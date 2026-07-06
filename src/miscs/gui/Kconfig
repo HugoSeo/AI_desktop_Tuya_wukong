@@ -1,0 +1,107 @@
+# UI / LVGL Configuration
+# Sourced from: src/miscs/gui/
+
+menuconfig ENABLE_TUYA_UI
+    bool "Enable UI display system (LVGL)"
+    select TUYA_CPU_ARCH_SMP
+    select TUYA_LIB_FREETYPE
+    select TUYA_LIBJPEG_TURBO
+    default n
+    help
+      启用UI显示系统（基于LVGL），需要SMP多核支持
+
+if ENABLE_TUYA_UI
+    config TUYA_CPU_ARCH_SMP
+        bool
+        select TUYA_MULTI_TYPES_LCD
+        select TUYA_APP_DRIVERS_TP
+        select TUYA_AI_TOY_DEMO
+        select TUYA_LVGL_DRAW_WITH_ARM2D
+        select TUYA_LVGL_DMA2D
+        select RGB565_COLOR_SWAP_LVGL
+        select RGB888_COLOR_SWAP_LVGL
+        default n
+
+    config TUYA_MULTI_TYPES_LCD
+        bool
+        default n
+
+    config TUYA_APP_DRIVERS_TP
+        bool
+        default n
+
+    config RGB565_COLOR_SWAP_LVGL
+        bool
+        default n
+
+    config RGB888_COLOR_SWAP_LVGL
+        bool
+        default n
+
+    config TUYA_LVGL_VERSION
+        int "LVGL version (8 or 9)"
+        default 8
+        range 8 9
+        help
+          LVGL版本号，支持8或9
+
+    config TUYA_IMG_DIRECT_FLUSH
+        bool "Enable direct image flush to screen"
+        depends on TUYA_CPU_ARCH_SMP
+        default n
+        help
+          图片直接刷屏模式，跳过LVGL渲染流程，降低延迟
+
+    config TUYA_LVGL_DRAW_WITH_ARM2D
+        bool
+        default n
+
+    config TUYA_DMA2D_SHARE
+        bool "Enable shared DMA2D acceleration"
+        default n
+        help
+          启用DMA2D硬件加速共享，多模块可共用DMA2D
+
+    config TUYA_LVGL_DMA2D
+        bool "enable lvgl with dma2d"
+        default y
+
+    config TUYA_FILE_SYSTEM
+        bool "Enable file system (LittleFS)"
+        default n
+        help
+          启用文件系统，支持littlefs（SPI Flash/SD卡）
+        if TUYA_FILE_SYSTEM
+            choice
+                prompt "LittleFS storage medium"
+                default FILE_SYSTEM_LFS_SPI_FLASH
+
+                config FILE_SYSTEM_LFS_SD
+                    bool "LittleFS on SD card"
+                    help
+                      使用SD卡作为littlefs存储介质
+
+                config FILE_SYSTEM_LFS_SPI_FLASH
+                    bool "LittleFS on SPI Flash"
+                    help
+                      使用SPI Flash作为littlefs存储介质
+
+            endchoice
+    endif
+
+    config TUYA_LIBJPEG_TURBO
+        bool
+        default n
+
+    config TUYA_LIB_FREETYPE
+        bool
+        default n
+
+    config TUYA_AI_TOY_DEMO
+        bool
+        default n
+
+    config LV_COLOR_16_SWAP
+        bool
+        default n
+endif

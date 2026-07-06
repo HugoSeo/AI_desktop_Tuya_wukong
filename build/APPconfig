@@ -1,0 +1,293 @@
+menuconfig APP_CONFIG
+
+    # ==========================================================================
+    # Hidden configs: auto-selected by board type, not shown in menuconfig
+    # ==========================================================================
+    config TUYA_MODULE_T5
+        bool
+        default n
+
+    config ENABLE_AI_MODE_HOLD
+        bool
+        default n
+
+    config ENABLE_AI_MODE_ONESHOT
+        bool
+        default n
+
+    config ENABLE_AI_MODE_WAKEUP
+        bool
+        default n
+
+    config ENABLE_AI_MODE_FREE
+        bool
+        default n
+
+    config ENABLE_AI_MODE_TRANSLATE
+        bool
+        default n
+
+    config ENABLE_AI_MODE_RECORD
+        bool
+        default n
+
+    config ENABLE_AI_MODE_DETECTION
+        bool
+        default n
+    
+    config ENABLE_AI_MODE_PICTURE
+        bool
+        default n
+
+    config ENABLE_DEFAULT_SESSION
+        bool
+        default y
+
+    # ============================================================
+    # Layer 1: Board Selection
+    # ============================================================
+    choice
+        prompt "Board type (use 'make app_config_choice' to switch)"
+        default T5AI_BOARD
+
+        config T5AI_BOARD
+            bool "T5AI_BOARD"
+            select TUYA_MODULE_T5
+            select ENABLE_AI_MODE_HOLD
+            select ENABLE_AI_MODE_ONESHOT
+            select ENABLE_AI_MODE_WAKEUP
+            select ENABLE_AI_MODE_FREE
+            select ENABLE_AI_MODE_PICTURE
+            select TUYA_LVGL_DMA2D
+
+        config T5AI_BOARD_EYES
+            bool "T5AI_BOARD_EYES"
+            select TUYA_MODULE_T5
+            select ENABLE_AI_MODE_HOLD
+            select ENABLE_AI_MODE_ONESHOT
+            select ENABLE_AI_MODE_WAKEUP
+            select ENABLE_AI_MODE_FREE
+
+        config T5AI_BOARD_EVB
+            bool "T5AI_BOARD_EVB"
+            select TUYA_MODULE_T5
+            select ENABLE_AI_MODE_HOLD
+            select ENABLE_AI_MODE_ONESHOT
+            select ENABLE_AI_MODE_WAKEUP
+            select ENABLE_AI_MODE_FREE
+
+        config T5AI_BOARD_EVB_PRO
+            bool "T5AI_BOARD_EVB_PRO"
+            select TUYA_MODULE_T5
+            select ENABLE_AI_MODE_HOLD
+            select ENABLE_AI_MODE_ONESHOT
+            select ENABLE_AI_MODE_WAKEUP
+            select ENABLE_AI_MODE_FREE
+
+        config T5AI_BOARD_ROBOT
+            bool "T5AI_BOARD_ROBOT"
+            select TUYA_MODULE_T5
+            select ENABLE_AI_MODE_HOLD
+            select ENABLE_AI_MODE_ONESHOT
+            select ENABLE_AI_MODE_WAKEUP
+            select ENABLE_AI_MODE_FREE
+
+        config T5AI_BOARD_DESKTOP
+            bool "T5AI_BOARD_DESKTOP"
+            select TUYA_MODULE_T5
+            select ENABLE_AI_MODE_HOLD
+            select ENABLE_AI_MODE_ONESHOT
+            select ENABLE_AI_MODE_WAKEUP
+            select ENABLE_AI_MODE_FREE
+            select ENABLE_AI_MODE_RECORD
+            select ENABLE_AI_MODE_TRANSLATE
+            select ENABLE_AI_MODE_DETECTION
+            select ENABLE_AI_MODE_PICTURE
+
+        config T2AI_BOARD
+            bool "T2AI_BOARD"
+            select ENABLE_AI_MODE_HOLD
+            select ENABLE_AI_MODE_ONESHOT
+            select ENABLE_AI_MODE_WAKEUP
+            select ENABLE_AI_MODE_FREE
+
+        config LE270AI_BOARD
+            bool "LE270AI_BOARD"
+            select ENABLE_AI_MODE_HOLD
+            select ENABLE_AI_MODE_ONESHOT
+            select ENABLE_AI_MODE_WAKEUP
+            select ENABLE_AI_MODE_FREE
+
+        config WUKONG_BOARD_UBUNTU
+            bool "UBUNTU"
+            select ENABLE_AI_MODE_HOLD
+
+    endchoice
+
+    # --- T5AI_BOARD UI style ---
+    if T5AI_BOARD
+        choice
+            prompt "T5AI_BOARD UI style"
+            default ENABLE_VIEW_UI if ENABLE_TUYA_PICTURE
+            default ENABLE_T5AI_BOARD_UI_WECHAT
+
+            config ENABLE_VIEW_UI
+                bool "View UI"
+
+            config ENABLE_T5AI_BOARD_UI_WECHAT
+                bool "WeChat UI"
+        endchoice
+    endif
+
+    # ============================================================
+    # Layer 2: Board Hardware Configuration
+    # ============================================================
+    rsource "../src/boards/Kconfig"
+    rsource "../src/mode/Kconfig"
+    rsource "../src/miscs/battery/Kconfig"
+    rsource "../src/drivers/app_tuya_camera/Kconfig"
+
+    # ============================================================
+    # Layer 3: Feature / Software Configuration
+    # ============================================================
+    rsource "../src/wukong/picture/Kconfig"
+    rsource "../src/wukong/mcp/Kconfig"
+    rsource "../src/miscs/gui/Kconfig"
+    rsource "../src/miscs/audio_player/Kconfig"
+
+    config ENABLE_CELLULAR_DONGLE
+        bool "Enable USB cellular dongle (4G)"
+        default n
+        help
+          启用USB蜂窝网络模块，通过4G联网代替WiFi
+
+    # --- AI Chat Default Mode ---
+    choice
+        prompt "Default AI chat mode"
+        default AI_CHAT_DEFAULT_HOLD
+
+        config AI_CHAT_DEFAULT_HOLD
+            bool "Hold (press and talk)"
+            depends on ENABLE_AI_MODE_HOLD
+            help
+              长按触发对话模式（按住说话）
+
+        config AI_CHAT_DEFAULT_ONESHOT
+            bool "Oneshot (press once)"
+            depends on ENABLE_AI_MODE_ONESHOT
+            help
+              单次按键对话模式（按一下说一句）
+
+        config AI_CHAT_DEFAULT_WAKEUP
+            bool "Wakeup word"
+            depends on ENABLE_AI_MODE_WAKEUP
+            help
+              唤醒词对话模式（语音唤醒后说话）
+
+        config AI_CHAT_DEFAULT_FREE
+            bool "Free conversation"
+            depends on ENABLE_AI_MODE_FREE
+            help
+              自由对话模式（持续聆听）
+
+        config AI_CHAT_DEFAULT_TRANSLATE
+            bool "Translation"
+            depends on ENABLE_AI_MODE_TRANSLATE
+            help
+              翻译模式
+
+        config AI_CHAT_DEFAULT_PICTURE
+            bool "Picture"
+            depends on ENABLE_AI_MODE_PICTURE
+            help
+              语音生图（按键对话，唤醒对话）
+
+        config AI_CHAT_DEFAULT_P2P
+            bool "P2P video chat"
+            depends on ENABLE_AI_MODE_P2P
+            help
+              P2P视频对讲模式（需先开启摄像头）
+    endchoice
+
+    config TUYA_AI_CHAT_DEFAULT_MODE
+        int
+        default 0 if AI_CHAT_DEFAULT_HOLD
+        default 1 if AI_CHAT_DEFAULT_ONESHOT
+        default 2 if AI_CHAT_DEFAULT_WAKEUP
+        default 3 if AI_CHAT_DEFAULT_FREE
+        default 4 if AI_CHAT_DEFAULT_TRANSLATE
+        default 5 if AI_CHAT_DEFAULT_P2P
+
+    # ============================================================
+    # Layer 4: Device Defaults
+    # ============================================================
+    menu "Device Defaults"
+        config TY_SPK_DEFAULT_VOL
+            int "Default speaker volume (0-100)"
+            range 0 100
+            default 70
+            help
+              默认扬声器音量，上电后初始音量值
+
+        config TY_AI_DEFAULT_LANG
+            int "Default language (0=Chinese, 1=English)"
+            range 0 1
+            default 1
+            help
+              默认语言：0=中文，1=英文
+
+        config ENABLE_AUDIO_ANALYSIS
+            bool "Enable audio analysis"
+            default n
+            help
+              启用音频分析功能
+
+        config ENABLE_APP_AI_MONITOR
+            bool "Enable AI monitor"
+            default n
+            help
+              启用AI监控功能（调试/诊断用）
+
+        config ENABLE_CLOUD_ALERT
+            bool "Enable cloud alert sounds"
+            default n
+            help
+              启用云端提示音，优先使用云端TTS播报
+
+        config ENABLE_APP_JOYINSIDE
+            bool "Enable joyinside integration"
+            default n
+            help
+              启用joyinside第三方集成
+
+        menuconfig ENABLE_LOW_POWER
+            bool "Enable low-power mode"
+            default n
+            help
+              启用低功耗模式。空闲超时后自动进入低功耗状态，
+              按键唤醒后恢复正常工作。关闭则不进入低功耗
+
+        if ENABLE_LOW_POWER
+            choice
+                prompt "Low-power sleep level"
+                default LOW_POWER_LIGHT_SLEEP
+
+                config LOW_POWER_LIGHT_SLEEP
+                    bool "Light sleep (TUYA_CPU_SLEEP)"
+                    help
+                      轻度休眠：关闭外设、降低功耗，按键后快速恢复。
+                      适合需要快速响应的场景
+
+                config LOW_POWER_DEEP_SLEEP
+                    bool "Deep sleep (TUYA_CPU_DEEP_SLEEP)"
+                    help
+                      深度休眠：功耗最低，按键唤醒后重启系统。
+                      适合对功耗要求极高、可接受较长恢复时间的场景
+            endchoice
+
+            config TY_AI_LOW_POWER_MODE
+                int
+                default 0 if LOW_POWER_LIGHT_SLEEP
+                default 1 if LOW_POWER_DEEP_SLEEP
+        endif
+    endmenu

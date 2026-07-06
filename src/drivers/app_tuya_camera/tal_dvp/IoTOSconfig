@@ -1,0 +1,16 @@
+# Ktuyaconf
+menu "Dvp function Config"
+        config ENABLE_TUYA_TAL_DVP
+            bool "ENABLE_TUYA_TAL_DVP: enable tal dvp"
+        default n
+
+        config ENABLE_DVP_SPLIT_FRAME
+            bool "ENABLE_DVP_SPLIT_FRAME: output the frame in segments as memory is insufficient"
+        depends on ENABLE_TUYA_TAL_DVP
+        default n
+
+        config DVP_SPLIT_FRAME_SEG_CNT
+            int "DVP_SPLIT_FRAME_SEG_CNT: set the memory pool size = 1460 * DVP_SPLIT_FRAME_SEG_CNT"
+        depends on ENABLE_DVP_SPLIT_FRAME
+        default 10
+endmenu

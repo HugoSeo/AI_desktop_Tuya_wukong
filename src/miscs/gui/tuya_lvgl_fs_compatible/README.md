@@ -1,0 +1,3 @@
+# ty_app_component_lvgl_fs_compatible
+
+GUI文件系统兼容组件

@@ -1,0 +1,31 @@
+# AI Mode Scode Configuration
+# Sourced from: src/mode/
+
+menu "AI Agent Scode Configuration"
+
+    config AI_AGENT_SCODE_CHAT
+        string "Chat mode scode"
+        default ""
+        help
+          聊天模式的 solution code，桌面机器人默认为 MULTIMODAL_CHAT，
+          通用场景留空
+
+    config AI_AGENT_SCODE_TRANSLATE
+        string "Translate mode scode"
+        default "asr-llm-tts"
+        help
+          翻译模式的 solution code
+
+    config AI_AGENT_SCODE_PICTURE
+        string "Picture mode scode"
+        default ""
+        help
+          生图模式的 solution code
+
+    config AI_AGENT_SCODE_DETECTION
+        string "Detection mode scode"
+        default ""
+        help
+          侦测模式的 solution code
+
+endmenu
