@@ -95,6 +95,7 @@
 #endif
 
 #include "hugo_ai_desktop.h"
+#include "hugo_ai_face.h"
 #include "tal_queue.h"
 /* ---------------------------------------------------------------------------
  * Macro definitions
@@ -613,8 +614,11 @@ STATIC VOID_T user_main(VOID_T)
     TUYA_CALL_ERR_LOG(__soc_device_init());
 
     //Add by Hugo 26.6.11
-    TAL_PR_DEBUG("Hugo init");
+    TAL_PR_DEBUG("Hugo desktop init");
     TUYA_CALL_ERR_LOG(hugo_ai_desktop_init());
+
+    // TAL_PR_DEBUG("Hugo face init");
+    // TUYA_CALL_ERR_LOG(hugo_ai_face_init());
 
     // STATIC UINT8_T *buf={0};
     // if (tal_queue_fetch(s_queue111, &buf, 1000) == OPRT_OK) 

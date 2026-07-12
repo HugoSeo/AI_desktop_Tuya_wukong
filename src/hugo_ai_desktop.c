@@ -78,7 +78,7 @@ STATIC TUYA_ADC_BASE_CFG_T sg_adc_cfg = {
     .conv_cnt = 1,
 };
 
-extern QUEUE_HANDLE  s_queue111;
+extern QUEUE_HANDLE  s_queue_voice_cmd;
 extern QUEUE_HANDLE  s_queue_state;
 
 /***********************************************************
@@ -207,6 +207,8 @@ VOID mcu_uart_rx_process(VOID)
                     {
                         flag_turn_off_on_state = uart_rxbuff[t+6];
                         flag_shut_voice = flag_turn_off_on_state;
+
+                        tal_queue_post(s_queue_state, &flag_turn_off_on_state, 0);
                     }
                     break;
                 default:
@@ -418,7 +420,7 @@ OPERATE_RET hugo_ai_desktop_init(VOID)
     // if (OPRT_OK != rt) {
     //     TAL_PR_ERR("ai toy -> schedule default session creation failed, rt: %d", rt);
     // }
-    tal_queue_create_init(&s_queue111, 4*SIZEOF(UINT8_T), 1);    
+    tal_queue_create_init(&s_queue_voice_cmd, 4*SIZEOF(UINT8_T), 1);
     tal_queue_create_init(&s_queue_state, SIZEOF(UINT8_T), 1);
     // WUKONG_AI_PLAYTTS_T tts_param = {
     //     .text = "网络开小差了，机器人暂时无法联网，仅支持本地按键操作"
@@ -443,14 +445,14 @@ OPERATE_RET hugo_ai_desktop_init(VOID)
             // tal_system_sleep(100);
         }
         // hugo_cmd_getback1(buf);
-        if (tal_queue_fetch(s_queue111, &getdata, 1000) == OPRT_OK)
+        if (tal_queue_fetch(s_queue_voice_cmd, &getdata, 1000) == OPRT_OK)
         {
             TAL_PR_NOTICE("------------------get OK------------------");
             // tal_system_sleep(1000);
             TAL_PR_NOTICE("------------------getdata=%d------------------",getdata[0]);
-            // tuya_ai_input_start(TRUE);
-            // TUYA_CALL_ERR_LOG(wukong_ai_agent_send_text(""));
-            // tuya_ai_input_stop();
+            tuya_ai_input_start(TRUE);
+            TUYA_CALL_ERR_LOG(wukong_ai_agent_send_text(""));
+            tuya_ai_input_stop();
 
             // audio_data = (CONST CHAR_T*)media_src_haolei_zh;
             // audio_size = sizeof(media_src_haolei_zh); 
@@ -459,9 +461,10 @@ OPERATE_RET hugo_ai_desktop_init(VOID)
             switch (getdata[0])
             {
             case 1:
-                tuya_ai_input_start(TRUE);
-                TUYA_CALL_ERR_LOG(wukong_ai_agent_send_text(""));
-                tuya_ai_input_stop();
+                // tuya_ai_input_start(TRUE);
+                // TUYA_CALL_ERR_LOG(wukong_ai_agent_send_text(""));
+                // tuya_ai_input_stop();
+
                 if(flag_turn_off_on_state ==2 )
                 {
                     continue;
@@ -479,9 +482,9 @@ OPERATE_RET hugo_ai_desktop_init(VOID)
             //     // TAL_PR_NOTICE("------------------get data 2------------------");
             //     break;
             case 3:
-                tuya_ai_input_start(TRUE);
-                TUYA_CALL_ERR_LOG(wukong_ai_agent_send_text(""));
-                tuya_ai_input_stop();
+                // tuya_ai_input_start(TRUE);
+                // TUYA_CALL_ERR_LOG(wukong_ai_agent_send_text(""));
+                // tuya_ai_input_stop();
                 if(getdata[1]<=5)
                 {
                     if(flag_turn_off_on_state == 2)
@@ -492,39 +495,40 @@ OPERATE_RET hugo_ai_desktop_init(VOID)
                 }
                 break;
             case 4:
-                tuya_ai_input_start(TRUE);
-                TUYA_CALL_ERR_LOG(wukong_ai_agent_send_text(""));
-                tuya_ai_input_stop();
+                // tuya_ai_input_start(TRUE);
+                // TUYA_CALL_ERR_LOG(wukong_ai_agent_send_text(""));
+                // tuya_ai_input_stop();
                 if(getdata[1]<=2)
                 {
                     flag_turn_off_on_cmd = getdata[1];
                     flag_turn_off_on_state = flag_turn_off_on_cmd;
+                    TAL_PR_NOTICE("------------------flag_turn_off_on_state=%d------------------",flag_turn_off_on_state);
+                    tal_queue_post(s_queue_state, &flag_turn_off_on_state, 0);
+                    
                     if(flag_turn_off_on_cmd==2)
                     {
                         flag_shut_voice = 2;
                         continue;
-                    }
-                    tal_queue_post(s_queue_state, &flag_turn_off_on_state, 0);
+                    }                    
                 }
                 break;
 
-            case 0xFF:
+            // case 0xFF:
             default:
-                if (flag_turn_off_on_state == 2)
-                {
-                    tuya_ai_input_start(TRUE);
-                    TUYA_CALL_ERR_LOG(wukong_ai_agent_send_text(""));
-                    tuya_ai_input_stop();                    
-                }                
+                // if (flag_turn_off_on_state == 2)
+                // {
+                //     tuya_ai_input_start(TRUE);
+                //     TUYA_CALL_ERR_LOG(wukong_ai_agent_send_text(""));
+                //     tuya_ai_input_stop();                    
+                // }
                 continue;
             }
             if(flag_shut_voice == 2)
                 continue;
             audio_data = (CONST CHAR_T*)media_src_haolei_zh;
-            audio_size = sizeof(media_src_haolei_zh); 
+            audio_size = sizeof(media_src_haolei_zh);
             TUYA_CALL_ERR_LOG(wukong_audio_play_data(AI_AUDIO_CODEC_MP3, audio_data, audio_size));
         }
-        
 
         if(flag_shut_voice == 1)
         {
@@ -565,7 +569,8 @@ OPERATE_RET hugo_ai_desktop_init(VOID)
 
         // tal_system_sleep(200);
     }
-    tal_queue_free(s_queue111);
+    tal_queue_free(s_queue_voice_cmd);
+    tal_queue_free(s_queue_state);
     return rt;
 
 }

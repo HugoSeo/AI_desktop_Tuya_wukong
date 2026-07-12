@@ -15,12 +15,13 @@
 #include <stdio.h>
 
 #include "tal_queue.h"
+// #include "tuya_ai_input.h"
 // #include "hugo_ai_desktop.h"
 
 STATIC BOOL_T __s_chat_break = FALSE;
 // STATIC UINT8_T cmd_data[4] = {0};
-// STATIC UINT8_T get_offon_state = 0;
-QUEUE_HANDLE  s_queue111;
+STATIC UINT8_T get_offon_state = 0;
+QUEUE_HANDLE  s_queue_voice_cmd;
 QUEUE_HANDLE  s_queue_state;
 
 
@@ -92,6 +93,7 @@ OPERATE_RET __wukong_ai_skill_process(AI_TEXT_TYPE_E type, ty_cJSON *root, BOOL_
 
 OPERATE_RET __wukong_ai_asr_process(AI_TEXT_TYPE_E type, ty_cJSON *root, BOOL_T eof)
 {
+    OPERATE_RET rt = OPRT_OK;
     // ty_cJSON *data = ty_cJSON_GetObjectItem(root, "data");
     // TUYA_CHECK_NULL_RETURN(data, OPRT_INVALID_PARM);
     CHAR_T *content =  ty_cJSON_GetStringValue(root);
@@ -107,49 +109,61 @@ OPERATE_RET __wukong_ai_asr_process(AI_TEXT_TYPE_E type, ty_cJSON *root, BOOL_T 
         // flag_rgb_bit = 1;
         cmd_data[0] = 1;
         cmd_data[1] = 1;
-        tal_queue_post(s_queue111, &cmd_data, 0); 
+        tal_queue_post(s_queue_voice_cmd, &cmd_data, 0); 
     }
     else if(strstr((const char*)content,"关灯")!=NULL)
     {
         TAL_PR_NOTICE("get cmd:关灯");
         cmd_data[0] = 1;
         cmd_data[1] = 2;
-        tal_queue_post(s_queue111, &cmd_data, 0);
+        tal_queue_post(s_queue_voice_cmd, &cmd_data, 0);
     }
     else if(strstr((const char*)content,"跳个舞")!=NULL)
     {
         TAL_PR_NOTICE("get cmd:跳个舞");
         cmd_data[0] = 3;
         cmd_data[1] = 1;
-        tal_queue_post(s_queue111, &cmd_data, 0);
+        tal_queue_post(s_queue_voice_cmd, &cmd_data, 0);
     }
     else if(strstr((const char*)content,"向后转")!=NULL)
     {
         TAL_PR_NOTICE("get cmd:向后转");
         cmd_data[0] = 3;
         cmd_data[1] = 2;
-        tal_queue_post(s_queue111, &cmd_data, 0);
+        tal_queue_post(s_queue_voice_cmd, &cmd_data, 0);
     }
     else if(strstr((const char*)content,"开机")!=NULL)
     {
         TAL_PR_NOTICE("get cmd:开机");
         cmd_data[0] = 4;
         cmd_data[1] = 1;
-        tal_queue_post(s_queue111, &cmd_data, 0);
+        tal_queue_post(s_queue_voice_cmd, &cmd_data, 0);
     }
     else if(strstr((const char*)content,"关机")!=NULL)
     {
         TAL_PR_NOTICE("get cmd:关机");
         cmd_data[0] = 4;
         cmd_data[1] = 2;
-        tal_queue_post(s_queue111, &cmd_data, 0);
+        tal_queue_post(s_queue_voice_cmd, &cmd_data, 0);
     }
     else
     {
-        cmd_data[0] = 0xFF;
-        tal_queue_post(s_queue111, &cmd_data, 0);
+    //     cmd_data[0] = 0xFF;
+    //     tal_queue_post(s_queue_voice_cmd, &cmd_data, 0);
+        if (tal_queue_fetch(s_queue_state, &get_offon_state, 1000) == OPRT_OK)
+        {
+            TAL_PR_NOTICE("------------------get_offon_state=%d------------------",get_offon_state);
+        }
     }
     
+    if(get_offon_state == 2)
+    {
+        // tuya_ai_input_start(TRUE);
+        // TUYA_CALL_ERR_LOG(wukong_ai_agent_send_text(""));
+        // tuya_ai_input_stop();
+        return OPRT_OK;
+    }
+
     // send data to register cb
     WUKONG_AI_TEXT_T text;
     text.data      = content;

@@ -61,18 +61,35 @@ extern "C" {
 #define AI_AGENT_SCODE_CHAT ""
 #define AI_AGENT_SCODE_TRANSLATE "asr-llm-tts"
 #define AI_AGENT_SCODE_PICTURE ""
-#define AI_AGENT_SCODE_DETECTION ""
+#define AI_AGENT_SCODE_DETECTION "MOTION_DETECTION"
 // end of AI Agent Scode Configuration
 
 // CONFIG_ENABLE_BATTERY is not set
-// CONFIG_ENABLE_TUYA_CAMERA is not set
+#define ENABLE_TUYA_CAMERA 1
+#define ENABLE_AI_MODE_P2P 1
+
+//
+// Camera Hardware Configuration
+//
+// CONFIG_CAMERA_TYPE_DVP is not set
+#define CAMERA_TYPE_UVC 1
+#define TUYA_AI_TOY_ISP_WIDTH_VAL 864
+#define TUYA_AI_TOY_ISP_HEIGHT_VAL 480
+#define TUYA_AI_TOY_ISP_FPS_VAL 15
+#define TUYA_AI_TOY_POWER_PIN_NUM 64
+#define TUYA_AI_TOY_I2C_CLK_PIN_NUM 64
+#define TUYA_AI_TOY_I2C_SDA_PIN_NUM 64
+// end of Camera Hardware Configuration
+
 #define ENABLE_TUYA_TOOLKITS 1
+// CONFIG_ENABLE_TOOLKITS_CAMERA is not set
 #define ENABLE_TOOLKITS_TM 1
 #define ENABLE_TOOLKITS_CONTROL 1
 #define ENABLE_TOOLKITS_PLAYBACK 1
 // CONFIG_ENABLE_TOOLKITS_IMM is not set
 // CONFIG_ENABLE_TOOLKITS_SOCIAL is not set
 // CONFIG_ENABLE_TUYA_UI is not set
+#define TUYA_DMA2D_SHARE 1
 
 //
 // Audio Configuration
@@ -132,6 +149,7 @@ extern "C" {
 // CONFIG_AI_CHAT_DEFAULT_ONESHOT is not set
 // CONFIG_AI_CHAT_DEFAULT_WAKEUP is not set
 #define AI_CHAT_DEFAULT_FREE 1
+// CONFIG_AI_CHAT_DEFAULT_P2P is not set
 #define TUYA_AI_CHAT_DEFAULT_MODE 3
 
 //

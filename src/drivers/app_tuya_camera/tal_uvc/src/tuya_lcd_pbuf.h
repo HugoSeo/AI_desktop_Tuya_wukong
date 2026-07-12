@@ -34,7 +34,7 @@
 
 #include "tuya_cloud_types.h"
 #include "tuya_slist.h"
-#include "ty_frame_buff.h"
+#include "../../../app_tuya_display/tal_display/include/ty_frame_buff.h"         ///home/tuya/Documents/tuya/Projects/T5_TuyaOS-3.13.6/software/TuyaOS/apps/tuyaos_demo_wukong_ai/src/drivers/app_tuya_display/tal_display/include/ty_frame_buff.h
 
 #ifdef __cplusplus
 extern "C" {
