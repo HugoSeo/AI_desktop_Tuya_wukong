@@ -1,0 +1,83 @@
+# Camera Configuration
+# Sourced from: src/drivers/app_tuya_camera/
+
+if T5AI_BOARD || T5AI_BOARD_EYES || T5AI_BOARD_ROBOT || T5AI_BOARD_EVB_PRO || T5AI_BOARD_DESKTOP
+    menuconfig ENABLE_TUYA_CAMERA
+        bool "Enable camera"
+        default n
+        select TUYA_DMA2D_SHARE
+        help
+          启用摄像头功能，支持DVP和UVC两种接口。机器人板默认开启
+
+    if ENABLE_TUYA_CAMERA
+        config ENABLE_AI_MODE_P2P
+            bool "Enable P2P video chat mode"
+            default n
+            help
+              启用P2P视频对讲模式
+
+        menu "Camera Hardware Configuration"
+            choice
+                prompt "Camera interface type"
+                default CAMERA_TYPE_UVC if T5AI_BOARD_ROBOT
+                default CAMERA_TYPE_DVP
+
+                config CAMERA_TYPE_DVP
+                    bool "DVP"
+                    help
+                      数字视频并行接口，适用于大多数板型
+                config CAMERA_TYPE_UVC
+                    bool "UVC"
+                    help
+                      USB视频类接口，适用于机器人板等USB摄像头场景
+            endchoice
+
+            config TUYA_AI_TOY_ISP_WIDTH_VAL
+                int "Camera ISP capture width"
+                default 320 if T5AI_BOARD_ROBOT
+                default 480
+                help
+                  摄像头ISP采集宽度（像素）
+
+            config TUYA_AI_TOY_ISP_HEIGHT_VAL
+                int "Camera ISP capture height"
+                default 240 if T5AI_BOARD_ROBOT
+                default 480
+                help
+                  摄像头ISP采集高度（像素）
+
+            config TUYA_AI_TOY_ISP_FPS_VAL
+                int "Camera ISP FPS"
+                default 15 if T5AI_BOARD_ROBOT
+                default 10
+                range 1 30
+                help
+                  摄像头采集帧率
+
+            config TUYA_AI_TOY_POWER_PIN_NUM
+                int "Camera power GPIO (64=none)"
+                default 51 if T5AI_BOARD || T5AI_BOARD_EYES
+                default 6  if T5AI_BOARD_ROBOT
+                default 64
+                range 0 64
+                help
+                  摄像头电源控制引脚，设为64表示无需控制
+
+            config TUYA_AI_TOY_I2C_CLK_PIN_NUM
+                int "Camera I2C CLK GPIO (64=none)"
+                default 13 if T5AI_BOARD || T5AI_BOARD_EYES
+                default 64
+                range 0 64
+                help
+                  摄像头I2C时钟引脚（DVP接口使用）
+
+            config TUYA_AI_TOY_I2C_SDA_PIN_NUM
+                int "Camera I2C SDA GPIO (64=none)"
+                default 15 if T5AI_BOARD || T5AI_BOARD_EYES
+                default 64
+                range 0 64
+                help
+                  摄像头I2C数据引脚（DVP接口使用）
+        endmenu
+    endif
+endif

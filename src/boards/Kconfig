@@ -1,0 +1,124 @@
+# Board Hardware Configuration
+# Sourced from: src/boards/
+
+menu "Pin Configuration"
+    config TUYA_AI_TOY_AUDIO_TRIGGER_PIN_NUM
+        int "Audio trigger GPIO pin number (64=disabled)"
+        default 12 if T5AI_BOARD || T5AI_BOARD_EYES || T2AI_BOARD
+        default 28 if T5AI_BOARD_DESKTOP
+        default 4  if T5AI_BOARD_EVB
+        default 6  if T5AI_BOARD_EVB_PRO
+        default 5  if T5AI_BOARD_ROBOT || LE270AI_BOARD
+        default 25 if L511_Y6E_BOARD || L511_Y7PM_BOARD
+        default 64
+        range 0 64
+        help
+          音频触发按键GPIO编号，按下触发对话。设为64表示禁用
+
+    config TUYA_AI_TOY_SPK_EN_PIN_NUM
+        int "Speaker enable GPIO pin number"
+        default 28 if T5AI_BOARD || T5AI_BOARD_EYES || T2AI_BOARD || LE270AI_BOARD
+        default 19 if T5AI_BOARD_EVB
+        default 64 if L511_Y6E_BOARD || L511_Y7PM_BOARD
+        default 26
+        range 0 64
+        help
+          喇叭功放使能引脚，控制扬声器开关
+
+    config TUYA_AI_TOY_LED_PIN_NUM
+        int "LED GPIO pin number (64=disabled)"
+        default 56 if T5AI_BOARD || T2AI_BOARD || LE270AI_BOARD
+        default 16 if L511_Y6E_BOARD || L511_Y7PM_BOARD
+        default 8  if T5AI_BOARD_EVB
+        default 25 if T5AI_BOARD_EVB_PRO
+        default 64
+        range 0 64
+        help
+          状态指示LED引脚。设为64表示禁用
+
+    config TUYA_AI_TOY_NET_PIN_NUM
+        int "Network indicator GPIO pin number (64=disabled)"
+        default 12 if T5AI_BOARD_EVB
+        default 7  if T5AI_BOARD_EVB_PRO
+        default 4  if T5AI_BOARD_ROBOT
+        default 64
+        range 0 64
+        help
+          网络状态指示灯引脚。设为64表示禁用
+
+    menuconfig DEVICE_POWER_CONTROL
+        bool "Enable device power on/off control"
+        default y if T5AI_BOARD_DESKTOP
+        default n
+        help
+          启用设备电源开关机控制（长按关机等），桌面版默认开启
+
+    if DEVICE_POWER_CONTROL
+        config DEVICE_POWER_NET_KEY_PIN_NUM
+            int "Power net key GPIO"
+            default 3
+            range 0 64
+            help
+              电源/网络按键引脚
+        config DEVICE_POWER_PIN_NUM
+            int "Device power GPIO"
+            default 4
+            range 0 64
+            help
+              设备电源锁存控制引脚
+    endif
+endmenu
+
+menu "Display Configuration"
+    config TUYA_LCD_IC_NAME_STR
+        string "LCD IC driver name"
+        default "ili9488"       if T5AI_BOARD || T2AI_BOARD
+        default "spi_st7789v2"  if T5AI_BOARD_DESKTOP
+        default "spi_st7789"    if T5AI_BOARD_EVB || T5AI_BOARD_EVB_PRO
+        default "spi_st7735s"   if T5AI_BOARD_EYES
+        default "spi_st7789p3"  if T5AI_BOARD_ROBOT
+        default ""
+        help
+          LCD屏幕驱动IC型号，需与硬件匹配
+
+    config TUYA_LCD_WIDTH_VAL
+        int "LCD width in pixels"
+        default 320 if T5AI_BOARD || T2AI_BOARD || T5AI_BOARD_DESKTOP || T5AI_BOARD_ROBOT
+        default 240 if T5AI_BOARD_EVB || T5AI_BOARD_EVB_PRO
+        default 128 if T5AI_BOARD_EYES
+        default 0
+        help
+          LCD水平分辨率（像素），0表示无屏幕
+
+    config TUYA_LCD_HEIGHT_VAL
+        int "LCD height in pixels"
+        default 480 if T5AI_BOARD || T2AI_BOARD
+        default 240 if T5AI_BOARD_DESKTOP || T5AI_BOARD_EVB || T5AI_BOARD_EVB_PRO
+        default 128 if T5AI_BOARD_EYES
+        default 172 if T5AI_BOARD_ROBOT
+        default 0
+        help
+          LCD垂直分辨率（像素），0表示无屏幕
+
+    config LCD_FPS_VAL
+        int "LCD refresh FPS"
+        default 15 if T5AI_BOARD_DESKTOP || T5AI_BOARD_EVB || T5AI_BOARD_EVB_PRO
+        default 10
+        range 1 60
+        help
+          LCD刷新帧率，值越高越流畅但CPU占用越高
+
+    config TUYA_LCD_ROTATION_VAL
+        int "LCD rotation (0=0, 1=90, 2=180, 3=270)"
+        default 0
+        range 0 3
+        help
+          屏幕旋转角度：0=不旋转，1=90度，2=180度，3=270度
+
+    config LCD_SPI_DEVICE_NUM
+        int "LCD SPI device number"
+        depends on T5AI_BOARD_EYES
+        default 1
+        help
+          LCD使用的SPI设备编号（眼睛板使用SPI1）
+endmenu

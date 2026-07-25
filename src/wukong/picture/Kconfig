@@ -1,0 +1,64 @@
+# AI Picture Configuration
+# Sourced from: src/wukong/picture/
+
+if ENABLE_AI_MODE_PICTURE
+    menuconfig ENABLE_TUYA_PICTURE
+        bool "Enable AI picture"
+        select ENABLE_IMAGE_ALBUM
+        default y
+        help
+          启用AI绘图功能，并自动启用图片相册、图像处理组件
+
+    if ENABLE_TUYA_PICTURE
+        config TUYA_PICTURE_ALBUM_NAME
+            string "Picture album name"
+            default "ai_picture"
+            help
+              图片相册名称
+
+        config TUYA_PICTURE_ALBUM_MAX_IMAGE_CNT
+            int "Max image count in album"
+            default 10
+            help
+              相册中最大图片数量
+
+        config TUYA_PICTURE_DEF_OUTPUT_WIDTH
+            int "Default output width (pixels)"
+            default TUYA_LCD_WIDTH_VAL
+            help
+              AI绘图默认输出宽度，默认与LCD宽度一致
+
+        config TUYA_PICTURE_DEF_OUTPUT_HEIGHT
+            int "Default output height (pixels)"
+            default TUYA_LCD_HEIGHT_VAL
+            help
+              AI绘图默认输出高度，默认与LCD高度一致
+
+        config ENABLE_TAL_IMAGE
+            bool "Enable tal_image (JPEG decode / YUV / scale)"
+            default y
+            help
+              启用图像处理库（JPEG解码、YUV转换、缩放）
+
+        menuconfig ENABLE_IMAGE_ALBUM
+            bool "Enable image album"
+            select ENABLE_TAL_IMAGE
+            default y
+            help
+              启用图片相册组件，用于图片存储和管理
+
+        if ENABLE_IMAGE_ALBUM
+            config ENABLE_IMAGE_ALBUM_STORAGE_MEM
+                bool "Memory storage backend"
+                default y
+                help
+                  使用RAM存储图片，访问快速，断电丢失
+
+            config ENABLE_IMAGE_ALBUM_STORAGE_SD
+                bool "Filesystem storage backend (SD/Flash)"
+                default n
+                help
+                  使用文件系统存储图片（SD卡/Flash），断电保留
+        endif
+    endif
+endif

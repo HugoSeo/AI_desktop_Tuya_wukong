@@ -1,0 +1,31 @@
+# Battery Management Configuration
+# Sourced from: src/miscs/battery/
+
+menuconfig ENABLE_BATTERY
+    bool "Enable battery management"
+    default y if T5AI_BOARD_DESKTOP || T5AI_BOARD_EVB || T5AI_BOARD_EVB_PRO || T5AI_BOARD_ROBOT
+    default n
+    help
+      启用电池管理功能，包括充电检测和电量显示
+
+if ENABLE_BATTERY
+    config TUYA_AI_TOY_CHARGE_PIN_NUM
+        int "Charge detect GPIO"
+        default 2  if T5AI_BOARD_DESKTOP
+        default 21 if T5AI_BOARD_EVB || T5AI_BOARD_ROBOT
+        default 23 if T5AI_BOARD_EVB_PRO
+        default 64
+        range 0 64
+        help
+          充电状态检测引脚，用于判断是否在充电
+
+    config TUYA_AI_TOY_BATTERY_CAP_PIN_NUM
+        int "Battery capacity ADC GPIO"
+        default 12 if T5AI_BOARD_DESKTOP
+        default 28 if T5AI_BOARD_EVB || T5AI_BOARD_ROBOT
+        default 22 if T5AI_BOARD_EVB_PRO
+        default 64
+        range 0 64
+        help
+          电池电量ADC采集引脚，用于读取电池电压
+endif

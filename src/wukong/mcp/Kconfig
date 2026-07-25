@@ -1,0 +1,56 @@
+# MCP Toolkits Configuration
+# Sourced from: src/wukong/mcp/
+
+menuconfig ENABLE_TUYA_TOOLKITS
+    bool "Enable MCP toolkits"
+    help
+      启用MCP工具集，为AI提供设备控制和扩展能力
+
+if ENABLE_TUYA_TOOLKITS
+    if ENABLE_TUYA_CAMERA
+        config ENABLE_TOOLKITS_CAMERA
+            bool "Camera toolkit"
+            default n
+            help
+              AI可调用摄像头进行拍照/识别
+    endif
+    if T5AI_BOARD_ROBOT
+        config ENABLE_TOOLKITS_MOTION
+            bool "Motion control toolkit"
+            default n
+            help
+              AI可控制机器人运动（仅机器人板）
+    endif
+    if T5AI_BOARD_DESKTOP
+        config ENABLE_APP_MOTION_ROTATION_MCP
+            bool "Motion rotation toolkit"
+            default y
+            help
+              启用旋转/运动传感器MCP工具（仅桌面版）
+    endif
+    config ENABLE_TOOLKITS_TM
+        bool "Time management toolkit"
+        default n
+        help
+          AI可进行时间管理（日程、提醒等）
+    config ENABLE_TOOLKITS_CONTROL
+        bool "Device control toolkit"
+        default y
+        help
+          AI可控制设备基础功能（音量、亮度等）
+    config ENABLE_TOOLKITS_PLAYBACK
+        bool "Audio playback toolkit"
+        default n
+        help
+          AI可控制音频播放（播放、暂停、切换等）
+    config ENABLE_TOOLKITS_IMM
+        bool "Instant messaging toolkit"
+        default n
+        help
+          AI可进行即时通讯（发送消息等）
+    config ENABLE_TOOLKITS_SOCIAL
+        bool "Social interaction toolkit"
+        default n
+        help
+          AI可使用社交功能（好友互动等）
+endif

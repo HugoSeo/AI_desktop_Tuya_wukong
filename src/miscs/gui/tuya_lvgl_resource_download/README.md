@@ -1,0 +1,3 @@
+# ty_app_component_lvgl_resource_download
+
+GUI 资源文件下载组件

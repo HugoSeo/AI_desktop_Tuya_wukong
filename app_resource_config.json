@@ -1,0 +1,22 @@
+{
+    "gpio_map": [
+        {
+            "gpio_id": "GPIO_55",
+            "second_func_en": "GPIO_SECOND_FUNC_DISABLE",
+            "second_func_dev": "GPIO_DEV_INVALID",
+            "io_mode": "GPIO_IO_DISABLE",
+            "pull_mode": "GPIO_PULL_DISABLE",
+            "int_en": "GPIO_INT_DISABLE",
+            "int_type": "GPIO_INT_TYPE_LOW_LEVEL",
+            "low_power_io_ctrl": "GPIO_LOW_POWER_DISCARD_IO_STATUS",
+            "driver_capacity": "GPIO_DRIVER_CAPACITY_0",
+            "bind_core":"1"
+        }
+    ],
+    "ota_mode": {
+        "_comment": "支持压缩模式与兼容模式，值为compress或partition或compatible",
+        "_comment_compress": "压缩模式： SMP固件使用压缩升级模式",
+        "_comment_partition": "分段模式： SMP固件使用覆盖分段升级模式，由AMP架构升级到SMP的固件，首次架构切换必须使用该模式",
+        "mode": "partition"
+    }
+}

@@ -1,0 +1,3 @@
+# ty_app_component_lib_freetype
+
+动态矢量字库引擎FreeType

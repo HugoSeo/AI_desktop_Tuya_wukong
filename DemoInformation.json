@@ -1,0 +1,9 @@
+{
+    "DemoName": "tuyaos_demo_wukong_ai",
+    "DemoVersion": "1.0.55",
+    "AdaptFrameworks": [
+        "EmbeddedPackage-AI:WuKong"
+    ],
+    "MinVersion": "3.13.8",
+    "MaxVersion": null
+}

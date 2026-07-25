@@ -1,0 +1,15 @@
+spec:
+  name: gui_core
+  version: 0.0.1-beta.1
+  summary: embed module created by embedded-cli.
+  homepage: YOUR_HOMEPAGE
+  license:
+    type: MIT
+    file: LICENSE
+  author:
+    name: embedCI
+    email: embed@tuya.com
+  source:
+    git: https://registry.code.tuya-inc.top/ci_gw_technology_group/gui_core.git
+    tag: 0.0.1-beta.1
+

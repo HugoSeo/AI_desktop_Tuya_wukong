@@ -1,0 +1,112 @@
+# AI Mode Scode Configuration
+# Sourced from: src/mode/
+
+menu "AI Agent Scode Configuration"
+
+    choice
+        prompt "AI Agent Scode preset"
+        default AI_AGENT_SCODE_PRESET_DEFAULT
+        help
+          选择 AI Agent solution code 预设方案：
+          default   - 通用场景，仅 translate 使用 asr-llm-tts，其余留空
+          multimode - 桌面机器人多模态预设（MULTIMODAL_CHAT/REALTIME_TRANSLATION/
+                      VOICE_TO_IMAGE/MOTION_DETECTION）
+          custom    - 在下方四个条目里手动填写（初值与 default 预设一致）
+
+        config AI_AGENT_SCODE_PRESET_DEFAULT
+            bool "default"
+            help
+              通用场景预设：translate=asr-llm-tts，其余留空
+
+        config AI_AGENT_SCODE_PRESET_MULTIMODE
+            bool "multimode"
+            help
+              桌面机器人多模态预设，对应 T5AI_BOARD_DESKTOP
+
+        config AI_AGENT_SCODE_PRESET_CUSTOM
+            bool "custom"
+            help
+              自定义：初值与 default 预设一致，用户可在下方四个条目里改
+    endchoice
+
+    # ------------------------------------------------------------------
+    # User-editable overrides, only visible/active under CUSTOM preset.
+    # 初始默认值跟 DEFAULT 预设一致；用户改过之后会保留到 .config，
+    # 切到其它预设时这几行被隐藏但保存值不丢，下次切回 CUSTOM 还在。
+    # ------------------------------------------------------------------
+    config AI_AGENT_SCODE_CHAT_USER
+        string "Chat mode scode"
+        depends on AI_AGENT_SCODE_PRESET_CUSTOM
+        default ""
+        help
+          聊天模式的 solution code，默认与 default 预设一致
+
+    config AI_AGENT_SCODE_TRANSLATE_USER
+        string "Translate mode scode"
+        depends on AI_AGENT_SCODE_PRESET_CUSTOM
+        default "asr-llm-tts"
+        help
+          翻译模式的 solution code，默认与 default 预设一致
+
+    config AI_AGENT_SCODE_PICTURE_USER
+        string "Picture mode scode"
+        depends on AI_AGENT_SCODE_PRESET_CUSTOM
+        default ""
+        help
+          生图模式的 solution code，默认与 default 预设一致
+
+    config AI_AGENT_SCODE_DETECTION_USER
+        string "Detection mode scode"
+        depends on AI_AGENT_SCODE_PRESET_CUSTOM
+        default ""
+        help
+          侦测模式的 solution code，默认与 default 预设一致
+
+    # ------------------------------------------------------------------
+    # Final scode symbols consumed by C code. No prompt — purely derived.
+    # CUSTOM 预设下转引上面的 *_USER；其它预设按硬编码默认值。
+    # ------------------------------------------------------------------
+    config AI_AGENT_SCODE_CHAT
+        string
+        default AI_AGENT_SCODE_CHAT_USER if AI_AGENT_SCODE_PRESET_CUSTOM
+        default "MULTIMODAL_CHAT" if AI_AGENT_SCODE_PRESET_MULTIMODE
+        default ""
+
+    config AI_AGENT_SCODE_TRANSLATE
+        string
+        default AI_AGENT_SCODE_TRANSLATE_USER if AI_AGENT_SCODE_PRESET_CUSTOM
+        default "REALTIME_TRANSLATION" if AI_AGENT_SCODE_PRESET_MULTIMODE
+        default "asr-llm-tts" if AI_AGENT_SCODE_PRESET_DEFAULT
+        default ""
+
+    config AI_AGENT_SCODE_PICTURE
+        string
+        default AI_AGENT_SCODE_PICTURE_USER if AI_AGENT_SCODE_PRESET_CUSTOM
+        default "VOICE_TO_IMAGE" if AI_AGENT_SCODE_PRESET_MULTIMODE
+        default ""
+
+    config AI_AGENT_SCODE_DETECTION
+        string
+        default AI_AGENT_SCODE_DETECTION_USER if AI_AGENT_SCODE_PRESET_CUSTOM
+        default "MOTION_DETECTION" if AI_AGENT_SCODE_PRESET_MULTIMODE
+        default ""
+
+    # ------------------------------------------------------------------
+    # DEFAULT / MULTIMODE 下用 comment 展示当前生效的 4 个 scode 值
+    # （CUSTOM 模式不需要 —— 上面的 *_USER prompt 已经把值露出来了）
+    # ------------------------------------------------------------------
+    if AI_AGENT_SCODE_PRESET_DEFAULT
+        comment "Chat mode scode:        \"\""
+        comment "Translate mode scode:   \"asr-llm-tts\""
+        comment "Picture mode scode:     \"\""
+        comment "Detection mode scode:   \"\""
+    endif
+
+    if AI_AGENT_SCODE_PRESET_MULTIMODE
+        comment "Chat mode scode:        \"MULTIMODAL_CHAT\""
+        comment "Translate mode scode:   \"REALTIME_TRANSLATION\""
+        comment "Picture mode scode:     \"VOICE_TO_IMAGE\""
+        comment "Detection mode scode:   \"MOTION_DETECTION\""
+    endif
+
+endmenu

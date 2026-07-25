@@ -1,0 +1,215 @@
+# Audio Configuration
+# Sourced from: src/miscs/audio_player/
+
+menu "Audio Configuration"
+    menu "Audio Input"
+        comment "--- Source ---"
+
+        choice
+        prompt "Audio input source"
+        default USING_UART_AUDIO_INPUT if LE270AI_BOARD
+        default USING_BOARD_AUDIO_INPUT
+
+        config USING_UART_AUDIO_INPUT
+            bool "UART (external codec)"
+            help
+              通过UART外接音频编解码芯片采集音频
+        config USING_BOARD_AUDIO_INPUT
+            bool "Onboard microphone"
+            help
+              使用板载麦克风采集音频
+        endchoice
+
+        config INPUT_BOARD_STACK_SIZE
+            int "Audio input thread stack size (bytes)"
+            range 2560 41472
+            default 2560
+            help
+              音频采集线程栈大小（字节），通常无需修改
+
+        comment "--- Frontend ---"
+
+        choice
+        prompt "Audio frontend engine"
+        default USING_TUYA_AUDIO_FRONTEND
+
+        config USING_TUYA_AUDIO_FRONTEND
+            bool "Tuya (AEC/AGC/NS)"
+            help
+              使用涂鸦自研音频前端（AEC回声消除/AGC增益控制/NS噪声抑制）
+        config USING_3RD_AUDIO_FRONTEND
+            bool "Third-party"
+            help
+              使用第三方音频前端处理库
+        endchoice
+
+        comment "--- Encoder ---"
+
+        config ENABLE_APP_OPUS_ENCODER
+            bool "Enable OPUS encoder"
+            default y if TUYA_MODULE_T5
+            default n
+            help
+              启用OPUS编码器，T5模组默认开启
+
+        config ENABLE_APP_SPEEX_ENCODER
+            bool "Enable SPEEX encoder"
+            default n
+            help
+              启用SPEEX编码器（压缩率低于OPUS但CPU占用更少）
+
+        config APP_OPUS_ENCODER_BITRATE
+            depends on ENABLE_APP_OPUS_ENCODER
+            int "OPUS encoder bitrate (bps)"
+            default 16000
+            range 8000 128000
+            help
+              OPUS编码比特率（bps），值越高音质越好但带宽占用越大
+
+        config APP_OPUS_ENCODER_BANDWIDTH
+            depends on ENABLE_APP_OPUS_ENCODER
+            int "OPUS encoder bandwidth (1101-1105)"
+            default 1102
+            range 1101 1105
+            help
+              OPUS编码带宽：1101=窄带4kHz，1102=中带6kHz，1103=宽带8kHz，1104=超宽带12kHz，1105=全带20kHz
+    endmenu
+
+    menu "Audio Output"
+        comment "--- Target ---"
+
+        choice
+        prompt "Audio output target"
+        default USING_UART_AUDIO_OUTPUT if LE270AI_BOARD
+        default USING_BOARD_AUDIO_OUTPUT
+
+        config USING_UART_AUDIO_OUTPUT
+            bool "UART (external codec)"
+            help
+              通过UART外接音频编解码芯片播放音频
+        config USING_BOARD_AUDIO_OUTPUT
+            bool "Onboard DAC/I2S"
+            help
+              使用板载DAC/I2S播放音频
+        endchoice
+
+        comment "--- Decoder / Player ---"
+
+        config AI_PLAYER_LITE
+            bool "Enable lite player (reduced RAM)"
+            default n
+            help
+              精简播放器模式，减少RAM占用（仅支持内存数据源，禁用OPUS/OGG解码器）
+
+        config AI_PLAYER_DECODER_OPUS_ENABLE
+            bool "Enable OPUS decoder (raw stream)"
+            default y
+            depends on !AI_PLAYER_LITE
+            help
+              启用原始OPUS解码器（无容器封装），用于实时AI语音流
+
+        config AI_PLAYER_DECODER_OPUS_FRAME_SIZE
+            depends on AI_PLAYER_DECODER_OPUS_ENABLE
+            int "OPUS decoder frame size (ms)"
+            default 40
+            range 10 60
+            help
+              OPUS解码帧长（毫秒），影响延迟和CPU占用的平衡
+
+        config AI_PLAYER_DECODER_OPUS_KBPS
+            depends on AI_PLAYER_DECODER_OPUS_ENABLE
+            int "OPUS decoder bitrate (kbps)"
+            default 16
+            range 16 128
+            help
+              OPUS解码比特率（kbps），需与服务端编码设置匹配
+
+        config AI_PLAYER_DECODER_OGGOPUS_ENABLE
+            bool "Enable OGG-OPUS decoder"
+            default y
+            depends on !AI_PLAYER_LITE
+            help
+              启用OGG封装的OPUS解码器，用于播放OGG格式音频文件
+    endmenu
+
+    menu "UART Codec"
+        depends on USING_UART_AUDIO_INPUT
+
+        choice
+            prompt "UART codec chip vendor"
+            default UART_CODEC_VENDOR_GX8006 if LE270AI_BOARD
+            default UART_CODEC_VENDOR_CI1302
+
+            config UART_CODEC_VENDOR_GX8006
+                bool "GX8006 (Nationalchip)"
+                help
+                  国芯GX8006语音编解码芯片
+            config UART_CODEC_VENDOR_CI1302
+                bool "CI1302 (Chipintelli)"
+                help
+                  启英泰伦CI1302语音编解码芯片
+        endchoice
+
+        config UART_CODEC_UART_PORT_NUM
+            int "UART port number (0 or 2)"
+            default 0 if WUKONG_BOARD_UBUNTU
+            default 2
+            range 0 2
+            help
+              与外接编解码芯片通信的UART端口号
+
+        config UART_CODEC_BOOT_IO_NUM
+            int "Codec BOOT mode GPIO"
+            default 25 if LE270AI_BOARD
+            default 2
+            range 0 64
+            help
+              外接编解码芯片的BOOT模式引脚
+
+        config UART_CODEC_POWER_IO_NUM
+            int "Codec power control GPIO"
+            default 31 if LE270AI_BOARD
+            default 3
+            range 0 64
+            help
+              外接编解码芯片的电源控制引脚
+
+        config UART_CODEC_SPK_FLOWCTL_IO_NUM
+            int "Speaker flow-control GPIO"
+            default 6  if LE270AI_BOARD
+            default 32
+            range 0 64
+            help
+              喇叭播放流控引脚，控制编解码芯片的播放时序
+
+        config UART_CODEC_SPK_FLOWCTL_ACTIVE_HIGH
+            bool "Speaker flow-control active HIGH"
+            default n if WUKONG_BOARD_UBUNTU
+            default y
+            help
+              流控引脚有效电平：y=高电平有效，n=低电平有效
+
+        choice
+            prompt "UART codec upload audio format"
+            default UART_CODEC_FMT_OPUS  if LE270AI_BOARD
+            default UART_CODEC_FMT_SPEEX
+
+            config UART_CODEC_FMT_SPEEX
+                bool "SPEEX"
+                help
+                  使用SPEEX格式上传音频（CPU占用低）
+            config UART_CODEC_FMT_OPUS
+                bool "OPUS"
+                help
+                  使用OPUS格式上传音频（压缩率更高）
+        endchoice
+    endmenu
+
+    # --- Codec bench test ---
+    config CODEC_BENCH_TEST
+        bool "Enable codec encoder benchmark test"
+        default n
+        help
+          编解码器性能基准测试模式。开启后跳过AI玩具初始化，
+          仅通过按键触发编码器性能测试（IoT/WiFi正常运行）
+endmenu
