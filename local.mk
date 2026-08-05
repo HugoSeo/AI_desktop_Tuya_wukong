@@ -189,6 +189,7 @@ LOCAL_SRC_FILES += $(LOCAL_PATH)/src/tuya_ai_toy_led.c
 LOCAL_SRC_FILES += $(LOCAL_PATH)/src/tuya_ai_toy_key.c 
 LOCAL_SRC_FILES += $(LOCAL_PATH)/src/hugo_ai_desktop.c
 LOCAL_SRC_FILES += $(LOCAL_PATH)/src/hugo_ai_face.c
+LOCAL_SRC_FILES += $(LOCAL_PATH)/src/hugo_ai_position_sensor.c
 LOCAL_SRC_FILES += $(LOCAL_PATH)/src/drivers/app_tuya_driver/src/os/tal_gpio.c
 LOCAL_SRC_FILES += $(LOCAL_PATH)/src/drivers/app_tuya_driver/src/os/tal_uart.c
 LOCAL_SRC_FILES += $(shell find $(LOCAL_PATH)/src/drivers/app_tuya_key -name "*.c" -o -name "*.cpp" -o -name "*.cc")

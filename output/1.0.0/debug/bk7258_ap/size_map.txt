@@ -522,7 +522,7 @@
      24	    460	     24	     24	      0	      0	    460	    484	    1e4	drv_model.c.obj (ex armino/driver/libdriver.a)
     360	     33	    360	    360	      0	      0	     33	    393	    189	timer_driver.c.obj (ex armino/driver/libdriver.a)
    3277	    141	   3229	   2814	    415	     48	     93	   3370	    d2a	uart_driver.c.obj (ex armino/driver/libdriver.a)
-   4522	      0	   4522	   4404	    118	      0	      0	   4522	   11aa	printf.c.obj (ex armino/driver/libdriver.a)
+   4546	      0	   4546	   4428	    118	      0	      0	   4546	   11c2	printf.c.obj (ex armino/driver/libdriver.a)
     275	     10	    275	    176	     99	      0	     10	    285	    11d	saradc_client.c.obj (ex armino/driver/libdriver.a)
      64	      4	     64	     64	      0	      0	      4	     68	     44	saradc_notify.c.obj (ex armino/driver/libdriver.a)
    1362	     28	   1362	   1192	    170	      0	     28	   1390	    56e	pwr_clk.c.obj (ex armino/driver/libdriver.a)
@@ -563,7 +563,7 @@
     572	      4	    572	    572	      0	      0	      4	    576	    240	sys_video_driver.c.obj (ex armino/driver/libdriver.a)
     104	      0	    104	    104	      0	      0	      0	    104	     68	sys_bt_driver.c.obj (ex armino/driver/libdriver.a)
     718	      0	    718	    678	     40	      0	      0	    718	    2ce	lcd_spi.c.obj (ex armino/driver/libdriver.a)
-  83585	   6920	  82965	  70066	  12899	    620	   6300	  89885	  15f1d	armino/driver/libdriver.a
+  83609	   6920	  82989	  70090	  12899	    620	   6300	  89909	  15f35	armino/driver/libdriver.a
 
   flash	    ram	   text	   code	 rodata	   data	    bss	    dec	    hex	filename
    1126	     75	   1125	   1044	     81	      1	     74	   1200	    4b0	printf.c.obj (ex armino/bk_system/libbk_system.a)
@@ -608,12 +608,17 @@
     454	      4	    454	    426	     28	      0	      4	    458	    1ca	tkl_flash.c.obj (ex armino/tuyaos_adapter/libtuyaos_adapter.a)
    1377	    684	    693	    532	    161	    684	      0	   1377	    561	tkl_gpio.c.obj (ex armino/tuyaos_adapter/libtuyaos_adapter.a)
     731	      8	    731	    468	    263	      0	      8	    739	    2e3	test_lp.c.obj (ex armino/tuyaos_adapter/libtuyaos_adapter.a)
-    676	      6	    674	    524	    150	      2	      4	    680	    2a8	tkl_uart.c.obj (ex armino/tuyaos_adapter/libtuyaos_adapter.a)
+    822	      6	    820	    588	    232	      2	      4	    826	    33a	tkl_uart.c.obj (ex armino/tuyaos_adapter/libtuyaos_adapter.a)
     742	    729	    742	    704	     38	      0	    729	   1471	    5bf	tuya_dma.c.obj (ex armino/tuyaos_adapter/libtuyaos_adapter.a)
      28	      0	     28	     28	      0	      0	      0	     28	     1c	tkl_output.c.obj (ex armino/tuyaos_adapter/libtuyaos_adapter.a)
     166	      0	    166	    166	      0	      0	      0	    166	     a6	tkl_thread.c.obj (ex armino/tuyaos_adapter/libtuyaos_adapter.a)
      40	      4	     40	     40	      0	      0	      4	     44	     2c	tkl_wired.c.obj (ex armino/tuyaos_adapter/libtuyaos_adapter.a)
    3275	     51	   3267	   2352	    915	      8	     43	   3318	    cf6	tkl_audio.c.obj (ex armino/tuyaos_adapter/libtuyaos_adapter.a)
+    258	      0	    258	    258	      0	      0	      0	    258	    102	tkl_pinmux.c.obj (ex armino/tuyaos_adapter/libtuyaos_adapter.a)
+    308	    675	    291	    256	     35	     17	    658	    966	    3c6	tkl_adc.c.obj (ex armino/tuyaos_adapter/libtuyaos_adapter.a)
+    120	      8	    112	    112	      0	      8	      0	    120	     78	tkl_spi.c.obj (ex armino/tuyaos_adapter/libtuyaos_adapter.a)
+     48	     12	     36	     36	      0	     12	      0	     48	     30	tkl_i2c.c.obj (ex armino/tuyaos_adapter/libtuyaos_adapter.a)
+     78	      6	     72	     72	      0	      6	      0	     78	     4e	tkl_sdio.c.obj (ex armino/tuyaos_adapter/libtuyaos_adapter.a)
       2	      0	      2	      2	      0	      0	      0	      2	      2	bk_adapter.c.obj (ex armino/tuyaos_adapter/libtuyaos_adapter.a)
    1867	      4	   1867	   1318	    549	      0	      4	   1871	    74f	tkl_fs.c.obj (ex armino/tuyaos_adapter/libtuyaos_adapter.a)
    1750	   1168	   1746	   1346	    400	      4	   1164	   2914	    b62	tkl_ota.c.obj (ex armino/tuyaos_adapter/libtuyaos_adapter.a)
@@ -633,7 +638,7 @@
     120	      0	    120	      0	    120	      0	      0	    120	     78	tkl_init_wifi.c.obj (ex armino/tuyaos_adapter/libtuyaos_adapter.a)
      40	      0	     40	      0	     40	      0	      0	     40	     28	tkl_init_wired.c.obj (ex armino/tuyaos_adapter/libtuyaos_adapter.a)
       0	      4	      0	      0	      0	      0	      4	      4	      4	tkl_cellular.c.obj (ex armino/tuyaos_adapter/libtuyaos_adapter.a)
-  31449	   3532	  30439	  22592	   7847	   1010	   2522	  33971	   84b3	armino/tuyaos_adapter/libtuyaos_adapter.a
+  32407	   4233	  31354	  23390	   7964	   1053	   3180	  35587	   8b03	armino/tuyaos_adapter/libtuyaos_adapter.a
 
   flash	    ram	   text	   code	 rodata	   data	    bss	    dec	    hex	filename
     117	     85	     32	     32	      0	     85	      0	    117	     75	mpu_cfg.c.obj (ex armino/bk7258_ap/libbk7258_ap.a)
@@ -994,6 +999,7 @@
     133	      0	    133	    132	      1	      0	      0	    133	     85	lib_a-w_log.o (ex /home/tuya/Documents/tuya/Projects/T5_TuyaOS-3.13.8/software/TuyaOS/vendor/T5/toolchain/gcc-arm-none-eabi-10.3-2021.10/bin/../lib/gcc/arm-none-eabi/10.3.1/../../../../arm-none-eabi/lib/thumb/v8-m.main+fp/hard/libm.a)
     240	      0	    240	    240	      0	      0	      0	    240	     f0	lib_a-w_pow.o (ex /home/tuya/Documents/tuya/Projects/T5_TuyaOS-3.13.8/software/TuyaOS/vendor/T5/toolchain/gcc-arm-none-eabi-10.3-2021.10/bin/../lib/gcc/arm-none-eabi/10.3.1/../../../../arm-none-eabi/lib/thumb/v8-m.main+fp/hard/libm.a)
     104	      0	    104	    104	      0	      0	      0	    104	     68	lib_a-w_sqrt.o (ex /home/tuya/Documents/tuya/Projects/T5_TuyaOS-3.13.8/software/TuyaOS/vendor/T5/toolchain/gcc-arm-none-eabi-10.3-2021.10/bin/../lib/gcc/arm-none-eabi/10.3.1/../../../../arm-none-eabi/lib/thumb/v8-m.main+fp/hard/libm.a)
+      4	      0	      4	      4	      0	      0	      0	      4	      4	lib_a-wf_atan2.o (ex /home/tuya/Documents/tuya/Projects/T5_TuyaOS-3.13.8/software/TuyaOS/vendor/T5/toolchain/gcc-arm-none-eabi-10.3-2021.10/bin/../lib/gcc/arm-none-eabi/10.3.1/../../../../arm-none-eabi/lib/thumb/v8-m.main+fp/hard/libm.a)
      97	      0	     97	     96	      1	      0	      0	     97	     61	lib_a-wf_log10.o (ex /home/tuya/Documents/tuya/Projects/T5_TuyaOS-3.13.8/software/TuyaOS/vendor/T5/toolchain/gcc-arm-none-eabi-10.3-2021.10/bin/../lib/gcc/arm-none-eabi/10.3.1/../../../../arm-none-eabi/lib/thumb/v8-m.main+fp/hard/libm.a)
     188	      0	    188	    188	      0	      0	      0	    188	     bc	lib_a-wf_pow.o (ex /home/tuya/Documents/tuya/Projects/T5_TuyaOS-3.13.8/software/TuyaOS/vendor/T5/toolchain/gcc-arm-none-eabi-10.3-2021.10/bin/../lib/gcc/arm-none-eabi/10.3.1/../../../../arm-none-eabi/lib/thumb/v8-m.main+fp/hard/libm.a)
      68	      0	     68	     68	      0	      0	      0	     68	     44	lib_a-wf_sqrt.o (ex /home/tuya/Documents/tuya/Projects/T5_TuyaOS-3.13.8/software/TuyaOS/vendor/T5/toolchain/gcc-arm-none-eabi-10.3-2021.10/bin/../lib/gcc/arm-none-eabi/10.3.1/../../../../arm-none-eabi/lib/thumb/v8-m.main+fp/hard/libm.a)
@@ -1002,6 +1008,7 @@
    2892	      0	   2892	   2892	      0	      0	      0	   2892	    b4c	lib_a-e_pow.o (ex /home/tuya/Documents/tuya/Projects/T5_TuyaOS-3.13.8/software/TuyaOS/vendor/T5/toolchain/gcc-arm-none-eabi-10.3-2021.10/bin/../lib/gcc/arm-none-eabi/10.3.1/../../../../arm-none-eabi/lib/thumb/v8-m.main+fp/hard/libm.a)
    1492	      0	   1492	   1100	    392	      0	      0	   1492	    5d4	lib_a-e_rem_pio2.o (ex /home/tuya/Documents/tuya/Projects/T5_TuyaOS-3.13.8/software/TuyaOS/vendor/T5/toolchain/gcc-arm-none-eabi-10.3-2021.10/bin/../lib/gcc/arm-none-eabi/10.3.1/../../../../arm-none-eabi/lib/thumb/v8-m.main+fp/hard/libm.a)
     388	      0	    388	    388	      0	      0	      0	    388	    184	lib_a-e_sqrt.o (ex /home/tuya/Documents/tuya/Projects/T5_TuyaOS-3.13.8/software/TuyaOS/vendor/T5/toolchain/gcc-arm-none-eabi-10.3-2021.10/bin/../lib/gcc/arm-none-eabi/10.3.1/../../../../arm-none-eabi/lib/thumb/v8-m.main+fp/hard/libm.a)
+    368	      0	    368	    344	     24	      0	      0	    368	    170	lib_a-ef_atan2.o (ex /home/tuya/Documents/tuya/Projects/T5_TuyaOS-3.13.8/software/TuyaOS/vendor/T5/toolchain/gcc-arm-none-eabi-10.3-2021.10/bin/../lib/gcc/arm-none-eabi/10.3.1/../../../../arm-none-eabi/lib/thumb/v8-m.main+fp/hard/libm.a)
     512	      0	    512	    512	      0	      0	      0	    512	    200	lib_a-ef_log.o (ex /home/tuya/Documents/tuya/Projects/T5_TuyaOS-3.13.8/software/TuyaOS/vendor/T5/toolchain/gcc-arm-none-eabi-10.3-2021.10/bin/../lib/gcc/arm-none-eabi/10.3.1/../../../../arm-none-eabi/lib/thumb/v8-m.main+fp/hard/libm.a)
     192	      0	    192	    192	      0	      0	      0	    192	     c0	lib_a-ef_log10.o (ex /home/tuya/Documents/tuya/Projects/T5_TuyaOS-3.13.8/software/TuyaOS/vendor/T5/toolchain/gcc-arm-none-eabi-10.3-2021.10/bin/../lib/gcc/arm-none-eabi/10.3.1/../../../../arm-none-eabi/lib/thumb/v8-m.main+fp/hard/libm.a)
    1556	      0	   1556	   1556	      0	      0	      0	   1556	    614	lib_a-ef_pow.o (ex /home/tuya/Documents/tuya/Projects/T5_TuyaOS-3.13.8/software/TuyaOS/vendor/T5/toolchain/gcc-arm-none-eabi-10.3-2021.10/bin/../lib/gcc/arm-none-eabi/10.3.1/../../../../arm-none-eabi/lib/thumb/v8-m.main+fp/hard/libm.a)
@@ -1018,12 +1025,13 @@
      28	      0	     28	     28	      0	      0	      0	     28	     1c	lib_a-s_finite.o (ex /home/tuya/Documents/tuya/Projects/T5_TuyaOS-3.13.8/software/TuyaOS/vendor/T5/toolchain/gcc-arm-none-eabi-10.3-2021.10/bin/../lib/gcc/arm-none-eabi/10.3.1/../../../../arm-none-eabi/lib/thumb/v8-m.main+fp/hard/libm.a)
      16	      0	     16	     16	      0	      0	      0	     16	     10	lib_a-s_nan.o (ex /home/tuya/Documents/tuya/Projects/T5_TuyaOS-3.13.8/software/TuyaOS/vendor/T5/toolchain/gcc-arm-none-eabi-10.3-2021.10/bin/../lib/gcc/arm-none-eabi/10.3.1/../../../../arm-none-eabi/lib/thumb/v8-m.main+fp/hard/libm.a)
     296	      0	    296	    296	      0	      0	      0	    296	    128	lib_a-s_scalbn.o (ex /home/tuya/Documents/tuya/Projects/T5_TuyaOS-3.13.8/software/TuyaOS/vendor/T5/toolchain/gcc-arm-none-eabi-10.3-2021.10/bin/../lib/gcc/arm-none-eabi/10.3.1/../../../../arm-none-eabi/lib/thumb/v8-m.main+fp/hard/libm.a)
+    464	      0	    464	    432	     32	      0	      0	    464	    1d0	lib_a-sf_atan.o (ex /home/tuya/Documents/tuya/Projects/T5_TuyaOS-3.13.8/software/TuyaOS/vendor/T5/toolchain/gcc-arm-none-eabi-10.3-2021.10/bin/../lib/gcc/arm-none-eabi/10.3.1/../../../../arm-none-eabi/lib/thumb/v8-m.main+fp/hard/libm.a)
      16	      0	     16	     16	      0	      0	      0	     16	     10	lib_a-sf_fabs.o (ex /home/tuya/Documents/tuya/Projects/T5_TuyaOS-3.13.8/software/TuyaOS/vendor/T5/toolchain/gcc-arm-none-eabi-10.3-2021.10/bin/../lib/gcc/arm-none-eabi/10.3.1/../../../../arm-none-eabi/lib/thumb/v8-m.main+fp/hard/libm.a)
      28	      0	     28	     28	      0	      0	      0	     28	     1c	lib_a-sf_finite.o (ex /home/tuya/Documents/tuya/Projects/T5_TuyaOS-3.13.8/software/TuyaOS/vendor/T5/toolchain/gcc-arm-none-eabi-10.3-2021.10/bin/../lib/gcc/arm-none-eabi/10.3.1/../../../../arm-none-eabi/lib/thumb/v8-m.main+fp/hard/libm.a)
       8	      0	      8	      8	      0	      0	      0	      8	      8	lib_a-sf_floor.o (ex /home/tuya/Documents/tuya/Projects/T5_TuyaOS-3.13.8/software/TuyaOS/vendor/T5/toolchain/gcc-arm-none-eabi-10.3-2021.10/bin/../lib/gcc/arm-none-eabi/10.3.1/../../../../arm-none-eabi/lib/thumb/v8-m.main+fp/hard/libm.a)
      12	      0	     12	     12	      0	      0	      0	     12	      c	lib_a-sf_nan.o (ex /home/tuya/Documents/tuya/Projects/T5_TuyaOS-3.13.8/software/TuyaOS/vendor/T5/toolchain/gcc-arm-none-eabi-10.3-2021.10/bin/../lib/gcc/arm-none-eabi/10.3.1/../../../../arm-none-eabi/lib/thumb/v8-m.main+fp/hard/libm.a)
     224	      0	    224	    224	      0	      0	      0	    224	     e0	lib_a-sf_scalbn.o (ex /home/tuya/Documents/tuya/Projects/T5_TuyaOS-3.13.8/software/TuyaOS/vendor/T5/toolchain/gcc-arm-none-eabi-10.3-2021.10/bin/../lib/gcc/arm-none-eabi/10.3.1/../../../../arm-none-eabi/lib/thumb/v8-m.main+fp/hard/libm.a)
-  18590	      0	  18590	  17092	   1498	      0	      0	  18590	   489e	/home/tuya/Documents/tuya/Projects/T5_TuyaOS-3.13.8/software/TuyaOS/vendor/T5/toolchain/gcc-arm-none-eabi-10.3-2021.10/bin/../lib/gcc/arm-none-eabi/10.3.1/../../../../arm-none-eabi/lib/thumb/v8-m.main+fp/hard/libm.a
+  19426	      0	  19426	  17872	   1554	      0	      0	  19426	   4be2	/home/tuya/Documents/tuya/Projects/T5_TuyaOS-3.13.8/software/TuyaOS/vendor/T5/toolchain/gcc-arm-none-eabi-10.3-2021.10/bin/../lib/gcc/arm-none-eabi/10.3.1/../../../../arm-none-eabi/lib/thumb/v8-m.main+fp/hard/libm.a
 
   flash	    ram	   text	   code	 rodata	   data	    bss	    dec	    hex	filename
      16	      0	     16	     16	      0	      0	      0	     16	     10	close.o (ex /home/tuya/Documents/tuya/Projects/T5_TuyaOS-3.13.8/software/TuyaOS/vendor/T5/toolchain/gcc-arm-none-eabi-10.3-2021.10/bin/../lib/gcc/arm-none-eabi/10.3.1/../../../../arm-none-eabi/lib/thumb/v8-m.main+fp/hard/libnosys.a)

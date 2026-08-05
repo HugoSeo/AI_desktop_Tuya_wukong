@@ -96,6 +96,7 @@
 
 #include "hugo_ai_desktop.h"
 #include "hugo_ai_face.h"
+#include "hugo_ai_position_sensor.h"
 #include "tal_queue.h"
 /* ---------------------------------------------------------------------------
  * Macro definitions
@@ -108,7 +109,8 @@
  */
 
 //  #define PID            "gcwfmdfkv6824tuh"   // T5AI_BOARD_DESKTOP
- #define PID            "owmlbbc3auumktx5"        /*小康机器人*/
+//  #define PID            "owmlbbc3auumktx5"        /*小康机器人*/
+#define PID            "gk4wxa53gapeangs"        /*小康机器人*/
 
 /* ---------------------------------------------------------------------------
  * Forward declarations
@@ -121,7 +123,7 @@ extern void tuya_ble_enable_debug(bool enable);
 
 /** Handle of the application main thread (tuya_app_thread). Cleared when thread exits. */
 STATIC THREAD_HANDLE ty_app_thread = NULL;
-STATIC THREAD_HANDLE hugo_self_ai_seg_thread = NULL;
+STATIC THREAD_HANDLE hugo_self_ai_position_thread = NULL;
 /* ---------------------------------------------------------------------------
  * QR code helpers (cellular / QR code active only)
  * --------------------------------------------------------------------------- */
@@ -546,17 +548,29 @@ OPERATE_RET __soc_device_init(VOID_T)
 #endif
 }
 
+/// @brief 
+/// @param arg 
+/// @return 
+// STATIC VOID_T hugo_ai_seg_thread(VOID_T *arg)
+// {
+//     // (void)arg;
 
-STATIC VOID_T hugo_ai_seg_thread(VOID_T *arg)
+//     hugo_ai_seg_process();
+
+//     // tal_thread_delete(hugo_self_ai_seg_thread);
+//     // hugo_self_ai_seg_thread = NULL;
+// }
+
+
+STATIC VOID_T hugo_ai_position_thread(VOID_T *arg)
 {
-    // (void)arg;
+    (void)arg;
 
-    hugo_ai_seg_process();
+    hugo_ai_position_process();
 
-    // tal_thread_delete(hugo_self_ai_seg_thread);
-    // hugo_self_ai_seg_thread = NULL;
+    tal_thread_delete(hugo_self_ai_position_thread);
+    hugo_self_ai_position_thread = NULL;
 }
-
 
 /**
  * @brief First-stage main logic: init netconfig, optional cellular boot, Tuya IoT params/DB,
@@ -616,10 +630,10 @@ STATIC VOID_T user_main(VOID_T)
     TAL_PR_DEBUG("device_init in");
     TUYA_CALL_ERR_LOG(__soc_device_init());
 
-    seg_init();
-    TIMER_ID hugo_ai_seg_timer = NULL;
-    tal_sw_timer_create(hugo_ai_seg_thread, NULL, &hugo_ai_seg_timer);
-    tal_sw_timer_start(hugo_ai_seg_timer, 1, TAL_TIMER_CYCLE);
+    // seg_init();
+    // TIMER_ID hugo_ai_seg_timer = NULL;
+    // tal_sw_timer_create(hugo_ai_seg_thread, NULL, &hugo_ai_seg_timer);
+    // tal_sw_timer_start(hugo_ai_seg_timer, 3, TAL_TIMER_CYCLE);
 
     //Add by Hugo 26.6.11
     TAL_PR_DEBUG("Hugo desktop init");
@@ -676,8 +690,8 @@ VOID_T tuya_app_main(VOID)
     THREAD_CFG_T thrd_param = {4096, THREAD_PRIO_2, "tuya_app_main"};
     tal_thread_create_and_start(&ty_app_thread, NULL, NULL, tuya_app_thread, NULL, &thrd_param);
 
-    // THREAD_CFG_T thrd_param1 = {1024, THREAD_PRIO_1, "hugo_ai_seg"};
-    // tal_thread_create_and_start(&hugo_self_ai_seg_thread, NULL, NULL, hugo_ai_seg_thread, NULL, &thrd_param1);
+    THREAD_CFG_T thrd_param1 = {2048, THREAD_PRIO_4, "hugo_ai_position__thread"};
+    tal_thread_create_and_start(&hugo_self_ai_position_thread, NULL, NULL, hugo_ai_position_thread, NULL, &thrd_param1);
 
     // seg_init();
     // TIMER_ID hugo_ai_seg_timer = NULL;

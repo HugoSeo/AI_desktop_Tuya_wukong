@@ -21,6 +21,7 @@ STATIC BOOL_T __s_chat_break = FALSE;
 STATIC UINT8_T get_offon_state = 0;
 QUEUE_HANDLE  s_queue_voice_cmd;
 QUEUE_HANDLE  s_queue_state;
+QUEUE_HANDLE  s_queue_name_str;
 OPERATE_RET __wukong_ai_skill_process(AI_TEXT_TYPE_E type, ty_cJSON *root, BOOL_T eof)
 {
     OPERATE_RET rt = OPRT_OK;
@@ -94,6 +95,9 @@ OPERATE_RET __wukong_ai_asr_process(AI_TEXT_TYPE_E type, ty_cJSON *root, BOOL_T 
     CHAR_T *content =  ty_cJSON_GetStringValue(root);
     TAL_PR_NOTICE("wukong text -> ASR result: %s", content);
     STATIC UINT8_T cmd_data[4] = {0};
+    STATIC UINT8_T name_str[31] = {0};
+    char* start_cnt = NULL;
+    char* end_cnt = NULL;
 
     if(strstr((const char*)content,"开灯")!=NULL)
     {
@@ -138,23 +142,63 @@ OPERATE_RET __wukong_ai_asr_process(AI_TEXT_TYPE_E type, ty_cJSON *root, BOOL_T 
         cmd_data[1] = 2;
         tal_queue_post(s_queue_voice_cmd, &cmd_data, 0);
     }
-    else
+    else if((strstr((const char*)content,"我是")!=NULL)||(strstr((const char*)content,"我叫")!=NULL))
     {
-    //     cmd_data[0] = 0xFF;
-    //     tal_queue_post(s_queue_voice_cmd, &cmd_data, 0);
-        if (tal_queue_fetch(s_queue_state, &get_offon_state, 1000) == OPRT_OK)
+        cmd_data[0] = 5;
+        cmd_data[1] = 1;
+        tal_queue_post(s_queue_voice_cmd, &cmd_data, 0);
+        // strncpy((const char*)content,"",);
+        // TAL_PR_NOTICE("len=%d [%d %d]  data=%.2X %.2X %.2X   %.2X %.2X %.2X  %.2X %.2X %.2X",strlen((const char*)"。"),strlen((const char*)"，"),strlen((const char*)content),content[0],content[1],content[2],content[3],content[4],content[5],content[6],content[7],content[8]);
+
+        //  使用UTF-8，每个汉字3个字节
+        // name_str        
+        memset(name_str,0x00,31);
+
+        start_cnt = strstr((const char*)content,"我是");
+        if (start_cnt == NULL)
         {
-            TAL_PR_NOTICE("------------------get_offon_state=%d------------------",get_offon_state);
+            start_cnt = strstr((const char*)content,"我叫");
+        }        
+        if(start_cnt != NULL)
+        {
+            end_cnt = strstr((const char*)content,"，");
+            if (end_cnt == NULL)
+            {
+                end_cnt = strstr((const char*)content,"。");
+            }
+            if (end_cnt == NULL)
+            {
+                end_cnt = strlen((const char*)content);
+            }
+            start_cnt += 6;
+            if((end_cnt > start_cnt)&&(end_cnt-start_cnt <= 30))
+            {
+                strncpy(name_str,start_cnt,end_cnt-start_cnt);
+                TAL_PR_NOTICE("cnt=[%d, %d]  str=%s",start_cnt,end_cnt ,(const char*)name_str);
+                tal_queue_post(s_queue_name_str, &name_str, 0);
+            }
         }
+        
+        
+        
     }
+    // else
+    // {
+    // //     cmd_data[0] = 0xFF;
+    // //     tal_queue_post(s_queue_voice_cmd, &cmd_data, 0);
+    //     if (tal_queue_fetch(s_queue_state, &get_offon_state, 100) == OPRT_OK)
+    //     {
+    //         TAL_PR_NOTICE("------------------get_offon_state=%d------------------",get_offon_state);
+    //     }
+    // }
     
-    if(get_offon_state == 2)
-    {
-        // tuya_ai_input_start(TRUE);
-        // TUYA_CALL_ERR_LOG(wukong_ai_agent_send_text(""));
-        // tuya_ai_input_stop();
-        return OPRT_OK;
-    }
+    // if(get_offon_state == 2)
+    // {
+    //     // tuya_ai_input_start(TRUE);
+    //     // TUYA_CALL_ERR_LOG(wukong_ai_agent_send_text(""));
+    //     // tuya_ai_input_stop();
+    //     return OPRT_OK;
+    // }
 
     
     // send data to register cb

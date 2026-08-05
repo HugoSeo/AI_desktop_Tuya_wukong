@@ -33,17 +33,22 @@
 #include "skill_cloudevent.h"
 #include "wukong_audio_player.h"
 #include "hugo_ai_desktop.h"
-
+#include "hugo_ai_face.h"
 
 // #include "wukong_ai_skills.h"
 /***********************************************************
 *************************micro define***********************
 ***********************************************************/
-#define ADC_NUM       TUYA_ADC_NUM_0
-#define ADC_CHANNEL   14
+// #define ADC_NUM       TUYA_ADC_NUM_0
+// #define ADC_CHANNEL   14
+#define ADC_NUM                 TUYA_ADC_NUM_0
+#define ADC_CHANNEL_A           1
+#define ADC_CHANNEL_B           4
+#define ADC_CHANNEL_C           6
+#define ADC_CHANNEL_D           14
 
 #define LED_CTRL_PIN            TUYA_GPIO_NUM_50
-#define TOUCH_KEY_PIN           TUYA_GPIO_NUM_13
+#define TOUCH_KEY_PIN           TUYA_GPIO_NUM_14
 
 // SEG define
 #define SEG_A_PIN               TUYA_GPIO_NUM_42
@@ -60,9 +65,16 @@
 #define SEG_3_PIN               TUYA_GPIO_NUM_23
 #define SEG_4_PIN               TUYA_GPIO_NUM_7
 
-//uart define
+// uart define
 #define Maxdatalen 300
 
+// Moto define
+#define MOTO_A_PIN              TUYA_GPIO_NUM_46    //black wire
+#define MOTO_B_PIN              TUYA_GPIO_NUM_45    //yellow wire
+// #define MOTO_C_PIN              TUYA_GPIO_NUM_49    //brown wire
+// #define MOTO_D_PIN              TUYA_GPIO_NUM_47    //blue wire
+#define MOTO_NSLEEP_PIN          TUYA_GPIO_NUM_17    //nSleep wire
+#define MOTO_NFAULT_PIN              TUYA_GPIO_NUM_17    //nSleep wire
 
 STATIC UINT8_T uart_rxbuff[Maxdatalen] = {0x00};
 STATIC UINT8_T uart_txbuff[Maxdatalen] = {0x00};
@@ -76,7 +88,7 @@ STATIC UINT8_T flag_turn_off_on_cmd = 0;
 STATIC UINT8_T flag_shut_voice = 0;
 STATIC UINT8_T flag_turn_off_on_state = 0;
 STATIC UINT8_T getdata[4]={0};
-
+STATIC UINT8_T getnamestr[31]={0};
 
 STATIC UINT8_T segdata[4]={16,16,16,16};
 STATIC UINT8_T segdp_flg = 0;
@@ -109,17 +121,18 @@ CONST UINT8_T seg_code[] = {0x3F,0x06,0x5B,0x4F,0x66,0x6D,0x7D,0x07,0x7F,0x6F,0x
 /***********************************************************
 ***********************variable define**********************
 ***********************************************************/
-STATIC TUYA_ADC_BASE_CFG_T sg_adc_cfg = {
-    .ch_list.data = 1<<ADC_CHANNEL,
-    .ch_nums = 1,    //adc Number of channel lists
-    .width = 12,
-    .mode = TUYA_ADC_CONTINUOUS,
-    .type = TUYA_ADC_INNER_SAMPLE_VOL,
-    .conv_cnt = 1,
-};
+// STATIC TUYA_ADC_BASE_CFG_T sg_adc_cfg = {
+//     .ch_list.data = 1<<ADC_CHANNEL,
+//     .ch_nums = 1,    //adc Number of channel lists
+//     .width = 12,
+//     .mode = TUYA_ADC_CONTINUOUS,
+//     .type = TUYA_ADC_INNER_SAMPLE_VOL,
+//     .conv_cnt = 1,
+// };
 
 extern QUEUE_HANDLE  s_queue_voice_cmd;
 extern QUEUE_HANDLE  s_queue_state;
+extern QUEUE_HANDLE  s_queue_name_str;
 
 /***********************************************************
 ***********************function define**********************
@@ -564,226 +577,305 @@ STATIC UINT8_T get_touchkey(VOID_T)
 
 
 
-// STATIC 
-VOID_T seg_init(VOID_T)
+// // STATIC 
+// VOID_T seg_init(VOID_T)
+// {
+//     OPERATE_RET rt = OPRT_OK;
+//     /*GPIO output init*/
+//     TUYA_GPIO_BASE_CFG_T out_pin_cfg = {
+//         .mode = TUYA_GPIO_PULLUP,
+//         .direct = TUYA_GPIO_OUTPUT,
+//         .level = TUYA_GPIO_LEVEL_LOW
+//     };
+//     TUYA_CALL_ERR_LOG(tkl_gpio_init(SEG_A_PIN, &out_pin_cfg));
+//     TUYA_CALL_ERR_LOG(tkl_gpio_init(SEG_B_PIN, &out_pin_cfg));
+//     TUYA_CALL_ERR_LOG(tkl_gpio_init(SEG_C_PIN, &out_pin_cfg));
+//     TUYA_CALL_ERR_LOG(tkl_gpio_init(SEG_D_PIN, &out_pin_cfg));
+//     TUYA_CALL_ERR_LOG(tkl_gpio_init(SEG_E_PIN, &out_pin_cfg));
+//     TUYA_CALL_ERR_LOG(tkl_gpio_init(SEG_F_PIN, &out_pin_cfg));
+//     TUYA_CALL_ERR_LOG(tkl_gpio_init(SEG_G_PIN, &out_pin_cfg));
+//     TUYA_CALL_ERR_LOG(tkl_gpio_init(SEG_DP_PIN, &out_pin_cfg));
+//     TUYA_CALL_ERR_LOG(tkl_gpio_init(SEG_1_PIN, &out_pin_cfg));
+//     TUYA_CALL_ERR_LOG(tkl_gpio_init(SEG_2_PIN, &out_pin_cfg));
+//     TUYA_CALL_ERR_LOG(tkl_gpio_init(SEG_3_PIN, &out_pin_cfg));
+//     TUYA_CALL_ERR_LOG(tkl_gpio_init(SEG_4_PIN, &out_pin_cfg));
+// }
+
+// STATIC VOID_T seg_alloff(VOID_T)
+// {
+//     tkl_gpio_write(SEG_1_PIN, TUYA_GPIO_LEVEL_LOW);
+//     tkl_gpio_write(SEG_2_PIN, TUYA_GPIO_LEVEL_LOW);
+//     tkl_gpio_write(SEG_3_PIN, TUYA_GPIO_LEVEL_LOW);
+//     tkl_gpio_write(SEG_4_PIN, TUYA_GPIO_LEVEL_LOW);
+
+//     // tkl_gpio_write(SEG_A_PIN, TUYA_GPIO_LEVEL_LOW);
+//     // tkl_gpio_write(SEG_B_PIN, TUYA_GPIO_LEVEL_LOW);
+//     // tkl_gpio_write(SEG_C_PIN, TUYA_GPIO_LEVEL_LOW);
+//     // tkl_gpio_write(SEG_D_PIN, TUYA_GPIO_LEVEL_LOW);
+
+//     // tkl_gpio_write(SEG_E_PIN, TUYA_GPIO_LEVEL_LOW);
+//     // tkl_gpio_write(SEG_F_PIN, TUYA_GPIO_LEVEL_LOW);
+//     // tkl_gpio_write(SEG_G_PIN, TUYA_GPIO_LEVEL_LOW);
+//     // tkl_gpio_write(SEG_DP_PIN, TUYA_GPIO_LEVEL_LOW);
+
+// }
+// STATIC VOID_T seg_task(VOID_T)
+// {
+//     STATIC UINT8_T seg_cnt = 0;
+//     STATIC UINT8_T seg_dis = 0;
+//     STATIC UINT32_T seg_halfsec_cnt = 0;
+
+//     if(time_valid_flag == 0)
+//     {
+//         return;
+//     }
+
+//     seg_alloff();
+//     if (seg_cnt < 4)
+//     {
+//         seg_dis = seg_code[segdata[seg_cnt]];
+
+//         if (seg_dis&0x01)
+//         {
+//             tkl_gpio_write(SEG_A_PIN, TUYA_GPIO_LEVEL_HIGH);
+//         }
+//         else
+//         {
+//             tkl_gpio_write(SEG_A_PIN, TUYA_GPIO_LEVEL_LOW);
+//         }
+//         if (seg_dis&0x02)
+//         {
+//             tkl_gpio_write(SEG_B_PIN, TUYA_GPIO_LEVEL_HIGH);
+//         }
+//         else
+//         {
+//             tkl_gpio_write(SEG_B_PIN, TUYA_GPIO_LEVEL_LOW);
+//         }
+//         if (seg_dis&0x04)
+//         {
+//             tkl_gpio_write(SEG_C_PIN, TUYA_GPIO_LEVEL_HIGH);
+//         }
+//         else
+//         {
+//             tkl_gpio_write(SEG_C_PIN, TUYA_GPIO_LEVEL_LOW);
+//         }
+//         if (seg_dis&0x08)
+//         {
+//             tkl_gpio_write(SEG_D_PIN, TUYA_GPIO_LEVEL_HIGH);
+//         }
+//         else
+//         {
+//             tkl_gpio_write(SEG_D_PIN, TUYA_GPIO_LEVEL_LOW);
+//         }
+//         if (seg_dis&0x10)
+//         {
+//             tkl_gpio_write(SEG_E_PIN, TUYA_GPIO_LEVEL_HIGH);
+//         }
+//         else
+//         {
+//             tkl_gpio_write(SEG_E_PIN, TUYA_GPIO_LEVEL_LOW);
+//         }
+//         if (seg_dis&0x20)
+//         {
+//             tkl_gpio_write(SEG_F_PIN, TUYA_GPIO_LEVEL_HIGH);
+//         }
+//         else
+//         {
+//             tkl_gpio_write(SEG_F_PIN, TUYA_GPIO_LEVEL_LOW);
+//         }
+//         if (seg_dis&0x40)
+//         {
+//             tkl_gpio_write(SEG_G_PIN, TUYA_GPIO_LEVEL_HIGH);
+//         }
+//         else
+//         {
+//             tkl_gpio_write(SEG_G_PIN, TUYA_GPIO_LEVEL_LOW);
+//         }
+        
+
+//         if(segdp_flg == 0)
+//         {
+//             tkl_gpio_write(SEG_DP_PIN, TUYA_GPIO_LEVEL_HIGH);
+//         }
+//         else
+//         {
+//             tkl_gpio_write(SEG_DP_PIN, TUYA_GPIO_LEVEL_LOW);
+//         }
+
+//         switch (seg_cnt)
+//         {
+//         case 0:
+//             tkl_gpio_write(SEG_4_PIN, TUYA_GPIO_LEVEL_HIGH);            
+//             break;
+//         case 1:
+//             tkl_gpio_write(SEG_3_PIN, TUYA_GPIO_LEVEL_HIGH);
+//             break;            
+//         case 2:
+//             tkl_gpio_write(SEG_2_PIN, TUYA_GPIO_LEVEL_HIGH);
+//             break;
+//         case 3:
+//             tkl_gpio_write(SEG_1_PIN, TUYA_GPIO_LEVEL_HIGH);
+//             break;
+//         default:
+//             break;
+//         }
+//     }
+
+//     seg_cnt++;
+//     if(seg_cnt >= 4)
+//         seg_cnt = 0;
+
+//     seg_halfsec_cnt++;
+//     if (seg_halfsec_cnt >= 500)
+//     {
+//         seg_halfsec_cnt = 0;
+//         segdp_flg = ~segdp_flg;
+//     }
+    
+
+//     // tkl_gpio_write(SEG_A_PIN, TUYA_GPIO_LEVEL_HIGH);
+//     // tkl_gpio_write(SEG_B_PIN, TUYA_GPIO_LEVEL_HIGH);
+//     // tkl_gpio_write(SEG_C_PIN, TUYA_GPIO_LEVEL_HIGH);
+//     // tkl_gpio_write(SEG_D_PIN, TUYA_GPIO_LEVEL_HIGH);
+//     // tkl_gpio_write(SEG_E_PIN, TUYA_GPIO_LEVEL_HIGH);
+//     // tkl_gpio_write(SEG_F_PIN, TUYA_GPIO_LEVEL_HIGH);
+//     // tkl_gpio_write(SEG_G_PIN, TUYA_GPIO_LEVEL_HIGH);
+//     // tkl_gpio_write(SEG_DP_PIN, TUYA_GPIO_LEVEL_HIGH);
+
+//     // tkl_gpio_write(SEG_1_PIN, TUYA_GPIO_LEVEL_HIGH);
+//     // tkl_gpio_write(SEG_2_PIN, TUYA_GPIO_LEVEL_HIGH);
+//     // tkl_gpio_write(SEG_3_PIN, TUYA_GPIO_LEVEL_HIGH);
+//     // tkl_gpio_write(SEG_4_PIN, TUYA_GPIO_LEVEL_HIGH);
+
+// }
+
+// VOID_T hugo_ai_seg_process(VOID_T)
+// {
+//     // seg_init();
+//     // while(1)
+//     // {
+//         seg_task();
+//     //     tal_system_sleep(3);
+//     // }
+
+// }
+
+// STATIC VOID_T hugo_ai_seg_reflash_time(VOID_T)
+// {
+//     POSIX_TM_S tm = {0};
+//     STATIC INT_T s_last_min  = -1;
+
+//     if (tal_time_check_time_sync() != OPRT_OK ||
+//     tal_time_check_time_zone_sync() != OPRT_OK) 
+//     {
+//         return;
+//     }
+//     if (tal_time_get_local_time_custom(0, &tm) != OPRT_OK) 
+//     {
+//         return;
+//     }
+//     if (tm.tm_min== s_last_min)
+//     {
+//         return;
+//     }
+
+//     time_valid_flag = 1;
+//     segdata[0] = tm.tm_hour/10;
+//     // if (segdata[0] == 0)
+//     // {
+//     //     segdata[0] = 16;
+//     // }
+//     segdata[1] = tm.tm_hour%10;
+//     segdata[2] = tm.tm_min/10;
+//     segdata[3] = tm.tm_min%10;
+// }
+
+// moto control
+STATIC VOID hugo_ai_moto_init(VOID)
 {
+    
     OPERATE_RET rt = OPRT_OK;
     /*GPIO output init*/
     TUYA_GPIO_BASE_CFG_T out_pin_cfg = {
-        .mode = TUYA_GPIO_PULLUP,
+        .mode = TUYA_GPIO_PUSH_PULL,
         .direct = TUYA_GPIO_OUTPUT,
         .level = TUYA_GPIO_LEVEL_LOW
     };
-    TUYA_CALL_ERR_LOG(tkl_gpio_init(SEG_A_PIN, &out_pin_cfg));
-    TUYA_CALL_ERR_LOG(tkl_gpio_init(SEG_B_PIN, &out_pin_cfg));
-    TUYA_CALL_ERR_LOG(tkl_gpio_init(SEG_C_PIN, &out_pin_cfg));
-    TUYA_CALL_ERR_LOG(tkl_gpio_init(SEG_D_PIN, &out_pin_cfg));
-    TUYA_CALL_ERR_LOG(tkl_gpio_init(SEG_E_PIN, &out_pin_cfg));
-    TUYA_CALL_ERR_LOG(tkl_gpio_init(SEG_F_PIN, &out_pin_cfg));
-    TUYA_CALL_ERR_LOG(tkl_gpio_init(SEG_G_PIN, &out_pin_cfg));
-    TUYA_CALL_ERR_LOG(tkl_gpio_init(SEG_DP_PIN, &out_pin_cfg));
-    TUYA_CALL_ERR_LOG(tkl_gpio_init(SEG_1_PIN, &out_pin_cfg));
-    TUYA_CALL_ERR_LOG(tkl_gpio_init(SEG_2_PIN, &out_pin_cfg));
-    TUYA_CALL_ERR_LOG(tkl_gpio_init(SEG_3_PIN, &out_pin_cfg));
-    TUYA_CALL_ERR_LOG(tkl_gpio_init(SEG_4_PIN, &out_pin_cfg));
+    TUYA_CALL_ERR_LOG(tkl_gpio_init(MOTO_A_PIN, &out_pin_cfg));
+    TUYA_CALL_ERR_LOG(tkl_gpio_init(MOTO_B_PIN, &out_pin_cfg));
+    // TUYA_CALL_ERR_LOG(tkl_gpio_init(MOTO_C_PIN, &out_pin_cfg));
+    // TUYA_CALL_ERR_LOG(tkl_gpio_init(MOTO_D_PIN, &out_pin_cfg));
+    TUYA_CALL_ERR_LOG(tkl_gpio_init(MOTO_NSLEEP_PIN, &out_pin_cfg));
 }
-
-STATIC VOID_T seg_alloff(VOID_T)
+STATIC VOID hugo_ai_moto_up(VOID)
 {
-    tkl_gpio_write(SEG_1_PIN, TUYA_GPIO_LEVEL_LOW);
-    tkl_gpio_write(SEG_2_PIN, TUYA_GPIO_LEVEL_LOW);
-    tkl_gpio_write(SEG_3_PIN, TUYA_GPIO_LEVEL_LOW);
-    tkl_gpio_write(SEG_4_PIN, TUYA_GPIO_LEVEL_LOW);
-
-    // tkl_gpio_write(SEG_A_PIN, TUYA_GPIO_LEVEL_LOW);
-    // tkl_gpio_write(SEG_B_PIN, TUYA_GPIO_LEVEL_LOW);
-    // tkl_gpio_write(SEG_C_PIN, TUYA_GPIO_LEVEL_LOW);
-    // tkl_gpio_write(SEG_D_PIN, TUYA_GPIO_LEVEL_LOW);
-
-    // tkl_gpio_write(SEG_E_PIN, TUYA_GPIO_LEVEL_LOW);
-    // tkl_gpio_write(SEG_F_PIN, TUYA_GPIO_LEVEL_LOW);
-    // tkl_gpio_write(SEG_G_PIN, TUYA_GPIO_LEVEL_LOW);
-    // tkl_gpio_write(SEG_DP_PIN, TUYA_GPIO_LEVEL_LOW);
-
+    tkl_gpio_write(MOTO_NSLEEP_PIN, TUYA_GPIO_LEVEL_HIGH);
+    tkl_gpio_write(MOTO_A_PIN, TUYA_GPIO_LEVEL_HIGH);
+    tkl_gpio_write(MOTO_B_PIN, TUYA_GPIO_LEVEL_LOW);
 }
-STATIC VOID_T seg_task(VOID_T)
+STATIC VOID hugo_ai_moto_down(VOID)
 {
-    STATIC UINT8_T seg_cnt = 0;
-    STATIC UINT8_T seg_dis = 0;
-    STATIC UINT32_T seg_halfsec_cnt = 0;
-
-    if(time_valid_flag == 0)
-    {
-        return;
-    }
-
-    seg_alloff();
-    if (seg_cnt < 4)
-    {
-        seg_dis = seg_code[segdata[seg_cnt]];
-
-        if (seg_dis&0x01)
-        {
-            tkl_gpio_write(SEG_A_PIN, TUYA_GPIO_LEVEL_HIGH);
-        }
-        else
-        {
-            tkl_gpio_write(SEG_A_PIN, TUYA_GPIO_LEVEL_LOW);
-        }
-        if (seg_dis&0x02)
-        {
-            tkl_gpio_write(SEG_B_PIN, TUYA_GPIO_LEVEL_HIGH);
-        }
-        else
-        {
-            tkl_gpio_write(SEG_B_PIN, TUYA_GPIO_LEVEL_LOW);
-        }
-        if (seg_dis&0x04)
-        {
-            tkl_gpio_write(SEG_C_PIN, TUYA_GPIO_LEVEL_HIGH);
-        }
-        else
-        {
-            tkl_gpio_write(SEG_C_PIN, TUYA_GPIO_LEVEL_LOW);
-        }
-        if (seg_dis&0x08)
-        {
-            tkl_gpio_write(SEG_D_PIN, TUYA_GPIO_LEVEL_HIGH);
-        }
-        else
-        {
-            tkl_gpio_write(SEG_D_PIN, TUYA_GPIO_LEVEL_LOW);
-        }
-        if (seg_dis&0x10)
-        {
-            tkl_gpio_write(SEG_E_PIN, TUYA_GPIO_LEVEL_HIGH);
-        }
-        else
-        {
-            tkl_gpio_write(SEG_E_PIN, TUYA_GPIO_LEVEL_LOW);
-        }
-        if (seg_dis&0x20)
-        {
-            tkl_gpio_write(SEG_F_PIN, TUYA_GPIO_LEVEL_HIGH);
-        }
-        else
-        {
-            tkl_gpio_write(SEG_F_PIN, TUYA_GPIO_LEVEL_LOW);
-        }
-        if (seg_dis&0x40)
-        {
-            tkl_gpio_write(SEG_G_PIN, TUYA_GPIO_LEVEL_HIGH);
-        }
-        else
-        {
-            tkl_gpio_write(SEG_G_PIN, TUYA_GPIO_LEVEL_LOW);
-        }
-        
-
-        if(segdp_flg == 0)
-        {
-            tkl_gpio_write(SEG_DP_PIN, TUYA_GPIO_LEVEL_HIGH);
-        }
-        else
-        {
-            tkl_gpio_write(SEG_DP_PIN, TUYA_GPIO_LEVEL_LOW);
-        }
-
-        switch (seg_cnt)
-        {
-        case 0:
-            tkl_gpio_write(SEG_4_PIN, TUYA_GPIO_LEVEL_HIGH);            
-            break;
-        case 1:
-            tkl_gpio_write(SEG_3_PIN, TUYA_GPIO_LEVEL_HIGH);
-            break;            
-        case 2:
-            tkl_gpio_write(SEG_2_PIN, TUYA_GPIO_LEVEL_HIGH);
-            break;
-        case 3:
-            tkl_gpio_write(SEG_1_PIN, TUYA_GPIO_LEVEL_HIGH);
-            break;
-        default:
-            break;
-        }
-    }
-
-    seg_cnt++;
-    if(seg_cnt >= 4)
-        seg_cnt = 0;
-
-    seg_halfsec_cnt++;
-    if (seg_halfsec_cnt >= 500)
-    {
-        seg_halfsec_cnt = 0;
-        segdp_flg = ~segdp_flg;
-    }
-    
-
-    // tkl_gpio_write(SEG_A_PIN, TUYA_GPIO_LEVEL_HIGH);
-    // tkl_gpio_write(SEG_B_PIN, TUYA_GPIO_LEVEL_HIGH);
-    // tkl_gpio_write(SEG_C_PIN, TUYA_GPIO_LEVEL_HIGH);
-    // tkl_gpio_write(SEG_D_PIN, TUYA_GPIO_LEVEL_HIGH);
-    // tkl_gpio_write(SEG_E_PIN, TUYA_GPIO_LEVEL_HIGH);
-    // tkl_gpio_write(SEG_F_PIN, TUYA_GPIO_LEVEL_HIGH);
-    // tkl_gpio_write(SEG_G_PIN, TUYA_GPIO_LEVEL_HIGH);
-    // tkl_gpio_write(SEG_DP_PIN, TUYA_GPIO_LEVEL_HIGH);
-
-    // tkl_gpio_write(SEG_1_PIN, TUYA_GPIO_LEVEL_HIGH);
-    // tkl_gpio_write(SEG_2_PIN, TUYA_GPIO_LEVEL_HIGH);
-    // tkl_gpio_write(SEG_3_PIN, TUYA_GPIO_LEVEL_HIGH);
-    // tkl_gpio_write(SEG_4_PIN, TUYA_GPIO_LEVEL_HIGH);
-
+    tkl_gpio_write(MOTO_NSLEEP_PIN, TUYA_GPIO_LEVEL_HIGH);
+    tkl_gpio_write(MOTO_A_PIN, TUYA_GPIO_LEVEL_LOW);
+    tkl_gpio_write(MOTO_B_PIN, TUYA_GPIO_LEVEL_HIGH);
 }
-
-VOID_T hugo_ai_seg_process(VOID_T)
+STATIC VOID hugo_ai_moto_stop(VOID)
 {
-    // seg_init();
-    // while(1)
-    // {
-        seg_task();
-    //     tal_system_sleep(3);
-    // }
-
+    tkl_gpio_write(MOTO_NSLEEP_PIN, TUYA_GPIO_LEVEL_LOW);
+    tkl_gpio_write(MOTO_A_PIN, TUYA_GPIO_LEVEL_LOW);
+    tkl_gpio_write(MOTO_B_PIN, TUYA_GPIO_LEVEL_LOW);
 }
 
-STATIC VOID_T hugo_ai_seg_reflash_time(VOID_T)
-{
-    POSIX_TM_S tm = {0};
-    STATIC INT_T s_last_min  = -1;
-
-    if (tal_time_check_time_sync() != OPRT_OK ||
-    tal_time_check_time_zone_sync() != OPRT_OK) 
-    {
-        return;
-    }
-    if (tal_time_get_local_time_custom(0, &tm) != OPRT_OK) 
-    {
-        return;
-    }
-    if (tm.tm_min== s_last_min)
-    {
-        return;
-    }
-
-    time_valid_flag = 1;
-    segdata[0] = tm.tm_hour/10;
-    // if (segdata[0] == 0)
-    // {
-    //     segdata[0] = 16;
-    // }
-    segdata[1] = tm.tm_hour%10;
-    segdata[2] = tm.tm_min/10;
-    segdata[3] = tm.tm_min%10;
-}
-
-STATIC VOID hugo_ai_moto_init(VOID)
-{
-
-}
 STATIC VOID hugo_ai_moto_task(VOID)
 {
     
+}
+
+// ADC
+// P28      P12     P21     P25
+// ADC4     ADC14   ADC6    ADC1
+STATIC UINT8_T hugo_ai_adc_init(VOID)
+{
+    OPERATE_RET rt = OPRT_OK;
+    STATIC TUYA_ADC_BASE_CFG_T sg_adc_cfg = {
+        .ch_list.data = (1<<ADC_CHANNEL_A) | (1<<ADC_CHANNEL_B) | (1<<ADC_CHANNEL_C) | (1<<ADC_CHANNEL_D),
+        // .ch_list.data = (1<<ADC_CHANNEL_B) ,
+        .ch_nums = 4,    //adc Number of channel lists
+        .width = 12,
+        .mode = TUYA_ADC_CONTINUOUS,
+        .type = TUYA_ADC_INNER_SAMPLE_VOL,
+        .conv_cnt = 1,
+    };
+
+    TUYA_CALL_ERR_GOTO(tkl_adc_init(ADC_NUM, &sg_adc_cfg), __EXIT_ADC);
+    return 1;
+__EXIT_ADC:
+    return 0;
+}
+
+VOID adc_get(VOID)
+{
+    OPERATE_RET rt = OPRT_OK;
+    INT32_T adc_value[4] = {0};
+    UINT8_T i = 0;
+
+    // TUYA_CALL_ERR_LOG(tkl_adc_read_single_channel(ADC_NUM, ADC_CHANNEL, &adc_value));
+    TUYA_CALL_ERR_LOG(tkl_adc_read_data(ADC_NUM,adc_value,4));
+    // TAL_PR_DEBUG("ADC%d value = %d", ADC_NUM, adc_value&0x0FFF);
+    for(i=0;i<4;i++)
+    {        
+        TAL_PR_DEBUG("ADC%d[%d] get Volt = %d", i, adc_value[i], adc_value[i]/2*3300/4096);
+    }
+    // tkl_adc_read_voltage(ADC_NUM, &adc_value, 4);
+    // for(i=0;i<4;i++)
+    //     TAL_PR_DEBUG("ADC ch%d voltage = %d mV", i, adc_value[i]);
+    // TUYA_CALL_ERR_LOG(tkl_adc_deinit(ADC_NUM));
+    return;
+}
+
+STATIC UINT8_T hugo_ai_adc_task(VOID)
+{
+    adc_get();
 }
 
 OPERATE_RET hugo_ai_desktop_init(VOID)
@@ -792,6 +884,8 @@ OPERATE_RET hugo_ai_desktop_init(VOID)
 
     CONST CHAR_T *audio_data = NULL;
     UINT32_T audio_size = 0;
+
+    CHAR_T *text;
 
 //     //ADC
 //     INT32_T adc_value = 0;
@@ -808,15 +902,16 @@ OPERATE_RET hugo_ai_desktop_init(VOID)
 //     return 1;
 
 
-
+    hugo_ai_adc_init();
 
     // uart test
     mcu_uart_init();
 
     //touch key
     touchkey_init();
-    seg_init();
+    // seg_init();
     // app_led_init();
+    Face_Init();
 
     // UINT8_T data[64] = {0x55,0xAA,0x05,0x01,0xAB,0xBC};
     // OPERATE_RET cnt = 0;
@@ -858,6 +953,7 @@ OPERATE_RET hugo_ai_desktop_init(VOID)
     // }
     tal_queue_create_init(&s_queue_voice_cmd, 4*SIZEOF(UINT8_T), 1);
     tal_queue_create_init(&s_queue_state, SIZEOF(UINT8_T), 1);
+    tal_queue_create_init(&s_queue_name_str, 31*SIZEOF(UINT8_T), 1);
     // WUKONG_AI_PLAYTTS_T tts_param = {
     //     .text = "网络开小差了，机器人暂时无法联网，仅支持本地按键操作"
     // };
@@ -866,10 +962,12 @@ OPERATE_RET hugo_ai_desktop_init(VOID)
     { 
         // TUYA_CALL_ERR_LOG(hugo_cmd_getback(buf));
 
-        hugo_ai_seg_reflash_time();
+        // hugo_ai_seg_reflash_time();
         
         mcu_uart_task();
+        // hugo_ai_adc_task();
         
+        hugo_Face_uart_task();
         if(get_touchkey()==1)
         {
             TAL_PR_NOTICE("------------------get touch key------------------");
@@ -951,7 +1049,25 @@ OPERATE_RET hugo_ai_desktop_init(VOID)
                     }                    
                 }
                 break;
+            case 5:
+                if(getdata[1]==1)
+                {
+                    if (tal_queue_fetch(s_queue_name_str, &getnamestr, 1) == OPRT_OK)
+                    {
+                        // TUYA_CALL_ERR_LOG(wukong_ai_agent_send_text("这个是一个认识的人，打一下招呼")); 
 
+                        // face_voice_flag = 2;
+                        if(face_name_store(getnamestr)==TRUE)
+                        {
+
+                        }
+                        else
+                        {
+
+                        }
+                    }
+                }
+                break;
             // case 0xFF:
             default:
                 // if (flag_turn_off_on_state == 2)
@@ -985,6 +1101,22 @@ OPERATE_RET hugo_ai_desktop_init(VOID)
             TUYA_CALL_ERR_LOG(wukong_audio_play_data(AI_AUDIO_CODEC_MP3, audio_data, audio_size));
             flag_turn_off_on_cmd = 3;
         }
+        if(face_voice_flag == 1)
+        {
+            face_voice_flag = 0;
+            tuya_ai_input_start(TRUE);
+            // TUYA_CALL_ERR_LOG(wukong_ai_agent_send_text("这个是一个陌生人，打一下招呼，问一下对方怎么称呼"));
+            TUYA_CALL_ERR_LOG(wukong_ai_agent_send_text("这个是一个陌生人，用下面这个话术进行打招呼，不要加任何其他的词包括“好的”和“正在处理”等词，直接说：“你好呀，我是小康，请问您怎么称呼呀?”。"));
+            tuya_ai_input_stop();            
+        }
+        if(face_voice_flag == 2)
+        {
+            face_voice_flag = 0;
+            tuya_ai_input_start(TRUE);
+            sprintf(text,"这个是一个认识的人，对方是%s，打一下招呼。",getnamestr);
+            TUYA_CALL_ERR_LOG(wukong_ai_agent_send_text(text));
+            tuya_ai_input_stop();            
+        }
         // if(*buf!=0)
         // {
         //     TAL_PR_NOTICE("------------------buf=%d------------------",*buf);
@@ -1010,6 +1142,7 @@ OPERATE_RET hugo_ai_desktop_init(VOID)
     }
     tal_queue_free(s_queue_voice_cmd);
     tal_queue_free(s_queue_state);
+    tal_queue_free(s_queue_name_str);
     return rt;
 
 }

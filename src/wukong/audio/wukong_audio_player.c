@@ -378,14 +378,20 @@ OPERATE_RET wukong_audio_player_alert(TY_AI_TOY_ALERT_TYPE_E type, BOOL_T send_e
         audio_size = sizeof(media_src_connect_error_zh);
         break;
     case AI_TOY_ALERT_TYPE_NETWORK_CONNECTED:
-        audio_data = (CONST CHAR_T*)media_src_connected_zh;
-        audio_size = sizeof(media_src_connected_zh);
+        // audio_data = (CONST CHAR_T*)media_src_connected_zh;
+        // audio_size = sizeof(media_src_connected_zh);
+        tuya_ai_input_start(TRUE);
+        TUYA_CALL_ERR_LOG(wukong_ai_agent_send_text("刚连接上网络，用下面话术进行播报，不要加任何其他的词包括“好的”和“正在处理”等词，直接说：“已联网，开始我们的对话吧。”。"));
+        tuya_ai_input_stop();
         break;
     case AI_TOY_ALERT_TYPE_WAKEUP: 
         if(net_state == WSS_GOT_IP)
         {
-            audio_data = (CONST CHAR_T*)media_src_wozaine_zh;
-            audio_size = sizeof(media_src_wozaine_zh);
+            // audio_data = (CONST CHAR_T*)media_src_wozaine_zh;
+            // audio_size = sizeof(media_src_wozaine_zh);
+            tuya_ai_input_start(TRUE);
+            TUYA_CALL_ERR_LOG(wukong_ai_agent_send_text("用户正在呼唤你，用下面话术进行应答，不要加任何其他的词包括“好的”和“正在处理”等词，直接说：“我在呢。”。"));
+            tuya_ai_input_stop();
             break;
         }        
         audio_data = (CONST CHAR_T*)media_src_connect_error_zh;
