@@ -187,11 +187,15 @@ typedef enum
 
 VOID Face_Init(VOID);
 VOID hugo_Face_uart_task(VOID);
+VOID hugo_ai_face_timer(VOID);
+VOID hugo_ai_face_intimer(VOID);
 
 // VOID face_name_write(BYTE_T face_id, BYTE_T *data);
 // UINT8_T face_name_read(BYTE_T face_id, BYTE_T *data);
 UINT8_T face_name_store(BYTE_T *data);
 UINT8_T face_name_get(BYTE_T *data);
+
+unsigned char GetCRC(const unsigned char *pData, unsigned char len);
 // UINT8_T  Face_RXtime;
 extern UINT8_T face_voice_flag;
 

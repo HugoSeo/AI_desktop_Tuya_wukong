@@ -158,7 +158,7 @@ extern "C" {
 //
 // Device Defaults
 //
-#define TY_SPK_DEFAULT_VOL 100
+#define TY_SPK_DEFAULT_VOL 90
 #define TY_AI_DEFAULT_LANG 1
 // CONFIG_ENABLE_AUDIO_ANALYSIS is not set
 // CONFIG_ENABLE_APP_AI_MONITOR is not set

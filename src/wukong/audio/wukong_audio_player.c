@@ -17,6 +17,7 @@
 #include "tuya_svc_netmgr.h"
 #include "tuya_svc_netmgr_linkage.h"
 #include <stdio.h>
+#include "tal_queue.h"
 STATIC BOOL_T __s_music_continuous = FALSE;
 STATIC BOOL_T __s_music_replay = FALSE;
 STATIC BOOL_T __s_tts_play_flag = FALSE;
@@ -26,6 +27,7 @@ STATIC AI_PLAYER_HANDLE __s_music_player = NULL;
 STATIC AI_PLAYLIST_HANDLE __s_music_playlist = NULL;
 
 STATIC WF_STATION_STAT_E net_state={0};
+QUEUE_HANDLE  s_queue_wake;
 
 STATIC OPERATE_RET __audio_output_open(TKL_AUDIO_SAMPLE_E sample, TKL_AUDIO_DATABITS_E datebits, TKL_AUDIO_CHANNEL_E channel)
 {
@@ -347,6 +349,7 @@ OPERATE_RET wukong_audio_player_alert(TY_AI_TOY_ALERT_TYPE_E type, BOOL_T send_e
     OPERATE_RET rt = OPRT_OK;
     CONST CHAR_T *audio_data = NULL;
     UINT32_T audio_size = 0;
+    UINT8_T wakeupflg = 1;
 
     tal_wifi_station_get_status(&net_state);
     TAL_PR_NOTICE("------------net_state=%d------------",net_state);
@@ -380,17 +383,23 @@ OPERATE_RET wukong_audio_player_alert(TY_AI_TOY_ALERT_TYPE_E type, BOOL_T send_e
     case AI_TOY_ALERT_TYPE_NETWORK_CONNECTED:
         // audio_data = (CONST CHAR_T*)media_src_connected_zh;
         // audio_size = sizeof(media_src_connected_zh);
-        tuya_ai_input_start(TRUE);
-        TUYA_CALL_ERR_LOG(wukong_ai_agent_send_text("刚连接上网络，用下面话术进行播报，不要加任何其他的词包括“好的”和“正在处理”等词，直接说：“已联网，开始我们的对话吧。”。"));
-        tuya_ai_input_stop();
+        audio_data = (CONST CHAR_T*)media_src_bingo_msc;
+        audio_size = sizeof(media_src_bingo_msc);
+        // tuya_ai_input_start(TRUE);
+        // TUYA_CALL_ERR_LOG(wukong_ai_agent_send_text("刚连接上网络，用下面话术进行播报，不要加任何其他的词包括“好的”和“正在处理”等词，直接说：“已联网，开始我们的对话吧。”。"));
+        // tuya_ai_input_stop();
         break;
     case AI_TOY_ALERT_TYPE_WAKEUP: 
+        
+        tal_queue_post(s_queue_wake, &wakeupflg, 0); 
         if(net_state == WSS_GOT_IP)
         {
             // audio_data = (CONST CHAR_T*)media_src_wozaine_zh;
             // audio_size = sizeof(media_src_wozaine_zh);
             tuya_ai_input_start(TRUE);
-            TUYA_CALL_ERR_LOG(wukong_ai_agent_send_text("用户正在呼唤你，用下面话术进行应答，不要加任何其他的词包括“好的”和“正在处理”等词，直接说：“我在呢。”。"));
+            // TUYA_CALL_ERR_LOG(wukong_ai_agent_send_text("用户正在呼唤你，用下面话术进行应答，不要加任何其他的词包括“好的”和“正在处理”等词，直接说：“我在呢。”。"));
+            // TUYA_CALL_ERR_LOG(wukong_ai_agent_send_text("用户正在呼唤你。"));
+            TUYA_CALL_ERR_LOG(wukong_ai_agent_send_text("你好!"));
             tuya_ai_input_stop();
             break;
         }        

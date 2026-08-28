@@ -97,6 +97,7 @@
 #include "hugo_ai_desktop.h"
 #include "hugo_ai_face.h"
 #include "hugo_ai_position_sensor.h"
+#include "hugo_ai_com_lightboard.h"
 #include "tal_queue.h"
 /* ---------------------------------------------------------------------------
  * Macro definitions
@@ -109,8 +110,8 @@
  */
 
 //  #define PID            "gcwfmdfkv6824tuh"   // T5AI_BOARD_DESKTOP
-//  #define PID            "owmlbbc3auumktx5"        /*小康机器人*/
-#define PID            "gk4wxa53gapeangs"        /*小康机器人*/
+ #define PID            "owmlbbc3auumktx5"        /*小康机器人*/
+// #define PID            "gk4wxa53gapeangs"        /*小康机器人*/
 
 /* ---------------------------------------------------------------------------
  * Forward declarations
@@ -123,13 +124,15 @@ extern void tuya_ble_enable_debug(bool enable);
 
 /** Handle of the application main thread (tuya_app_thread). Cleared when thread exits. */
 STATIC THREAD_HANDLE ty_app_thread = NULL;
-STATIC THREAD_HANDLE hugo_self_ai_position_thread = NULL;
+STATIC THREAD_HANDLE hugo_self_ai_i2c_thread = NULL;
+STATIC THREAD_HANDLE hugo_self_ai_general_thread = NULL;
 /* ---------------------------------------------------------------------------
  * QR code helpers (cellular / QR code active only)
  * --------------------------------------------------------------------------- */
 #if (defined(ENABLE_QRCODE_ACTIVE) && (ENABLE_QRCODE_ACTIVE == 1))
 extern INT_T qrcode_exec(INT_T argc, CHAR_T **argv);
 
+extern VOID hugo_ai_moto_timer(VOID);
 /**
  * @brief Print a QR code for the given message using qrcode_exec.
  * @param[in] msg String to encode (e.g. short URL). Not modified.
@@ -561,15 +564,37 @@ OPERATE_RET __soc_device_init(VOID_T)
 //     // hugo_self_ai_seg_thread = NULL;
 // }
 
+STATIC VOID_T hugo_ai_general_thread(VOID_T *arg)
+{
+    (void)arg;
+    while(1)
+    {
+        hugo_ai_face_timer();
+        hugo_ai_moto_timer();
+        tal_system_sleep(50);
+    }
+    tal_thread_delete(hugo_self_ai_general_thread);
+    hugo_self_ai_general_thread = NULL;
+    
+}
 
-STATIC VOID_T hugo_ai_position_thread(VOID_T *arg)
+
+STATIC VOID_T hugo_ai_i2c_thread(VOID_T *arg)
 {
     (void)arg;
 
-    hugo_ai_position_process();
-
-    tal_thread_delete(hugo_self_ai_position_thread);
-    hugo_self_ai_position_thread = NULL;
+    hugo_ai_position_init();
+    hugo_ai_lightboard_init();
+    hugo_ai_moto_init();
+    while(1)
+    {
+        hugo_ai_position_process();
+        hugo_ai_moto_task();
+        hugo_ai_lightboard_process();
+        tal_system_sleep(10);
+    }
+    tal_thread_delete(hugo_self_ai_i2c_thread);
+    hugo_self_ai_i2c_thread = NULL;
 }
 
 /**
@@ -690,13 +715,20 @@ VOID_T tuya_app_main(VOID)
     THREAD_CFG_T thrd_param = {4096, THREAD_PRIO_2, "tuya_app_main"};
     tal_thread_create_and_start(&ty_app_thread, NULL, NULL, tuya_app_thread, NULL, &thrd_param);
 
-    THREAD_CFG_T thrd_param1 = {2048, THREAD_PRIO_4, "hugo_ai_position__thread"};
-    tal_thread_create_and_start(&hugo_self_ai_position_thread, NULL, NULL, hugo_ai_position_thread, NULL, &thrd_param1);
+    THREAD_CFG_T thrd_param1 = {2048, THREAD_PRIO_4, "hugo_ai_i2c__thread"};
+    tal_thread_create_and_start(&hugo_self_ai_i2c_thread, NULL, NULL, hugo_ai_i2c_thread, NULL, &thrd_param1);
 
-    // seg_init();
+    THREAD_CFG_T thrd_param2 = {2048, THREAD_PRIO_4, "hugo_ai_timer__thread"};
+    tal_thread_create_and_start(&hugo_self_ai_general_thread, NULL, NULL, hugo_ai_general_thread, NULL, &thrd_param2);
+
+    // seg_init();    
     // TIMER_ID hugo_ai_seg_timer = NULL;
     // tal_sw_timer_create(hugo_ai_seg_thread, NULL, &hugo_ai_seg_timer);
     // tal_sw_timer_start(hugo_ai_seg_timer, 1000, TAL_TIMER_ONCE);
+
+    // TIMER_ID hugo_ai_general_timer_id = NULL;
+    // tal_sw_timer_create(hugo_ai_general_timer_cb, NULL, &hugo_ai_general_timer_id);
+    // tal_sw_timer_start(hugo_ai_general_timer_id, 1000, TAL_TIMER_CYCLE);
 
 #if OPERATING_SYSTEM == SYSTEM_LINUX
     while (1) {

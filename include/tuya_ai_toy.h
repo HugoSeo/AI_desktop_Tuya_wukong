@@ -121,4 +121,9 @@ VOID tuya_ai_toy_lowpower_timer_ctrl(BOOL_T enable);
  */
 VOID tuya_ai_toy_idle_timer_ctrl(BOOL_T enable);
 
+
+
+VOID hugo_ai_toy_idle_timer_ctrl(BOOL_T enable);
+VOID tuya_ai_toy_lowpower_timer_ctrl(BOOL_T enable);
+
 #endif /* __TUYA_AI_TOY_H__ */

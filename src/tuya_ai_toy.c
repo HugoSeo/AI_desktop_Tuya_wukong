@@ -111,6 +111,7 @@
 
 #define AI_TOY_ALERT_PLAY_ID   "ai_toy_alert"
 
+extern UINT8_T flag_turn_off_on_state;
 /* ---------------------------------------------------------------------------
  * File scope variables
  * --------------------------------------------------------------------------- */
@@ -715,27 +716,29 @@ STATIC VOID __on_ai_toy_audio_trigger_pin(UINT_T port, PUSH_KEY_TYPE_E type, INT
     /** Exit lowpower status when key press and device was in lowpower status */
     __on_ai_toy_key_press_exit_lowpower();
 
-    if (SEQ_KEY == type) {
+    // if (SEQ_KEY == type) {
 
-        TAL_PR_DEBUG("[%s] trigger mode:%d, device mode:%d", __func__, s_ai_toy->cfg.trigger_mode, s_ai_toy->cfg.device_mode);
-        if (s_ai_toy->cfg.device_mode != AI_DEVICE_MODE_CHAT) {
-            TAL_PR_INFO("[%s] current device mode %d ====> %d", __func__, s_ai_toy->cfg.device_mode, AI_DEVICE_MODE_CHAT);
-            wukong_audio_player_stop(AI_PLAYER_ALL);
-            wukong_ai_agent_chat_break(NULL);
-            wukong_ai_device_mode_switch(AI_DEVICE_MODE_CHAT);
-            return;
-        }
+    //     TAL_PR_DEBUG("[%s] trigger mode:%d, device mode:%d", __func__, s_ai_toy->cfg.trigger_mode, s_ai_toy->cfg.device_mode);
+    //     if (s_ai_toy->cfg.device_mode != AI_DEVICE_MODE_CHAT) {
+    //         TAL_PR_INFO("[%s] current device mode %d ====> %d", __func__, s_ai_toy->cfg.device_mode, AI_DEVICE_MODE_CHAT);
+    //         wukong_audio_player_stop(AI_PLAYER_ALL);
+    //         wukong_ai_agent_chat_break(NULL);
+    //         wukong_ai_device_mode_switch(AI_DEVICE_MODE_CHAT);
+    //         return;
+    //     }
 
-        /* Double press: stop all playback, send chat break, cycle trigger mode, play mode alert.
-         * sub_mode_cycle -> tuya_ai_toy_trigger_mode_set persists the new sub-mode. */
-        wukong_audio_player_stop(AI_PLAYER_ALL);
-        wukong_ai_agent_chat_break(NULL);
-        wukong_ai_chat_sub_mode_cycle();
-        wukong_audio_player_alert(AI_TOY_ALERT_TYPE_LONG_KEY_TALK + s_ai_toy->cfg.trigger_mode, TRUE);
-        return;
-    }
+    //     /* Double press: stop all playback, send chat break, cycle trigger mode, play mode alert.
+    //      * sub_mode_cycle -> tuya_ai_toy_trigger_mode_set persists the new sub-mode. */
+    //     wukong_audio_player_stop(AI_PLAYER_ALL);
+    //     wukong_ai_agent_chat_break(NULL);
+    //     wukong_ai_chat_sub_mode_cycle();
+    //     wukong_audio_player_alert(AI_TOY_ALERT_TYPE_LONG_KEY_TALK + s_ai_toy->cfg.trigger_mode, TRUE);
+    //     return;
+    // }
 
     /* Single/long press: pass to wukong key handler (e.g. hold to talk). */
+    if(flag_turn_off_on_state == 2)
+        return;
     wukong_ai_mode_dispatch(AI_MODE_OP_KEY, &type, 0);
 }
 
@@ -927,4 +930,25 @@ OPERATE_RET tuya_ai_toy_volume_set(UINT8_T value)
 UINT8_T tuya_ai_toy_volume_get(VOID)
 {
     return s_ai_toy->volume;
+}
+
+
+VOID hugo_ai_toy_idle_timer_ctrl(BOOL_T enable)
+{
+    TAL_PR_DEBUG("[====hugo_toy] idle timer ctrl enable:%d", enable);
+    if (enable) {
+        tal_sw_timer_start(s_ai_toy->idle_timer, 10, TAL_TIMER_ONCE);
+    } else {
+        tal_sw_timer_stop(s_ai_toy->idle_timer);
+    }
+}
+
+VOID hugo_ai_toy_lowpower_timer_ctrl(BOOL_T enable)
+{
+    TAL_PR_DEBUG("[====ai_toy] lowpower timer ctrl enable:%d", enable);
+    if (enable) {
+        tal_sw_timer_start(s_ai_toy->lowpower_timer, 10, TAL_TIMER_ONCE);
+    } else {
+        tal_sw_timer_stop(s_ai_toy->lowpower_timer);
+    }
 }

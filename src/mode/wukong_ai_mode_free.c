@@ -12,12 +12,15 @@
 #include "wukong_kws.h"
 #include "tuya_ai_toy.h"
 #include "wukong_tm_internal.h"
+#include "tal_queue.h"
 
 #if defined(ENABLE_AI_MODE_FREE) && (ENABLE_AI_MODE_FREE == 1)
 
 STATIC AI_CHAT_MODE_HANDLE_T s_ai_free_cb = {0};
 STATIC AI_CHAT_MODE_PARAM_T s_ai_free = {0};
 STATIC AI_CHAT_STATE_E s_ai_cur_state = AI_CHAT_INVALID;
+
+// QUEUE_HANDLE  s_queue_wake;
 
 /**
  * @brief Handle ASR result event in free mode.
@@ -635,6 +638,7 @@ STATIC OPERATE_RET wukong_ai_free_key_cb(VOID *data, INT_T len)
     switch (event) 
     {        
         case NORMAL_KEY:
+        case LONG_KEY:
         {
             wukong_ai_agent_output_stop(TRUE);
             wukong_audio_player_stop(AI_PLAYER_ALL);
@@ -646,6 +650,8 @@ STATIC OPERATE_RET wukong_ai_free_key_cb(VOID *data, INT_T len)
             CHAT_SUB_STATE_CHANGE(AI_CHAT_SUB_FREE, s_ai_free.state, AI_CHAT_LISTEN);
             s_ai_free.wakeup_stat = TRUE;
 
+            // STATIC UINT8_T wakeupflg = 1;
+            // tal_queue_post(s_queue_wake, &wakeupflg, 0); 
         } 
         break;  
 
@@ -655,11 +661,11 @@ STATIC OPERATE_RET wukong_ai_free_key_cb(VOID *data, INT_T len)
         }
         break;
 
-        case LONG_KEY: 
-        {
-            ;
-        }
-        break;   
+        // case LONG_KEY: 
+        // {
+        //     ;
+        // }
+        // break;   
 
         case RELEASE_KEY: 
         {
@@ -719,3 +725,36 @@ OPERATE_RET ai_free_register(AI_CHAT_MODE_HANDLE_T **cb)
     return rt;
 }
 #endif
+
+
+OPERATE_RET hugo_ai_set_free_idle(VOID)
+{
+    TAL_PR_DEBUG("[====hugo_ai_free] idle");
+    OPERATE_RET rt = OPRT_OK;
+
+    tuya_ai_toy_led_off();
+
+    //close idle timer
+    tuya_ai_toy_idle_timer_ctrl(FALSE);
+    // hugo_ai_toy_idle_timer_ctrl(TRUE);
+
+    //open low power timer
+    // tuya_ai_toy_lowpower_timer_ctrl(TRUE);
+    hugo_ai_toy_lowpower_timer_ctrl(TRUE);
+
+    // CHAT_SUB_STATE_CHANGE(AI_CHAT_SUB_FREE, s_ai_free.state, AI_CHAT_IDLE);
+    //disable wakeup
+    wukong_audio_input_wakeup_set(FALSE);
+    s_ai_free.wakeup_stat = FALSE;
+
+#if defined(USING_BOARD_AUDIO_INPUT) && (USING_BOARD_AUDIO_INPUT == 1)
+    //decrease the threshold of vad
+    wukong_vad_set_threshold(WUKONG_AUDIO_VAD_LOW);
+#endif
+
+    return rt;
+}
+OPERATE_RET hugo_ai_set_free_wakeup(VOID)
+{
+    wukong_ai_free_wakeup(NULL,0);
+}

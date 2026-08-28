@@ -24,6 +24,7 @@
 #include "tal_queue.h"
 #include "tal_workq_service.h"
 
+#include "tkl_fs.h"
 // #include "bk_gpio.h"
 // #include "gpio_driver.h"
 #include "wukong_ai_agent.h"
@@ -32,6 +33,8 @@
 #include "wukong_audio_player.h"
 #include "hugo_ai_face.h"
 
+#include "tuya_uf_db.h"
+
 // #include "eth_mac_types.h"
 
 // // #include "wukong_ai_skills.h"
@@ -39,7 +42,7 @@
 *************************micro define***********************
 ***********************************************************/
 
-#define AI_FACE_FLAG_PATH   "/face/flag"
+#define AI_FACE_FLAG_PATH   "faceflag"
 
 /***********************************************************
 ***********************typedef define***********************
@@ -52,34 +55,34 @@
 ***********************************************************/
 CONST UINT8_T  mEncKey[KEY_SIZE] = {'e','e','7','1','5','3','5','3','5','7','a','d','9','b','b','4'};
 
-UINT8_T  Face_RXtime=0;
-UINT8_T  Face_Rxln=0;
-unsigned char Face_rxlog=0;
-unsigned char Face_rxbuff[Face_Buffln];
-char Face_rxdata[RXBUFFERSIZE];
-unsigned char RX_Msgid;
+STATIC UINT8_T  Face_RXtime=0;
+STATIC UINT8_T  Face_Rxln=0;
+STATIC unsigned char Face_rxlog=0;
+STATIC unsigned char Face_rxbuff[Face_Buffln];
+STATIC char Face_rxdata[RXBUFFERSIZE];
+STATIC unsigned char RX_Msgid;
 
-unsigned int  FACE_TIME=5000;
+STATIC unsigned int  FACE_TIME=8000;
 
-unsigned int  FACE_ADD_TIME = 0;
-unsigned char FACE_Work_Mode=FACE_STANDBY;
+STATIC unsigned int  FACE_ADD_TIME = 0;
+STATIC unsigned char FACE_Work_Mode=FACE_STANDBY;
 //unsigned char PIR_DATA=0;
-unsigned char PIR_IRQ_FLG=0;
-unsigned char PIR_DATA=0,PIR_DATA_FLG=0,PIR_TS=60;
-unsigned char FACE_WORK_FLG=ENABLE;
-unsigned char FACE_POWER_FLG=DISABLE;
-unsigned char opendoor_time=0;
-UINT8_T  FACE_ID=0;
-unsigned int  PIR_READ_TIME=0;
-unsigned char Face_error_ts=0;
-unsigned char FACE_MODE_ERROR=1;
+STATIC unsigned char PIR_IRQ_FLG=0;
+STATIC unsigned char PIR_DATA=0,PIR_DATA_FLG=0,PIR_TS=60;
+STATIC unsigned char FACE_WORK_FLG=ENABLE;
+STATIC unsigned char FACE_POWER_FLG=DISABLE;
+STATIC unsigned char opendoor_time=0;
+STATIC UINT8_T  FACE_ID=0;
+STATIC unsigned int  PIR_READ_TIME=0;
+STATIC unsigned char Face_error_ts=0;
+STATIC unsigned char FACE_MODE_ERROR=1;
 
 // unsigned int  PIR_SEN_DATA=DELTA_H;
-unsigned char FACE_TX_FLG=0;
+STATIC unsigned char FACE_TX_FLG=0;
 
-UINT8_T setting_flag = SET_INPW;
+STATIC UINT8_T setting_flag = SET_INPW;
 UINT8_T face_voice_flag = 0;
-BYTE_T  face_flag_buf[100] = {0};
+STATIC BYTE_T  face_flag_buf[100] = {0};
 /***********************************************************
 ***********************function define**********************
 ***********************************************************/
@@ -88,92 +91,172 @@ VOID Face_seddata(unsigned char *data,unsigned int LN);
 VOID Face_uart_task(VOID);
 int encBytes(unsigned char *bytes, int length, unsigned char *out);
 int DencBytes(unsigned char *bytes, int length, unsigned char *out);
-unsigned char UartGetCRC(const unsigned char *pData, unsigned char len);
+unsigned char GetCRC(const unsigned char *pData, unsigned char len);
 
 
 VOID face_flag_write(BYTE_T *data)
 {
-    TUYA_FILE f = tkl_fopen(AI_FACE_FLAG_PATH, "wb+");
-    if (f == NULL) {
-        TAL_PR_NOTICE("open failed\r\n");
-        return;
+    INT_T  rt = OPRT_OK;
+    uFILE *fp = NULL;
+    INT_T  cnt = 0;
+
+    fp = ufopen(AI_FACE_FLAG_PATH, "w+");
+    if (NULL == fp) {
+        TAL_PR_ERR("uf file %s can't open and read data!", AI_FACE_FLAG_PATH);
+        return OPRT_NOT_EXIST;
     }
-    tkl_fwrite(data, 100, f);
-    tkl_fclose(f);
+
+    if (0 != ufseek(fp, 0, UF_SEEK_SET)) {
+        ufclose(fp);
+        TAL_PR_ERR("uf file %s Set file offset to 0 error!", AI_FACE_FLAG_PATH);
+        return OPRT_NOT_EXIST;
+    }
+
+    cnt = ufwrite(fp, data, 100);
+    if (cnt != 100) {
+        TAL_PR_ERR("uf file %s write data error!", AI_FACE_FLAG_PATH);
+    }
+
+    rt = ufclose(fp);
+
+    face_flag_read(data);
+
+    if (rt != OPRT_OK) {
+        TAL_PR_ERR("uf file %s close error!", AI_FACE_FLAG_PATH);
+        return rt;
+    }
+    return rt;
+
+
 }
 VOID face_flag_read(BYTE_T *data)
 {
-    UINT8_T i=0;
-    BYTE_T  get_data = 0;
+    INT_T    rt = OPRT_OK;
+    uFILE   *fp = NULL;
+    INT_T    cnt = 0;
 
-    TUYA_FILE f = tkl_fopen(AI_FACE_FLAG_PATH, "rb+");
-    if (f == NULL) {
-        TAL_PR_NOTICE("open failed\r\n");
-
-        return;
+    fp = ufopen(AI_FACE_FLAG_PATH, "r+");
+    if (NULL == fp) {
+        TAL_PR_ERR("uf file %s can't open and read data!", AI_FACE_FLAG_PATH);
+        return OPRT_NOT_EXIST;
     }
-    tkl_fread(data, 100, f);
-    tkl_fclose(f);
 
-    for(i=0;i<100;i++)
-    {
-        get_data = *(data+i);
-        if((get_data!=0)&&(get_data!=1))
-        {
-            *(data+i) = 0;
-        }
+    TAL_PR_DEBUG("uf open OK");
+    cnt = ufread(fp, data, 100);
+    TAL_PR_DEBUG("uf file %s read data %.2X %.2X!", AI_FACE_FLAG_PATH, data[0],data[1]);
+
+    rt = ufclose(fp);
+    if (rt != OPRT_OK) {
+        TAL_PR_ERR("uf file %s close error!", AI_FACE_FLAG_PATH);
+        return rt;
     }
+    return rt;
+
 }
 UINT8_T FACE_query(BYTE_T face_num)
 {
     return face_flag_buf[face_num];
 }
-
-UINT8_T face_name_write(BYTE_T face_id, BYTE_T *data)
+UINT8_T FACE_WR(BYTE_T face_num)
 {
-    CHAR_T *face_name_path = NULL;
-    sprintf(face_name_path,"/face/f%0.2X",face_id);
-    TUYA_FILE f = tkl_fopen(face_name_path, "wb+");
-    if (f == NULL) {
-        TAL_PR_NOTICE("open face failed\r\n");
-        return FALSE;
+    face_flag_buf[face_num] = 1;
+    face_flag_write(face_flag_buf);
+}
+
+INT_T face_name_write(BYTE_T face_id, BYTE_T *data)
+{
+    CHAR_T face_name_path[16] = "face";
+    face_name_path[4] = face_id/10%10 + '0';
+    face_name_path[5] = face_id%10 + '0';
+    face_name_path[6] = '\0';
+    // sprintf(face_name_path,"/face/%0.2X",face_id);
+
+    // tkl_fs_mkdir("/face");
+    TAL_PR_NOTICE("face_name_path = %s",face_name_path);
+
+
+
+    INT_T  rt = OPRT_OK;
+    uFILE *fp = NULL;
+    INT_T  cnt = 0;
+
+    fp = ufopen(face_name_path, "w+");
+    if (NULL == fp) {
+        TAL_PR_ERR("uf file %s can't open and read data!", face_name_path);
+        return OPRT_NOT_EXIST;
     }
-    tkl_fwrite(data, 31, f);
-    tkl_fclose(f);
-    return TRUE;
+
+    if (0 != ufseek(fp, 0, UF_SEEK_SET)) {
+        ufclose(fp);
+        TAL_PR_ERR("uf file %s Set file offset to 0 error!", face_name_path);
+        return OPRT_NOT_EXIST;
+    }
+
+    cnt = ufwrite(fp, data, 31);
+    if (cnt != 31) {
+        TAL_PR_ERR("uf file %s write data error!", face_name_path);
+    }
+
+    rt = ufclose(fp);
+    if (rt != OPRT_OK) {
+        TAL_PR_ERR("uf file %s close error!", face_name_path);
+        return rt;
+    }
+    return rt;
+
+
+    // return TRUE;
 }
 UINT8_T face_name_read(BYTE_T face_id, BYTE_T *data)
 {
-    CHAR_T *face_name_path = NULL;
-    sprintf(face_name_path,"/face/f%0.2X",face_id);
+    // CHAR_T *face_name_path;
+    // sprintf(face_name_path,"/face/f%0.2X",face_id);
+    CHAR_T face_name_path[16] = "face";
+    face_name_path[4] = face_id/10%10 + '0';
+    face_name_path[5] = face_id%10 + '0';
+    face_name_path[6] = '\0';
 
-    TUYA_FILE f = tkl_fopen(face_name_path, "rb+");
-    if (f == NULL) {
-        TAL_PR_NOTICE("open face failed\r\n");
+    INT_T    rt = OPRT_OK;
+    uFILE   *fp = NULL;
+    INT_T    cnt = 0;
 
-        return;
+    fp = ufopen(face_name_path, "r+");
+    if (NULL == fp) {
+        TAL_PR_ERR("uf file %s can't open and read data!", face_name_path);
+        return OPRT_NOT_EXIST;
     }
-    tkl_fread(data, 31, f);
-    tkl_fclose(f);
-    if(data != NULL)
-        return TRUE;
-    else return FALSE;   
+
+    TAL_PR_DEBUG("uf open OK");
+    cnt = ufread(fp, data, 31);
+    // TAL_PR_DEBUG("uf file %s read data %.2X %.2X %.2X %.2X %.2X %.2X %.2X %.2X %.2X %.2X!!", face_name_path, data[0],data[1],data[2],data[3],data[4],data[5],data[6],data[7],data[8],data[9]);
+
+    rt = ufclose(fp);
+    if (rt != OPRT_OK) {
+        TAL_PR_ERR("uf file %s close error!", face_name_path);
+        return rt;
+    }
+    return rt;
 }
 
 UINT8_T face_name_store(BYTE_T *data)
 {
     if(FACE_ADD_TIME > 0)
     {
-        if(face_name_write(FACE_ID,data))
-        {
-            return TRUE;
-        }
+        face_name_write(FACE_ID,data);
+        FACE_WR(FACE_ID);            
+        return TRUE;
     }
     return FALSE;
+
+
+    // face_name_write(1,"hugo");
+    // face_name_read(1,data);
+
+    // return 1;
 }
 UINT8_T face_name_get(BYTE_T *data)
 {
-    if(face_name_read(FACE_ID,data))
+    if(face_name_read(FACE_ID,data)==0)
     {
         return TRUE;
     }
@@ -232,7 +315,7 @@ VOID Face_seddata(unsigned char *data,unsigned int LN)
 {
     tal_uart_write(TUYA_UART_NUM_2, data, LN);
 }
-unsigned char UartGetCRC(const unsigned char *pData, unsigned char len)
+unsigned char GetCRC(const unsigned char *pData, unsigned char len)
 {
     UINT8_T xor = 0;
     UINT8_T i = 0;
@@ -313,7 +396,7 @@ VOID Send_FaceCmd(unsigned char msgid, unsigned char *pData, unsigned int dataLe
             encBytes(SendCmd+6,dataLen+3,SendCmd+4);
             SendCmd[2]=((dataLen+3)>>8);
             SendCmd[3]=(dataLen+3);
-            sum = UartGetCRC(&SendCmd[4],dataLen+3);
+            sum = GetCRC(&SendCmd[4],dataLen+3);
             SendCmd[dataLen+7] = (uint8_t)(sum);  // 包校验和
             // 发送指令部分数据
 #ifdef Debug_ENABLE
@@ -328,7 +411,7 @@ VOID Send_FaceCmd(unsigned char msgid, unsigned char *pData, unsigned int dataLe
         else
 #endif
         {
-            sum = UartGetCRC(&SendCmd[2], dataLen + 3);
+            sum = GetCRC(&SendCmd[2], dataLen + 3);
             SendCmd[SendLen++] = (uint8_t)(sum);    // 包校验和
             // 发送指令部分数据
             Face_seddata(SendCmd, SendLen);
@@ -371,13 +454,13 @@ unsigned char Face_Rx_data(char *data)
                 if(FACE_Work_Mode >= FACE_SET_RELEASE_KEY)
                 {
                     sum1 = Face_rxbuff[(Face_rxbuff[t + 2] + Face_rxbuff[t + 3]) + 4 + t];
-                    sum2 = UartGetCRC((Face_rxbuff + t + 4), ((Face_rxbuff[t + 2] + Face_rxbuff[t + 3])));
+                    sum2 = GetCRC((Face_rxbuff + t + 4), ((Face_rxbuff[t + 2] + Face_rxbuff[t + 3])));
                 }
                 else
 #endif
                 {
                     sum1 = Face_rxbuff[(Face_rxbuff[t + 3] + Face_rxbuff[t + 4]) + 5 + t];
-                    sum2 = UartGetCRC((Face_rxbuff + t + 2), ((Face_rxbuff[t + 3] + Face_rxbuff[t + 4]) + 3));
+                    sum2 = GetCRC((Face_rxbuff + t + 2), ((Face_rxbuff[t + 3] + Face_rxbuff[t + 4]) + 3));
                 }
 #ifdef Debug_ENABLE
                 printf("sum1=%0.2x %0.2x \r\n", sum1,sum2);
@@ -409,7 +492,7 @@ unsigned char Face_Rx_data(char *data)
                     for(i = 0; i < Face_Rxln; i++) {
                         printf("%0.2X ", Face_rxbuff[i]);   //打印接收人脸数据
                     }
-                    printf("\r\n");
+                    TAL_PR_NOTICE("\r\n");
 //                    for(i = 0; i < Face_Rxln; i++) Face_rxbuff[i] = 0; //清空数组
 //                    Face_rxlog = 0;
 //                    Face_RXtime = 0;
@@ -603,7 +686,7 @@ VOID Face_uart_task(VOID)
 #ifdef Debug_ENABLE
                     printf("MID_VERIFY \r\n");
 #endif
-                    tal_system_sleep(50);
+                    tal_system_sleep(150);
                     pdata[0] = 1; //自动关机
                     //pdata[0] = 0; //不马上关机
                     pdata[1] = 5; //5秒
@@ -639,16 +722,16 @@ VOID Face_uart_task(VOID)
     case FACE_VERIFY_ACK://人脸识别回复
         if(Face_Rx_data(Face_rxdata)) //从第五个字节开始取地址
         {
-            if(FACE_MODE_ERROR==2)
-            {
-                FACE_MODE_ERROR=0;
-                Bread_STANDBY();
-                for(i = 0; i < Face_Rxln; i++) Face_rxbuff[i] = 0; //清空数组
-                Face_rxlog = 0;
-                Face_RXtime = 0;
-                Face_Rxln = 0;
-                break;
-            }
+            // if(FACE_MODE_ERROR==2)
+            // {
+            //     FACE_MODE_ERROR=0;
+            //     Bread_STANDBY();
+            //     for(i = 0; i < Face_Rxln; i++) Face_rxbuff[i] = 0; //清空数组
+            //     Face_rxlog = 0;
+            //     Face_RXtime = 0;
+            //     Face_Rxln = 0;
+            //     break;
+            // }
             if(RX_Msgid == MR_SUCCESS && Face_rxdata[0] == MID_VERIFY && Face_rxdata[1] == MR_SUCCESS)
             {
                 FACE_ID = Face_rxdata[2]; //FACE_ID=(Face_rxdata[2]<<8)|Face_rxdata[3];
@@ -658,6 +741,9 @@ VOID Face_uart_task(VOID)
                 printf("FACE_ID=%0.2X\r\n", FACE_ID);
 #endif
                 i = FACE_query(FACE_ID); //人脸查询  OK返回1 NG返回0
+
+
+                TAL_PR_NOTICE("====get Id = %d, query = %d",FACE_ID,i);
                 // if(setting_flag == DEL_USER_FACE)
                 // {
                 //     //删除单个人脸
@@ -674,18 +760,19 @@ VOID Face_uart_task(VOID)
                 // }
                 if(i == 1)
                 {
-                    //
-                    face_voice_flag = 2;
+                    //                    
+                    face_voice_flag = 3;
 
                 }
                 else
                 {
                     face_voice_flag = 1;
-                    FACE_ADD_TIME = 15000;
+                    FACE_ADD_TIME = 80000;
                     FACE_TIME = 15000;
+                    // setting_flag = ADD_USER_FACE;
                 }
             }
-            else if(RX_Msgid == MR_SUCCESS && Face_rxdata[0] == MID_VERIFY && Face_rxdata[1] == MR_FAILED4_UNKNOWNUSER) // 没有已录入的用户
+            else if(RX_Msgid == MR_SUCCESS && Face_rxdata[0] == MID_VERIFY && ((Face_rxdata[1] == MR_FAILED4_UNKNOWNUSER) /*|| (Face_rxdata[1] == MR_FAILED4_TIMEOUT)*/)) // 没有已录入的用户
             {
                 // // 没有已录入的用户
                 // if(setting_flag == DEL_USER_FACE)
@@ -702,35 +789,47 @@ VOID Face_uart_task(VOID)
                 {
 
                     // WR_Lock_Open(FACE_OPEN_DOOR, User_not_exists);
-                    face_voice_flag = 1;
+                    // face_voice_flag = 1;
+
                     Bread_STANDBY();//人脸待机模式
                     Face_error_ts++;
-                    PIR_TS=20;
-                    if(Face_error_ts>=5)
+                    // PIR_TS=20;
+                    setting_flag = ADD_USER_FACE;
+                    // if(Face_error_ts>=5)
+                    // {
+                    //     Face_error_ts=0;
+                    //     FACE_TIME=30000;
+                    // }
+                    // else
+                    // {
+                    //     if(Face_error_ts<2)  FACE_TIME=5000;
+                    //     else  FACE_TIME=10000;
+                    // }
+                    if(Face_error_ts>10)
                     {
-                        Face_error_ts=0;
-                        FACE_TIME=30000;
+                        // Face_error_ts=0;
+                        FACE_TIME=10000;
                     }
                     else
                     {
-                        if(Face_error_ts<2)  FACE_TIME=5000;
-                        else  FACE_TIME=10000;
+                        if(Face_error_ts<=5)  FACE_TIME=3000;
+                        else  FACE_TIME=5000;
                     }
                 }
             }
             //Deleted by Hugo 25.11.18
-//            else
-//            {
+           else
+           {
 //#ifdef Palm_EN
 //                pdata[0] = 1; //自动关机
 //                pdata[1] = 2; //2秒
 //                Send_FaceCmd(PALM_VERIFY, pdata, 2); // 鉴权解锁 自动辨别人脸和掌静脉
 //#else
-//                pdata[0] = 1; //自动关机
-//                pdata[1] = 2; //2秒
-//                Send_FaceCmd(MID_VERIFY, pdata, 2); // 鉴权解锁
+               pdata[0] = 1; //自动关机
+               pdata[1] = 2; //2秒
+               Send_FaceCmd(MID_VERIFY, pdata, 2); // 鉴权解锁
 //#endif
-//            }
+           }
         }
         else if(FACE_TIME>3000&&FACE_TIME<3500)
         {
@@ -752,159 +851,23 @@ VOID Face_uart_task(VOID)
                     &&Face_rxdata[4]==FACE_MIDDLE)
             {
                 tal_system_sleep(600);
-                i=WR_ENROLL_ITG(pdata,FACE_RIGHT); // 录入朝右人脸
-                Send_FaceCmd(MID_ENROLL_ITG,pdata,i);
+                // i=WR_ENROLL_ITG(pdata,FACE_RIGHT); // 录入朝右人脸
+                // Send_FaceCmd(MID_ENROLL_ITG,pdata,i);
                 // SPK_Wdata(CN_PLS_FACE_RIGHT);//请把脸偏向右手边
-                FACE_Work_Mode=FACE_ADD_USER_ACK2;
+                FACE_Work_Mode=FACE_STANDBY;
+                setting_flag = SET_INPW;
                 FACE_TIME=12000;//12S
                 // SET_TIME=set_maxtime*3;
-                Dispay_fled(6);
-            }
-            else
-            {
-                USER_EXISTED();
-            }
-            break;
-        }
-        if((FACE_TIME<10500&&FACE_TIME>9500)||(FACE_TIME<6500&&FACE_TIME>5500))
-        {
-            if(FACE_TIME<6500&&FACE_TIME>5500) FACE_TIME=5500;
-            if(FACE_TIME<10500&&FACE_TIME>9500) FACE_TIME=9500;
-            i=WR_ENROLL_ITG(pdata,FACE_MIDDLE);
-            Send_FaceCmd(MID_ENROLL_ITG,pdata,i); //集成支持并扩展所有录入方式
-        }
-        Check_FACE_TimeOut();
-        break;
-    case FACE_ADD_USER_ACK2:
-        if(Face_Rx_data(Face_rxdata))
-        {
-            if(RX_Msgid==MR_SUCCESS&&Face_rxdata[0]==MID_ENROLL_ITG&&Face_rxdata[1]==MR_SUCCESS
-                    &&Face_rxdata[4]==(FACE_MIDDLE+FACE_RIGHT))
-            {
-                tal_system_sleep(600);
-                i=WR_ENROLL_ITG(pdata,FACE_LEFT);// 录入朝左人脸
-                Send_FaceCmd(MID_ENROLL_ITG,pdata,i);
-                // SPK_Wdata(CN_PLS_FACE_LEFT);
-                FACE_Work_Mode=FACE_ADD_USER_ACK3;
-                FACE_TIME=12000;
-                // SET_TIME=set_maxtime*3;
-                Dispay_fled(4);
-            }
-            else
-            {
-                USER_EXISTED();
-            }
-            break;
-        }
-        if((FACE_TIME<10500&&FACE_TIME>9500)||(FACE_TIME<6500&&FACE_TIME>5500))
-        {
-            if(FACE_TIME<6500&&FACE_TIME>5500) FACE_TIME=5500;
-            if(FACE_TIME<10500&&FACE_TIME>9500) FACE_TIME=9500;
-            i=WR_ENROLL_ITG(pdata,FACE_RIGHT); // 录入朝右人脸
-            Send_FaceCmd(MID_ENROLL_ITG,pdata,i);
-        }
-        Check_FACE_TimeOut();
-        break;
-    case FACE_ADD_USER_ACK3:
-        if(Face_Rx_data(Face_rxdata))
-        {
-            if(RX_Msgid==MR_SUCCESS&&Face_rxdata[0]==MID_ENROLL_ITG&&Face_rxdata[1]==MR_SUCCESS
-                    &&Face_rxdata[4]==FACE_MIDDLE+FACE_RIGHT+FACE_LEFT)
-            {
-                tal_system_sleep(600);
-                i=WR_ENROLL_ITG(pdata,FACE_DOWN);// 录入朝下人脸
-                Send_FaceCmd(MID_ENROLL_ITG,pdata,i);
-                // SPK_Wdata(CN_FACE_DOWN);//请微微低头
-                FACE_Work_Mode=FACE_ADD_USER_ACK4;
-                FACE_TIME=12000;
-                // SET_TIME=set_maxtime*3;
-                Dispay_fled(8);
-            }
-            else
-            {
-                USER_EXISTED();
-            }
-            break;
-        }
-        if((FACE_TIME<10500&&FACE_TIME>9500)||(FACE_TIME<6500&&FACE_TIME>5500))
-        {
-            if(FACE_TIME<6500&&FACE_TIME>5500) FACE_TIME=5500;
-            if(FACE_TIME<10500&&FACE_TIME>9500) FACE_TIME=9500;
-            i=WR_ENROLL_ITG(pdata,FACE_LEFT); // 录入朝右人脸
-            Send_FaceCmd(MID_ENROLL_ITG,pdata,i);
-        }
-        Check_FACE_TimeOut();
-        break;
-    case FACE_ADD_USER_ACK4:
-        if(Face_Rx_data(Face_rxdata))
-        {
-            if(RX_Msgid==MR_SUCCESS&&Face_rxdata[0]==MID_ENROLL_ITG&&Face_rxdata[1]==MR_SUCCESS
-                    &&Face_rxdata[4]==FACE_MIDDLE+FACE_RIGHT+FACE_LEFT+FACE_DOWN)
-            {
-                tal_system_sleep(600);
-                i=WR_ENROLL_ITG(pdata,FACE_UP);// 录入朝上人脸
-                Send_FaceCmd(MID_ENROLL_ITG,pdata,i);
-                // SPK_Wdata(CN_FACE_UP);//请微微抬头
-                FACE_Work_Mode=FACE_ADD_USER_ACK5;
-                FACE_TIME=12000;
-                // SET_TIME=set_maxtime*3;
-                Dispay_fled(2);
-            }
-            else
-            {
-                USER_EXISTED();
-            }
-            break;
-        }
+                // Dispay_fled(6);
 
-        if((FACE_TIME<10500&&FACE_TIME>9500)||(FACE_TIME<6500&&FACE_TIME>5500))
-        {
-            if(FACE_TIME<6500&&FACE_TIME>5500) FACE_TIME=5500;
-            if(FACE_TIME<10500&&FACE_TIME>9500) FACE_TIME=9500;
-            i=WR_ENROLL_ITG(pdata,FACE_DOWN); // 录入朝右人脸
-            Send_FaceCmd(MID_ENROLL_ITG,pdata,i);
-        }
-        Check_FACE_TimeOut();
-        break;
-    case FACE_ADD_USER_ACK5:
-        if(Face_Rx_data(Face_rxdata))
-        {
-            if(RX_Msgid==MR_SUCCESS&&Face_rxdata[0]==MID_ENROLL_ITG&&Face_rxdata[1]==MR_SUCCESS
-                    &&Face_rxdata[4]==FACE_MIDDLE+FACE_RIGHT+FACE_LEFT+FACE_DOWN+FACE_UP)
-            {
                 FACE_ID=Face_rxdata[2];//第七个字节
                 FACE_ID<<=8;
                 FACE_ID+=Face_rxdata[3];//第8个字节
-#ifdef Debug_ENABLE
-                printf("FACE_ID=%d\r\n",FACE_ID);
-#endif
-                FACE_TIME=2000;
-                tal_system_sleep(100);
-                // if(FACE_WR(FACE_ID)==User_full) SPK_Wdata(CN_USER_FULL);        //flash写入人脸
-                // else
-                {
-                    // SPK_Wdata(CN_OPERATION_OK); //操作成功；
-                    if(setting_flag==ADD_USER_FACE)
-                    {
-                        setting_flag=FACE_MANAGER;
-                    }
-                    Bread_STANDBY();//人脸待机模式
-                    // SET_TIME=set_maxtime*3;
-                    // if(APP_ADD_FACE_FLG==1)
-                    // {
-                    //     APP_ADD_FACE_FLG=0;
-                    //     BLE_time=0;
-                    //     KEY_TIME=500;
-                    //     LED_Wdata(0,0);
-                    //     Report_APP(0X01,0x04,0xFF,0X00,0x00);
-                    //     FACE_TIME=1000;
-                    // }
-                    // if(ALL_TEST_FLG == 1)
-                    // {
-                    //     ALL_TEST_FLG = 0;
-                    // }
-                    break;
-                }
+                // FACE_WR(FACE_ID);
+
+                face_voice_flag = 1;
+                FACE_ADD_TIME = 80000;
+                FACE_TIME = 80000;
             }
             else
             {
@@ -912,18 +875,164 @@ VOID Face_uart_task(VOID)
             }
             break;
         }
-        else
-        {
-            if((FACE_TIME<10500&&FACE_TIME>9500)||(FACE_TIME<6500&&FACE_TIME>5500))
-            {
-                if(FACE_TIME<6500&&FACE_TIME>5500) FACE_TIME=5500;
-                if(FACE_TIME<10500&&FACE_TIME>9500) FACE_TIME=9500;
-                i=WR_ENROLL_ITG(pdata,FACE_UP); // 录入朝右人脸
-                Send_FaceCmd(MID_ENROLL_ITG,pdata,i);
-            }
-            else  Check_FACE_TimeOut();
-        }
+        // if((FACE_TIME<10500&&FACE_TIME>9500)||(FACE_TIME<6500&&FACE_TIME>5500))
+        // {
+        //     if(FACE_TIME<6500&&FACE_TIME>5500) FACE_TIME=5500;
+        //     if(FACE_TIME<10500&&FACE_TIME>9500) FACE_TIME=9500;
+        //     i=WR_ENROLL_ITG(pdata,FACE_MIDDLE);
+        //     Send_FaceCmd(MID_ENROLL_ITG,pdata,i); //集成支持并扩展所有录入方式
+        // }
+        Check_FACE_TimeOut();
         break;
+//     case FACE_ADD_USER_ACK2:
+//         if(Face_Rx_data(Face_rxdata))
+//         {
+//             if(RX_Msgid==MR_SUCCESS&&Face_rxdata[0]==MID_ENROLL_ITG&&Face_rxdata[1]==MR_SUCCESS
+//                     &&Face_rxdata[4]==(FACE_MIDDLE+FACE_RIGHT))
+//             {
+//                 tal_system_sleep(600);
+//                 i=WR_ENROLL_ITG(pdata,FACE_LEFT);// 录入朝左人脸
+//                 Send_FaceCmd(MID_ENROLL_ITG,pdata,i);
+//                 // SPK_Wdata(CN_PLS_FACE_LEFT);
+//                 FACE_Work_Mode=FACE_ADD_USER_ACK3;
+//                 FACE_TIME=12000;
+//                 // SET_TIME=set_maxtime*3;
+//                 Dispay_fled(4);
+//             }
+//             else
+//             {
+//                 USER_EXISTED();
+//             }
+//             break;
+//         }
+//         if((FACE_TIME<10500&&FACE_TIME>9500)||(FACE_TIME<6500&&FACE_TIME>5500))
+//         {
+//             if(FACE_TIME<6500&&FACE_TIME>5500) FACE_TIME=5500;
+//             if(FACE_TIME<10500&&FACE_TIME>9500) FACE_TIME=9500;
+//             i=WR_ENROLL_ITG(pdata,FACE_RIGHT); // 录入朝右人脸
+//             Send_FaceCmd(MID_ENROLL_ITG,pdata,i);
+//         }
+//         Check_FACE_TimeOut();
+//         break;
+//     case FACE_ADD_USER_ACK3:
+//         if(Face_Rx_data(Face_rxdata))
+//         {
+//             if(RX_Msgid==MR_SUCCESS&&Face_rxdata[0]==MID_ENROLL_ITG&&Face_rxdata[1]==MR_SUCCESS
+//                     &&Face_rxdata[4]==FACE_MIDDLE+FACE_RIGHT+FACE_LEFT)
+//             {
+//                 tal_system_sleep(600);
+//                 i=WR_ENROLL_ITG(pdata,FACE_DOWN);// 录入朝下人脸
+//                 Send_FaceCmd(MID_ENROLL_ITG,pdata,i);
+//                 // SPK_Wdata(CN_FACE_DOWN);//请微微低头
+//                 FACE_Work_Mode=FACE_ADD_USER_ACK4;
+//                 FACE_TIME=12000;
+//                 // SET_TIME=set_maxtime*3;
+//                 Dispay_fled(8);
+//             }
+//             else
+//             {
+//                 USER_EXISTED();
+//             }
+//             break;
+//         }
+//         if((FACE_TIME<10500&&FACE_TIME>9500)||(FACE_TIME<6500&&FACE_TIME>5500))
+//         {
+//             if(FACE_TIME<6500&&FACE_TIME>5500) FACE_TIME=5500;
+//             if(FACE_TIME<10500&&FACE_TIME>9500) FACE_TIME=9500;
+//             i=WR_ENROLL_ITG(pdata,FACE_LEFT); // 录入朝右人脸
+//             Send_FaceCmd(MID_ENROLL_ITG,pdata,i);
+//         }
+//         Check_FACE_TimeOut();
+//         break;
+//     case FACE_ADD_USER_ACK4:
+//         if(Face_Rx_data(Face_rxdata))
+//         {
+//             if(RX_Msgid==MR_SUCCESS&&Face_rxdata[0]==MID_ENROLL_ITG&&Face_rxdata[1]==MR_SUCCESS
+//                     &&Face_rxdata[4]==FACE_MIDDLE+FACE_RIGHT+FACE_LEFT+FACE_DOWN)
+//             {
+//                 tal_system_sleep(600);
+//                 i=WR_ENROLL_ITG(pdata,FACE_UP);// 录入朝上人脸
+//                 Send_FaceCmd(MID_ENROLL_ITG,pdata,i);
+//                 // SPK_Wdata(CN_FACE_UP);//请微微抬头
+//                 FACE_Work_Mode=FACE_ADD_USER_ACK5;
+//                 FACE_TIME=12000;
+//                 // SET_TIME=set_maxtime*3;
+//                 Dispay_fled(2);
+//             }
+//             else
+//             {
+//                 USER_EXISTED();
+//             }
+//             break;
+//         }
+
+//         if((FACE_TIME<10500&&FACE_TIME>9500)||(FACE_TIME<6500&&FACE_TIME>5500))
+//         {
+//             if(FACE_TIME<6500&&FACE_TIME>5500) FACE_TIME=5500;
+//             if(FACE_TIME<10500&&FACE_TIME>9500) FACE_TIME=9500;
+//             i=WR_ENROLL_ITG(pdata,FACE_DOWN); // 录入朝右人脸
+//             Send_FaceCmd(MID_ENROLL_ITG,pdata,i);
+//         }
+//         Check_FACE_TimeOut();
+//         break;
+//     case FACE_ADD_USER_ACK5:
+//         if(Face_Rx_data(Face_rxdata))
+//         {
+//             if(RX_Msgid==MR_SUCCESS&&Face_rxdata[0]==MID_ENROLL_ITG&&Face_rxdata[1]==MR_SUCCESS
+//                     &&Face_rxdata[4]==FACE_MIDDLE+FACE_RIGHT+FACE_LEFT+FACE_DOWN+FACE_UP)
+//             {
+//                 FACE_ID=Face_rxdata[2];//第七个字节
+//                 FACE_ID<<=8;
+//                 FACE_ID+=Face_rxdata[3];//第8个字节
+// #ifdef Debug_ENABLE
+//                 printf("FACE_ID=%d\r\n",FACE_ID);
+// #endif
+//                 FACE_TIME=2000;
+//                 tal_system_sleep(100);
+//                 // if(FACE_WR(FACE_ID)==User_full) SPK_Wdata(CN_USER_FULL);        //flash写入人脸
+//                 // else
+//                 {
+//                     // SPK_Wdata(CN_OPERATION_OK); //操作成功；
+//                     if(setting_flag==ADD_USER_FACE)
+//                     {
+//                         setting_flag=FACE_MANAGER;
+//                     }
+//                     Bread_STANDBY();//人脸待机模式
+//                     // SET_TIME=set_maxtime*3;
+//                     // if(APP_ADD_FACE_FLG==1)
+//                     // {
+//                     //     APP_ADD_FACE_FLG=0;
+//                     //     BLE_time=0;
+//                     //     KEY_TIME=500;
+//                     //     LED_Wdata(0,0);
+//                     //     Report_APP(0X01,0x04,0xFF,0X00,0x00);
+//                     //     FACE_TIME=1000;
+//                     // }
+//                     // if(ALL_TEST_FLG == 1)
+//                     // {
+//                     //     ALL_TEST_FLG = 0;
+//                     // }
+//                     break;
+//                 }
+//             }
+//             else
+//             {
+//                 USER_EXISTED();
+//             }
+//             break;
+//         }
+//         else
+//         {
+//             if((FACE_TIME<10500&&FACE_TIME>9500)||(FACE_TIME<6500&&FACE_TIME>5500))
+//             {
+//                 if(FACE_TIME<6500&&FACE_TIME>5500) FACE_TIME=5500;
+//                 if(FACE_TIME<10500&&FACE_TIME>9500) FACE_TIME=9500;
+//                 i=WR_ENROLL_ITG(pdata,FACE_UP); // 录入朝右人脸
+//                 Send_FaceCmd(MID_ENROLL_ITG,pdata,i);
+//             }
+//             else  Check_FACE_TimeOut();
+//         }
+//         break;
     case FACE_DEL_ONE_ACK://删除单个人脸应答
         if(Face_Rx_data(Face_rxdata))
         {
@@ -994,12 +1103,31 @@ VOID Face_uart_task(VOID)
 #endif
 }
 
+VOID hugo_ai_face_timer(VOID)
+{
+    if(FACE_TIME>50) FACE_TIME -= 50;
+    else FACE_TIME = 0;
+    if(FACE_ADD_TIME>50) FACE_ADD_TIME -= 50;
+    Face_RXtime += 50;
+}
+
+VOID hugo_ai_face_intimer(VOID)
+{
+    // if(FACE_TIME > 5000)
+    {
+        FACE_TIME = 10;
+        FACE_Work_Mode=FACE_STANDBY;
+        Face_error_ts = 0;
+    }
+
+}
+
 VOID hugo_Face_uart_task(VOID)
 {
     Face_uart_rx();
     Face_uart_task();
 
-    if(FACE_TIME>0) FACE_TIME--;
-    if(FACE_ADD_TIME>0) FACE_ADD_TIME--;
-    Face_RXtime ++;
+    // if(FACE_TIME>0) FACE_TIME--;
+    // if(FACE_ADD_TIME>0) FACE_ADD_TIME--;
+    // Face_RXtime ++;
 }
