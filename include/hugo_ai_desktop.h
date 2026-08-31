@@ -45,6 +45,8 @@ VOID_T seg_init(VOID_T);
 
 // UINT8_T moto_flag;
 
+// #define DEMO_TEST
+
 //flag_rgb_data
 #define RGB_OFF     0x00
 #define RGB_ON      0x01
@@ -76,8 +78,9 @@ VOID_T seg_init(VOID_T);
 #define STATE_MOTO_ON		0x01
 #define STATE_MOTO_OFF		0x02
 #define STATE_MOTO_QUIET	0x03
-#define STATE_MOTO_NOD	0x04
-
+#define STATE_MOTO_NOD		0x04
+#define STATE_MOTO_TEST1	0x05
+#define STATE_MOTO_TEST2	0x06
 
 #define POWER_STATUS_ON		0x01
 #define POWER_STATUS_OFF	0x02

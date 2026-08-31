@@ -119,6 +119,11 @@ STATIC UINT16_T adc_check_time = 0;
 STATIC UINT16_T seg_dis_time = 0;
 STATIC UINT16_T rgb_dis_time = 0;
 
+UINT8_T demo_test_state = 0;
+STATIC UINT16_T demo_test_time = 0;
+STATIC UINT8_T demo_test_flag = 0;
+STATIC UINT8_T demo_test_cmd = 0;
+
 STATIC UINT8_T  radar_flag_valid = 0;
 
 STATIC UINT8_T moto_step = 0;
@@ -167,6 +172,7 @@ extern QUEUE_HANDLE  s_queue_voice_cmd;
 // extern QUEUE_HANDLE  s_queue_state;
 extern QUEUE_HANDLE  s_queue_name_str;
 extern QUEUE_HANDLE  s_queue_wake;
+extern QUEUE_HANDLE  s_queue_test;
 
 extern float pitch_out;
 extern float roll_out;
@@ -387,7 +393,9 @@ VOID mcu_uart_rx_process(VOID)
                             rgb_dis_time = 5000;
                             flag_rgb_data = RGB_WAIT;
                             moto_state = STATE_MOTO_ON;
-                            hugo_ai_set_free_wakeup();
+                            if(demo_test_state!=0)
+                                hugo_ai_set_free_wakeup();
+
                         }
                         else if(flag_turn_off_on_state == POWER_STATUS_OFF)
                         {
@@ -551,6 +559,12 @@ VOID mcu_uart_tx_process(VOID)
     //     send_mcu_data(0x08,&wakeflag,1);
     //     wakeflag = 0;
     // }
+
+    if(demo_test_cmd!=0)
+    {
+        send_mcu_data(0x05,&demo_test_cmd,1);
+        demo_test_cmd = 0;
+    }
 }
 
 VOID mcu_uart_task(VOID)
@@ -804,6 +818,18 @@ VOID hugo_ai_moto_timer(VOID)
         rgb_dis_time = 0;
         flag_rgb_data=RGB_OFF;
     }
+
+    if(demo_test_state == 0)
+    {
+        if (demo_test_time>50)
+        {
+            demo_test_time -= 50;
+        }
+        else
+        {
+            demo_test_time = 0;
+        }
+}
     
 }
 VOID hugo_ai_moto_process(VOID)
@@ -896,6 +922,16 @@ VOID hugo_ai_moto_process(VOID)
         moto_flag = MOTO_RUN_UP;
         // moto_step = 0;
         TAL_PR_INFO("=====set STATE_MOTO_OFF");
+    }
+    else if(moto_state == STATE_MOTO_TEST1)
+    {
+        moto_state = STATE_MOTO_IDLE;
+        moto_flag = MOTO_RUN_UP;
+    }
+    else if(moto_state == STATE_MOTO_TEST2)
+    {
+        moto_state = STATE_MOTO_IDLE;
+        moto_flag = MOTO_RUN_DOWN;
     }
     // else if(moto_state == STATE_MOTO_NOD)
     // {
@@ -1072,6 +1108,8 @@ VOID hugo_ai_moto_task(VOID)
             moto_flag=MOTO_RUN_UP_END;
             adc_check_time = 100;
             moto_time = 5000;
+            if(moto_cur_state == STATE_MOTO_TEST1)
+                moto_time = 600;
         break;
         case MOTO_RUN_UP_END:
             if((adc_check_time==0)&&(moto_adc_get()==FALSE)||(moto_time==0))
@@ -1095,6 +1133,8 @@ VOID hugo_ai_moto_task(VOID)
             moto_flag=MOTO_RUN_DOWN_END;
             adc_check_time = 50;
             moto_time = 2200;
+            if(moto_cur_state == STATE_MOTO_TEST2)
+            moto_time = 600;
         break;
         case MOTO_RUN_DOWN_END:
             if((adc_check_time==0)&&(moto_adc_get()==FALSE)||(moto_time==0))
@@ -1326,6 +1366,8 @@ OPERATE_RET hugo_ai_desktop_init(VOID)
     // tal_queue_create_init(&s_queue_state, SIZEOF(UINT8_T), 1);
     tal_queue_create_init(&s_queue_name_str, 31*SIZEOF(UINT8_T), 1);
     tal_queue_create_init(&s_queue_wake, 1*SIZEOF(UINT8_T), 1);
+    tal_queue_create_init(&s_queue_test, 1*SIZEOF(UINT8_T), 1);
+    
     // WUKONG_AI_PLAYTTS_T tts_param = {
     //     .text = "网络开小差了，机器人暂时无法联网，仅支持本地按键操作"
     // };
@@ -1335,6 +1377,7 @@ OPERATE_RET hugo_ai_desktop_init(VOID)
     // moto_state = STATE_MOTO_ON;
 
     tal_system_sleep(1000);
+    tal_queue_post(s_queue_test, &demo_test_state, 0); 
 
     while (1)
     { 
@@ -1541,6 +1584,18 @@ OPERATE_RET hugo_ai_desktop_init(VOID)
         if(flag_shut_voice == 1)
         {
             flag_shut_voice = 0;
+
+            if(demo_test_state == 0)
+            {
+                demo_test_flag = 1;
+                demo_test_time = 7200;            
+                audio_data = (CONST CHAR_T*)media_src_introduction_1_zh;
+                audio_size = sizeof(media_src_introduction_1_zh);
+                TUYA_CALL_ERR_LOG(wukong_audio_play_data(AI_AUDIO_CODEC_MP3, audio_data, audio_size));
+                tuya_ai_input_start(TRUE);
+
+                continue;
+            }
             tuya_ai_input_start(TRUE);
             TUYA_CALL_ERR_LOG(wukong_ai_agent_send_text("你好，自我介绍一下吧。"));
             tuya_ai_input_stop();
@@ -1553,11 +1608,18 @@ OPERATE_RET hugo_ai_desktop_init(VOID)
             // audio_size = sizeof(media_src_dingdong_zh); 
             // TUYA_CALL_ERR_LOG(wukong_audio_play_data(AI_AUDIO_CODEC_MP3, audio_data, audio_size));
             // flag_turn_off_on_cmd = 3;
-            audio_data = (CONST CHAR_T*)media_src_bingo2_msc;
-            audio_size = sizeof(media_src_bingo2_msc);
-            TUYA_CALL_ERR_LOG(wukong_audio_play_data(AI_AUDIO_CODEC_MP3, audio_data, audio_size));
-            tuya_ai_input_start(TRUE);
 
+            // audio_data = (CONST CHAR_T*)media_src_turnoff_remind_2_zh;
+            // audio_size = sizeof(media_src_turnoff_remind_2_zh);
+            // TUYA_CALL_ERR_LOG(wukong_audio_play_data(AI_AUDIO_CODEC_MP3, audio_data, audio_size));
+            // tuya_ai_input_start(TRUE);
+            if(demo_test_state != 0)
+            {
+                audio_data = (CONST CHAR_T*)media_src_bingo2_msc;
+                audio_size = sizeof(media_src_bingo2_msc);
+                TUYA_CALL_ERR_LOG(wukong_audio_play_data(AI_AUDIO_CODEC_MP3, audio_data, audio_size));
+                tuya_ai_input_start(TRUE);
+            }
             // moto_state = STATE_MOTO_ON;
             // if(net_state == WSS_GOT_IP)
             // {
@@ -1593,6 +1655,242 @@ OPERATE_RET hugo_ai_desktop_init(VOID)
         //         TUYA_CALL_ERR_LOG(wukong_audio_play_data(AI_AUDIO_CODEC_MP3, audio_data, audio_size));
         //     }
         // }
+
+
+        if((demo_test_state == 0)&&(demo_test_time == 0)&&(demo_test_flag!=0))
+        {            
+            if(demo_test_flag == 1)
+            {
+                audio_data = (CONST CHAR_T*)media_src_introduction_2_zh;
+                audio_size = sizeof(media_src_introduction_2_zh);
+                TUYA_CALL_ERR_LOG(wukong_audio_play_data(AI_AUDIO_CODEC_MP3, audio_data, audio_size));
+                tuya_ai_input_start(TRUE);                
+                demo_test_flag++;
+                demo_test_time = 5000;//7100
+            }
+            else if(demo_test_flag == 2)
+            {
+                audio_data = (CONST CHAR_T*)media_src_introduction_3_zh;
+                audio_size = sizeof(media_src_introduction_3_zh);
+                TUYA_CALL_ERR_LOG(wukong_audio_play_data(AI_AUDIO_CODEC_MP3, audio_data, audio_size));
+                tuya_ai_input_start(TRUE);                
+                demo_test_flag++;
+                demo_test_time = 8800;
+            }
+            else if(demo_test_flag == 3)
+            {
+                audio_data = (CONST CHAR_T*)media_src_greeting_1_zh;
+                audio_size = sizeof(media_src_greeting_1_zh);
+                TUYA_CALL_ERR_LOG(wukong_audio_play_data(AI_AUDIO_CODEC_MP3, audio_data, audio_size));
+                tuya_ai_input_start(TRUE);                
+                demo_test_flag++;
+                demo_test_time = 5400;  //7900
+                demo_test_cmd = 1;
+            }
+            else if(demo_test_flag == 4)
+            {
+                audio_data = (CONST CHAR_T*)media_src_greeting_2_zh;
+                audio_size = sizeof(media_src_greeting_2_zh);
+                TUYA_CALL_ERR_LOG(wukong_audio_play_data(AI_AUDIO_CODEC_MP3, audio_data, audio_size));
+                tuya_ai_input_start(TRUE);                
+                demo_test_flag++;
+                demo_test_time = 7100;//9700
+            }
+            else if(demo_test_flag == 5)
+            {
+                audio_data = (CONST CHAR_T*)media_src_greeting_3_zh;
+                audio_size = sizeof(media_src_greeting_3_zh);
+                TUYA_CALL_ERR_LOG(wukong_audio_play_data(AI_AUDIO_CODEC_MP3, audio_data, audio_size));
+                tuya_ai_input_start(TRUE);                
+                demo_test_flag++;
+                demo_test_time = 12700;
+            }
+            else if(demo_test_flag == 6)
+            {
+                audio_data = (CONST CHAR_T*)media_src_breakfast_1_zh;
+                audio_size = sizeof(media_src_breakfast_1_zh);
+                TUYA_CALL_ERR_LOG(wukong_audio_play_data(AI_AUDIO_CODEC_MP3, audio_data, audio_size));
+                tuya_ai_input_start(TRUE);                
+                demo_test_flag++;
+                demo_test_time = 5000;
+                demo_test_cmd = 2;
+                moto_state = STATE_MOTO_TEST1;
+            }
+            else if(demo_test_flag == 7)
+            {
+                audio_data = (CONST CHAR_T*)media_src_breakfast_2_zh;
+                audio_size = sizeof(media_src_breakfast_2_zh);
+                TUYA_CALL_ERR_LOG(wukong_audio_play_data(AI_AUDIO_CODEC_MP3, audio_data, audio_size));
+                tuya_ai_input_start(TRUE);                
+                demo_test_flag++;
+                demo_test_time = 5500;
+            }
+            else if(demo_test_flag == 8)
+            {
+                audio_data = (CONST CHAR_T*)media_src_breakfast_3_zh;
+                audio_size = sizeof(media_src_breakfast_3_zh);
+                TUYA_CALL_ERR_LOG(wukong_audio_play_data(AI_AUDIO_CODEC_MP3, audio_data, audio_size));
+                tuya_ai_input_start(TRUE);                
+                demo_test_flag++;
+                demo_test_time = 5500;
+            }
+            else if(demo_test_flag == 9)
+            {
+                audio_data = (CONST CHAR_T*)media_src_breakfast_4_zh;
+                audio_size = sizeof(media_src_breakfast_4_zh);
+                TUYA_CALL_ERR_LOG(wukong_audio_play_data(AI_AUDIO_CODEC_MP3, audio_data, audio_size));
+                tuya_ai_input_start(TRUE);                
+                demo_test_flag++;
+                demo_test_time = 8200;//
+            }
+            else if(demo_test_flag == 10)
+            {
+                audio_data = (CONST CHAR_T*)media_src_order_breakfast_1_zh;
+                audio_size = sizeof(media_src_order_breakfast_1_zh);
+                TUYA_CALL_ERR_LOG(wukong_audio_play_data(AI_AUDIO_CODEC_MP3, audio_data, audio_size));
+                tuya_ai_input_start(TRUE);                
+                demo_test_flag++;
+                demo_test_time = 5800;  //7100
+            }
+            else if(demo_test_flag == 11)
+            {
+                audio_data = (CONST CHAR_T*)media_src_order_breakfast_2_zh;
+                audio_size = sizeof(media_src_order_breakfast_2_zh);
+                TUYA_CALL_ERR_LOG(wukong_audio_play_data(AI_AUDIO_CODEC_MP3, audio_data, audio_size));
+                tuya_ai_input_start(TRUE);                
+                demo_test_flag++;
+                demo_test_time = 7700;
+            }
+            else if(demo_test_flag == 12)
+            {
+                audio_data = (CONST CHAR_T*)media_src_get_moving_1_zh;
+                audio_size = sizeof(media_src_get_moving_1_zh);
+                TUYA_CALL_ERR_LOG(wukong_audio_play_data(AI_AUDIO_CODEC_MP3, audio_data, audio_size));
+                tuya_ai_input_start(TRUE);                
+                demo_test_flag++;
+                demo_test_time = 5700;  //7200
+                demo_test_cmd = 3;             
+                
+            }
+            else if(demo_test_flag == 13)
+            {
+                audio_data = (CONST CHAR_T*)media_src_get_moving_2_zh;
+                audio_size = sizeof(media_src_get_moving_2_zh);
+                TUYA_CALL_ERR_LOG(wukong_audio_play_data(AI_AUDIO_CODEC_MP3, audio_data, audio_size));
+                tuya_ai_input_start(TRUE);                
+                demo_test_flag++;
+                demo_test_time = 9000;
+            }
+            else if(demo_test_flag == 14)
+            {
+                audio_data = (CONST CHAR_T*)media_src_meeting_targets_zh;
+                audio_size = sizeof(media_src_meeting_targets_zh);
+                TUYA_CALL_ERR_LOG(wukong_audio_play_data(AI_AUDIO_CODEC_MP3, audio_data, audio_size));
+                tuya_ai_input_start(TRUE);                
+                demo_test_flag++;
+                demo_test_time = 11500;
+            }
+            else if(demo_test_flag == 15)
+            {
+                audio_data = (CONST CHAR_T*)media_src_to_get_testing_1_zh;
+                audio_size = sizeof(media_src_to_get_testing_1_zh);
+                TUYA_CALL_ERR_LOG(wukong_audio_play_data(AI_AUDIO_CODEC_MP3, audio_data, audio_size));
+                tuya_ai_input_start(TRUE);                
+                demo_test_flag++;
+                demo_test_time = 5000;
+                flag_moto_motion = 8;
+            }
+            else if(demo_test_flag == 16)
+            {
+                audio_data = (CONST CHAR_T*)media_src_to_get_testing_2_zh;
+                audio_size = sizeof(media_src_to_get_testing_2_zh);
+                TUYA_CALL_ERR_LOG(wukong_audio_play_data(AI_AUDIO_CODEC_MP3, audio_data, audio_size));
+                tuya_ai_input_start(TRUE);                
+                demo_test_flag++;
+                demo_test_time = 12000;
+            }
+            else if(demo_test_flag == 17)
+            {
+                audio_data = (CONST CHAR_T*)media_src_out_of_range_1_zh;
+                audio_size = sizeof(media_src_out_of_range_1_zh);
+                TUYA_CALL_ERR_LOG(wukong_audio_play_data(AI_AUDIO_CODEC_MP3, audio_data, audio_size));
+                tuya_ai_input_start(TRUE);                
+                demo_test_flag++;
+                demo_test_time = 5000;
+            }
+            else if(demo_test_flag == 18)
+            {
+                audio_data = (CONST CHAR_T*)media_src_out_of_range_2_zh;
+                audio_size = sizeof(media_src_out_of_range_2_zh);
+                TUYA_CALL_ERR_LOG(wukong_audio_play_data(AI_AUDIO_CODEC_MP3, audio_data, audio_size));
+                tuya_ai_input_start(TRUE);                
+                demo_test_flag++;
+                demo_test_time = 5300;
+            }
+            else if(demo_test_flag == 19)
+            {
+                audio_data = (CONST CHAR_T*)media_src_out_of_range_3_zh;
+                audio_size = sizeof(media_src_out_of_range_3_zh);
+                TUYA_CALL_ERR_LOG(wukong_audio_play_data(AI_AUDIO_CODEC_MP3, audio_data, audio_size));
+                tuya_ai_input_start(TRUE);                
+                demo_test_flag++;
+                demo_test_time = 9600;
+            }
+            else if(demo_test_flag == 20)
+            {
+                audio_data = (CONST CHAR_T*)media_src_sedentary_remind_1_zh;
+                audio_size = sizeof(media_src_sedentary_remind_1_zh);
+                TUYA_CALL_ERR_LOG(wukong_audio_play_data(AI_AUDIO_CODEC_MP3, audio_data, audio_size));
+                tuya_ai_input_start(TRUE);                
+                demo_test_flag++;
+                demo_test_time = 5000;  //5700
+                demo_test_cmd = 4;
+                moto_state = STATE_MOTO_TEST2;
+
+            }
+            else if(demo_test_flag == 21)
+            {
+                audio_data = (CONST CHAR_T*)media_src_sedentary_remind_2_zh;
+                audio_size = sizeof(media_src_sedentary_remind_2_zh);
+                TUYA_CALL_ERR_LOG(wukong_audio_play_data(AI_AUDIO_CODEC_MP3, audio_data, audio_size));
+                tuya_ai_input_start(TRUE);                
+                demo_test_flag++;
+                demo_test_time = 15600;
+            }
+            else if(demo_test_flag == 22)
+            {
+                audio_data = (CONST CHAR_T*)media_src_turnoff_remind_1_zh;
+                audio_size = sizeof(media_src_turnoff_remind_1_zh);
+                TUYA_CALL_ERR_LOG(wukong_audio_play_data(AI_AUDIO_CODEC_MP3, audio_data, audio_size));
+                tuya_ai_input_start(TRUE);                
+                demo_test_flag++;
+                demo_test_time = 3100;
+                flag_turn_off_on_cmd = 2;
+                flag_turn_off_on_state = 2;
+                moto_state = 2;
+            }
+            else if(demo_test_flag == 23)
+            {
+                audio_data = (CONST CHAR_T*)media_src_turnoff_remind_2_zh;
+                audio_size = sizeof(media_src_turnoff_remind_2_zh);
+                TUYA_CALL_ERR_LOG(wukong_audio_play_data(AI_AUDIO_CODEC_MP3, audio_data, audio_size));
+                tuya_ai_input_start(TRUE);                
+                demo_test_flag++;
+                flag_shut_voice = 2;
+                // flag_turn_off_on_cmd = 2;
+                demo_test_time = 6000;
+            }
+            else if(demo_test_flag == 24)
+            {
+                demo_test_flag = 0;
+                demo_test_state = 1;
+                tal_queue_post(s_queue_test, &demo_test_state, 0);
+            }
+            continue;
+            
+        }
+
+
         if(net_state == WSS_GOT_IP)
         {
             if(face_voice_flag == 1)
@@ -1649,6 +1947,8 @@ OPERATE_RET hugo_ai_desktop_init(VOID)
     // tal_queue_free(s_queue_state);
     tal_queue_free(s_queue_name_str);
     tal_queue_free(s_queue_wake);
+    tal_queue_free(s_queue_test);
+    
     return rt;
 }
 

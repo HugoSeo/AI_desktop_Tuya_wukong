@@ -28,6 +28,7 @@ STATIC AI_PLAYLIST_HANDLE __s_music_playlist = NULL;
 
 STATIC WF_STATION_STAT_E net_state={0};
 QUEUE_HANDLE  s_queue_wake;
+QUEUE_HANDLE  s_queue_test;
 
 STATIC OPERATE_RET __audio_output_open(TKL_AUDIO_SAMPLE_E sample, TKL_AUDIO_DATABITS_E datebits, TKL_AUDIO_CHANNEL_E channel)
 {
@@ -350,6 +351,7 @@ OPERATE_RET wukong_audio_player_alert(TY_AI_TOY_ALERT_TYPE_E type, BOOL_T send_e
     CONST CHAR_T *audio_data = NULL;
     UINT32_T audio_size = 0;
     UINT8_T wakeupflg = 1;
+    UINT8_T testflg = 0xFF;
 
     tal_wifi_station_get_status(&net_state);
     TAL_PR_NOTICE("------------net_state=%d------------",net_state);
@@ -383,6 +385,14 @@ OPERATE_RET wukong_audio_player_alert(TY_AI_TOY_ALERT_TYPE_E type, BOOL_T send_e
     case AI_TOY_ALERT_TYPE_NETWORK_CONNECTED:
         // audio_data = (CONST CHAR_T*)media_src_connected_zh;
         // audio_size = sizeof(media_src_connected_zh);
+
+        if (tal_queue_fetch(s_queue_test, &testflg, 1) == OPRT_OK)
+        {
+            if(testflg == 0)
+            {
+                return rt;
+            }
+        }
         audio_data = (CONST CHAR_T*)media_src_bingo_msc;
         audio_size = sizeof(media_src_bingo_msc);
         // tuya_ai_input_start(TRUE);

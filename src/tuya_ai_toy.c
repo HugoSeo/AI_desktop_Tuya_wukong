@@ -112,6 +112,7 @@
 #define AI_TOY_ALERT_PLAY_ID   "ai_toy_alert"
 
 extern UINT8_T flag_turn_off_on_state;
+extern UINT8_T demo_test_state;
 /* ---------------------------------------------------------------------------
  * File scope variables
  * --------------------------------------------------------------------------- */
@@ -737,7 +738,7 @@ STATIC VOID __on_ai_toy_audio_trigger_pin(UINT_T port, PUSH_KEY_TYPE_E type, INT
     // }
 
     /* Single/long press: pass to wukong key handler (e.g. hold to talk). */
-    if(flag_turn_off_on_state == 2)
+    if((flag_turn_off_on_state == 2)||(demo_test_state==0))
         return;
     wukong_ai_mode_dispatch(AI_MODE_OP_KEY, &type, 0);
 }
