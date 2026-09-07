@@ -164,7 +164,7 @@ extern "C" {
 // CONFIG_ENABLE_APP_AI_MONITOR is not set
 // CONFIG_ENABLE_CLOUD_ALERT is not set
 // CONFIG_ENABLE_APP_JOYINSIDE is not set
-#define ENABLE_AI_MF_TEST 1
+// CONFIG_ENABLE_AI_MF_TEST is not set
 // CONFIG_ENABLE_LOW_POWER is not set
 // end of Device Defaults
 

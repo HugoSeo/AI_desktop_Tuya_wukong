@@ -786,10 +786,10 @@ OPERATE_RET tuya_ai_toy_init(TY_AI_TOY_CFG_T *cfg)
     TUYA_CALL_ERR_LOG(__ai_toy_config_load());
 
     /* LED and two keys: audio trigger (short/long = SEQ_KEY_TIME/LONG_KEY_TIME), net (long = 10*LONG_KEY_TIME for reset). */
-    TUYA_CALL_ERR_GOTO(tuya_ai_toy_led_init(s_ai_toy->cfg.led_pin), __error);
+    // TUYA_CALL_ERR_GOTO(tuya_ai_toy_led_init(s_ai_toy->cfg.led_pin), __error);
     // TUYA_CALL_ERR_GOTO(tuya_ai_toy_key_init(s_ai_toy->cfg.audio_trigger_pin, TRUE, SEQ_KEY_TIME, LONG_KEY_TIME, __on_ai_toy_audio_trigger_pin), __error);
     TUYA_CALL_ERR_GOTO(tuya_ai_toy_key_init(s_ai_toy->cfg.audio_trigger_pin, FALSE, SEQ_KEY_TIME, LONG_KEY_TIME, __on_ai_toy_audio_trigger_pin), __error);
-    TUYA_CALL_ERR_GOTO(tuya_ai_toy_key_init(s_ai_toy->cfg.net_pin, TRUE, SEQ_KEY_TIME, LONG_KEY_TIME * 10, __on_ai_toy_net_pin), __error);
+    // TUYA_CALL_ERR_GOTO(tuya_ai_toy_key_init(s_ai_toy->cfg.net_pin, TRUE, SEQ_KEY_TIME, LONG_KEY_TIME * 10, __on_ai_toy_net_pin), __error);
 
 #if defined(ENABLE_TUYA_CAMERA) && (ENABLE_TUYA_CAMERA == 1)
     TAL_PR_NOTICE("ai toy -> init camera");

@@ -1105,10 +1105,9 @@ VOID Face_uart_task(VOID)
 
 VOID hugo_ai_face_timer(VOID)
 {
-    if(FACE_TIME>50) FACE_TIME -= 50;
-    else FACE_TIME = 0;
-    if(FACE_ADD_TIME>50) FACE_ADD_TIME -= 50;
-    Face_RXtime += 50;
+    if(FACE_TIME>0) FACE_TIME --;    
+    if(FACE_ADD_TIME>0) FACE_ADD_TIME --;
+    Face_RXtime += 1;
 }
 
 VOID hugo_ai_face_intimer(VOID)

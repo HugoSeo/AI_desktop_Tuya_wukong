@@ -270,7 +270,7 @@ VOID_T hugo_ai_lightboard_process(VOID_T)
     // UINT8_T buf[10] = {0x12,0x34,0x03,0x04,0x05,0x06};
 
     hugo_ai_seg_reflash_time();
-    if ((time_valid_flag == 1)&&(flag_turn_off_on_state == 1))
+    if ((time_valid_flag == 1)&&(flag_turn_off_on_state != 2))
     {
         // hugo_ai_seg_reflash_time();
         buf[0] = 0x01;

@@ -19,30 +19,33 @@ extern CONST BYTE_T media_src_waiting_zh[9842];
 extern CONST BYTE_T media_src_connecting_zh[7650];
 
 
-extern CONST BYTE_T media_src_introduction_1_zh[27894];
-extern CONST BYTE_T media_src_introduction_2_zh[37206];
-extern CONST BYTE_T media_src_introduction_3_zh[14454];
-extern CONST BYTE_T media_src_wakeup_zh[28848];
-extern CONST BYTE_T media_src_greeting_1_zh[31158];
-extern CONST BYTE_T media_src_greeting_2_zh[41910];
-extern CONST BYTE_T media_src_greeting_3_zh[30966];
-extern CONST BYTE_T media_src_breakfast_1_zh[24918];
-extern CONST BYTE_T media_src_breakfast_2_zh[28662];
-extern CONST BYTE_T media_src_breakfast_3_zh[29046];
-extern CONST BYTE_T media_src_breakfast_4_zh[41814];
-extern CONST BYTE_T media_src_order_breakfast_1_zh[28086];
-extern CONST BYTE_T media_src_order_breakfast_2_zh[14262];
-extern CONST BYTE_T media_src_get_moving_1_zh[29066];
-extern CONST BYTE_T media_src_get_moving_2_zh[16586];
-extern CONST BYTE_T media_src_meeting_targets_zh[25994];
-extern CONST BYTE_T media_src_to_get_testing_1_zh[25994];
-extern CONST BYTE_T media_src_to_get_testing_2_zh[28970];
-extern CONST BYTE_T media_src_out_of_range_1_zh[23489];
-extern CONST BYTE_T media_src_out_of_range_2_zh[20426];
-extern CONST BYTE_T media_src_out_of_range_3_zh[18986];
-extern CONST BYTE_T media_src_sedentary_remind_1_zh[21962];
-extern CONST BYTE_T media_src_sedentary_remind_2_zh[22922];
+extern CONST BYTE_T media_src_introduction_1_zh[31754];
+extern CONST BYTE_T media_src_introduction_2_zh[24170];
+extern CONST BYTE_T media_src_introduction_3_zh[27146];
+// extern CONST BYTE_T media_src_wakeup_zh[28848];
+extern CONST BYTE_T media_src_greeting_1_zh[34058];
+extern CONST BYTE_T media_src_greeting_2_zh[38570];
+// extern CONST BYTE_T media_src_greeting_3_zh[30966];  //
+extern CONST BYTE_T media_src_breakfast_1_zh[35018];
+extern CONST BYTE_T media_src_breakfast_2_zh[34634];
+// extern CONST BYTE_T media_src_breakfast_3_zh[29046];
+// extern CONST BYTE_T media_src_breakfast_4_zh[41814];
+// extern CONST BYTE_T media_src_order_breakfast_1_zh[28086];
+// extern CONST BYTE_T media_src_order_breakfast_2_zh[14262];
+extern CONST BYTE_T media_src_get_moving_1_zh[13130];
+extern CONST BYTE_T media_src_get_moving_2_zh[30890];
+extern CONST BYTE_T media_src_get_moving_3_zh[9386];
+extern CONST BYTE_T media_src_get_moving_4_zh[21002];
+// extern CONST BYTE_T media_src_meeting_targets_zh[25994];
+extern CONST BYTE_T media_src_to_get_testing_1_zh[35402];
+// extern CONST BYTE_T media_src_to_get_testing_2_zh[28970];
+extern CONST BYTE_T media_src_out_of_range_1_zh[24266];
+extern CONST BYTE_T media_src_out_of_range_2_zh[33194];
+// extern CONST BYTE_T media_src_out_of_range_3_zh[18986];
+extern CONST BYTE_T media_src_sedentary_remind_1_zh[28490];
+extern CONST BYTE_T media_src_sedentary_remind_2_zh[17930];
 
-extern CONST BYTE_T media_src_turnoff_remind_1_zh[11594];
-extern CONST BYTE_T media_src_turnoff_remind_2_zh[20426];
+extern CONST BYTE_T media_src_turnoff_remind_1_zh[33194];
+extern CONST BYTE_T media_src_turnoff_remind_2_zh[10422];
+extern CONST BYTE_T media_src_turnoff_remind_3_zh[20234];
 #endif // __MEDIA_SRC_ZH_H__

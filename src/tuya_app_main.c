@@ -564,19 +564,26 @@ OPERATE_RET __soc_device_init(VOID_T)
 //     // hugo_self_ai_seg_thread = NULL;
 // }
 
-STATIC VOID_T hugo_ai_general_thread(VOID_T *arg)
+STATIC VOID_T hugo_ai_general_timer_cb(TIMER_ID timer_id, VOID_T *arg)
 {
-    (void)arg;
-    while(1)
-    {
-        hugo_ai_face_timer();
-        hugo_ai_moto_timer();
-        tal_system_sleep(50);
-    }
-    tal_thread_delete(hugo_self_ai_general_thread);
-    hugo_self_ai_general_thread = NULL;
-    
+    hugo_ai_moto_timer();
+    hugo_ai_face_timer();
+    // hugo_ai_moto_task();
 }
+
+// STATIC VOID_T hugo_ai_general_thread(VOID_T *arg)
+// {
+//     (void)arg;
+//     while(1)
+//     {
+//         // hugo_ai_face_timer();
+//         // hugo_ai_moto_timer();
+//         tal_system_sleep(50);
+//     }
+//     tal_thread_delete(hugo_self_ai_general_thread);
+//     hugo_self_ai_general_thread = NULL;
+    
+// }
 
 
 STATIC VOID_T hugo_ai_i2c_thread(VOID_T *arg)
@@ -588,10 +595,10 @@ STATIC VOID_T hugo_ai_i2c_thread(VOID_T *arg)
     hugo_ai_moto_init();
     while(1)
     {
-        hugo_ai_position_process();
+        // hugo_ai_position_process();
         hugo_ai_moto_task();
         hugo_ai_lightboard_process();
-        tal_system_sleep(10);
+        // tal_system_sleep(5);
     }
     tal_thread_delete(hugo_self_ai_i2c_thread);
     hugo_self_ai_i2c_thread = NULL;
@@ -659,6 +666,9 @@ STATIC VOID_T user_main(VOID_T)
     // TIMER_ID hugo_ai_seg_timer = NULL;
     // tal_sw_timer_create(hugo_ai_seg_thread, NULL, &hugo_ai_seg_timer);
     // tal_sw_timer_start(hugo_ai_seg_timer, 3, TAL_TIMER_CYCLE);
+    TIMER_ID hugo_ai_general_timer_id = NULL;
+    tal_sw_timer_create(hugo_ai_general_timer_cb, NULL, &hugo_ai_general_timer_id);
+    tal_sw_timer_start(hugo_ai_general_timer_id, 1, TAL_TIMER_CYCLE);
 
     //Add by Hugo 26.6.11
     TAL_PR_DEBUG("Hugo desktop init");
@@ -718,8 +728,8 @@ VOID_T tuya_app_main(VOID)
     THREAD_CFG_T thrd_param1 = {2048, THREAD_PRIO_4, "hugo_ai_i2c__thread"};
     tal_thread_create_and_start(&hugo_self_ai_i2c_thread, NULL, NULL, hugo_ai_i2c_thread, NULL, &thrd_param1);
 
-    THREAD_CFG_T thrd_param2 = {2048, THREAD_PRIO_4, "hugo_ai_timer__thread"};
-    tal_thread_create_and_start(&hugo_self_ai_general_thread, NULL, NULL, hugo_ai_general_thread, NULL, &thrd_param2);
+    // THREAD_CFG_T thrd_param2 = {2048, THREAD_PRIO_4, "hugo_ai_timer__thread"};
+    // tal_thread_create_and_start(&hugo_self_ai_general_thread, NULL, NULL, hugo_ai_general_thread, NULL, &thrd_param2);
 
     // seg_init();    
     // TIMER_ID hugo_ai_seg_timer = NULL;
@@ -728,7 +738,7 @@ VOID_T tuya_app_main(VOID)
 
     // TIMER_ID hugo_ai_general_timer_id = NULL;
     // tal_sw_timer_create(hugo_ai_general_timer_cb, NULL, &hugo_ai_general_timer_id);
-    // tal_sw_timer_start(hugo_ai_general_timer_id, 1000, TAL_TIMER_CYCLE);
+    // tal_sw_timer_start(hugo_ai_general_timer_id, 5, TAL_TIMER_ONCE);
 
 #if OPERATING_SYSTEM == SYSTEM_LINUX
     while (1) {

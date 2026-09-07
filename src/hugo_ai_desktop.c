@@ -96,7 +96,8 @@ STATIC UINT8_T flag_shut_voice = 0;
 UINT8_T flag_turn_off_on_state = 2;
 STATIC UINT8_T flag_config_voic = 0;
 STATIC UINT8_T getdata[4]={0};
-STATIC UINT8_T wakeflag={0};
+STATIC UINT8_T wakeflag=0;
+STATIC UINT8_T turnonkeyflag=0;
 STATIC UINT8_T getnamestr[31]={0};
 
 STATIC UINT16_T radar_distance = 0;
@@ -119,7 +120,7 @@ STATIC UINT16_T adc_check_time = 0;
 STATIC UINT16_T seg_dis_time = 0;
 STATIC UINT16_T rgb_dis_time = 0;
 
-UINT8_T demo_test_state = 0;
+UINT8_T demo_test_state = 1;    //0:demo test first run     1:usually run
 STATIC UINT16_T demo_test_time = 0;
 STATIC UINT8_T demo_test_flag = 0;
 STATIC UINT8_T demo_test_cmd = 0;
@@ -377,7 +378,7 @@ VOID mcu_uart_rx_process(VOID)
                 case 0x01:  //动作控制应答
                     break;
                 case 0x02:  //开关机设置
-                    if((uart_rxbuff[t+5]==1)&&(uart_rxbuff[t+6]<=2))
+                    if((uart_rxbuff[t+5]==1)&&(uart_rxbuff[t+6]<=3))
                     {
                         flag_turn_off_on_state = uart_rxbuff[t+6];
                         flag_shut_voice = flag_turn_off_on_state;
@@ -393,8 +394,10 @@ VOID mcu_uart_rx_process(VOID)
                             rgb_dis_time = 5000;
                             flag_rgb_data = RGB_WAIT;
                             moto_state = STATE_MOTO_ON;
-                            if(demo_test_state!=0)
-                                hugo_ai_set_free_wakeup();
+                            // if(demo_test_state!=0)
+                            demo_test_state = 1;
+                            hugo_ai_set_free_wakeup();
+                            turnonkeyflag = 1;
 
                         }
                         else if(flag_turn_off_on_state == POWER_STATUS_OFF)
@@ -405,6 +408,16 @@ VOID mcu_uart_rx_process(VOID)
                             moto_state = STATE_MOTO_OFF;
 
                             hugo_ai_set_free_idle();
+                        }
+                        else if(flag_turn_off_on_state == POWER_STATUS_DEMO)
+                        {
+                            flag_seg_data = 1;
+                            time_dis_flag = 1;
+
+                            rgb_dis_time = 5000;
+                            flag_rgb_data = RGB_WAIT;
+                            moto_state = STATE_MOTO_ON;
+                            demo_test_state = 0;    //demo test mode
                         }
                         
                     }
@@ -652,13 +665,15 @@ VOID hugo_ai_moto_init(VOID)
     TUYA_CALL_ERR_GOTO(tkl_pwm_init(PWM_ID_DOWN, &pwm_cfg), __EXIT);
     // TUYA_CALL_ERR_GOTO(tkl_pwm_start(PWM_ID_DOWN), __EXIT);
 
+    #if 1
     hugo_ai_motoadc_init();
-
+    #endif
     __EXIT:
         ;
 }
 STATIC UINT8_T moto_adc_get(VOID)
 {
+    #if 1
     OPERATE_RET rt = OPRT_OK;
     INT32_T adc_value = 0;
     STATIC INT32_T volt_cur = 0xFFFFFFFF;
@@ -679,7 +694,7 @@ STATIC UINT8_T moto_adc_get(VOID)
     if(adc_value>195)
     {
         adc_cnt++;
-        if(adc_cnt >= 5)
+        if(adc_cnt >= 10)
         {
             adc_cnt = 0;
             return FALSE;
@@ -689,12 +704,7 @@ STATIC UINT8_T moto_adc_get(VOID)
     {
         adc_cnt = 0;
     }
-    
-    // if (adc_value > 90)
-    // {
-    //     return FALSE;
-    // }
-    
+        #endif
     return TRUE;
 }
 STATIC VOID hugo_ai_moto_up(UINT_T pwm_duty)
@@ -773,35 +783,24 @@ STATIC VOID hugo_ai_moto_stop(VOID)
 }
 VOID hugo_ai_moto_timer(VOID)
 {
-    if(moto_time > 50)
+    if(moto_time > 0)
     {
-        moto_time -= 50;
+        moto_time --;
     }
-    else
+    
+    if(adc_check_time>0)
     {
-        moto_time = 0;
-    }
-    if(adc_check_time>50)
-    {
-        adc_check_time -= 50;
-    }
-    else
-    {
-        adc_check_time = 0;
-    }
+        adc_check_time --;
+    }   
 
-    if(hold_time>50)
+    if(hold_time>0)
     {
-        hold_time -= 50;
-    }
-    else
-    {
-        hold_time = 0;
-    }
+        hold_time --;
+    }    
 
-    if(seg_dis_time>50)
+    if(seg_dis_time>0)
     {
-        seg_dis_time -= 50;
+        seg_dis_time --;
     }
     else
     {
@@ -809,9 +808,9 @@ VOID hugo_ai_moto_timer(VOID)
         flag_seg_data = 3;
     }
 
-    if (rgb_dis_time > 50)
+    if (rgb_dis_time > 0)
     {
-        rgb_dis_time -= 50;
+        rgb_dis_time --;
     }
     else
     {
@@ -821,15 +820,11 @@ VOID hugo_ai_moto_timer(VOID)
 
     if(demo_test_state == 0)
     {
-        if (demo_test_time>50)
+        if (demo_test_time>0)
         {
-            demo_test_time -= 50;
-        }
-        else
-        {
-            demo_test_time = 0;
-        }
-}
+            demo_test_time --;
+        }        
+    }
     
 }
 VOID hugo_ai_moto_process(VOID)
@@ -911,7 +906,7 @@ VOID hugo_ai_moto_process(VOID)
     if(moto_state == STATE_MOTO_ON)
     {
         moto_state = STATE_MOTO_IDLE;
-        moto_flag = MOTO_RUN_UP;
+        moto_flag = MOTO_RUN_DOWN;
         // moto_step = 1;
         TAL_PR_INFO("=====set STATE_MOTO_ON");
     }
@@ -919,7 +914,7 @@ VOID hugo_ai_moto_process(VOID)
     {
 
         moto_state = STATE_MOTO_IDLE;
-        moto_flag = MOTO_RUN_UP;
+        moto_flag = MOTO_RUN_DOWN;
         // moto_step = 0;
         TAL_PR_INFO("=====set STATE_MOTO_OFF");
     }
@@ -932,6 +927,30 @@ VOID hugo_ai_moto_process(VOID)
     {
         moto_state = STATE_MOTO_IDLE;
         moto_flag = MOTO_RUN_DOWN;
+    }
+    else if(moto_state == STATE_MOTO_TEST3)
+    {
+        moto_state = STATE_MOTO_IDLE;
+        moto_flag = MOTO_RUN_DOWN;
+    }
+    else if(moto_state == STATE_MOTO_TEST4)
+    {
+        moto_state = STATE_MOTO_IDLE;
+        moto_flag = MOTO_RUN_UP;
+    }
+    else if(moto_state == STATE_MOTO_NOD)
+    {
+        moto_state = STATE_MOTO_IDLE;
+        moto_flag = MOTO_RUN_UP;
+        moto_step = 1;
+        // moto_time = 200;
+    }
+    else if(moto_state == STATE_MOTO_NOD1)
+    {
+        moto_state = STATE_MOTO_IDLE;
+        moto_flag = MOTO_RUN_DOWN;
+        moto_step = 1;
+        // moto_time = 200;
     }
     // else if(moto_state == STATE_MOTO_NOD)
     // {
@@ -1099,8 +1118,7 @@ VOID hugo_ai_moto_task(VOID)
 
 
     switch(moto_flag)
-    {
-
+    {       
         case MOTO_RUN_UP:
             hugo_ai_moto_up(5500);
             hugo_ai_moto_down(0);
@@ -1108,22 +1126,79 @@ VOID hugo_ai_moto_task(VOID)
             moto_flag=MOTO_RUN_UP_END;
             adc_check_time = 100;
             moto_time = 5000;
-            if(moto_cur_state == STATE_MOTO_TEST1)
-                moto_time = 600;
+            if((moto_cur_state == STATE_MOTO_ON)||(moto_cur_state == STATE_MOTO_TEST1))
+            {
+                moto_time = 2200;
+            }
+            else if(moto_cur_state == STATE_MOTO_TEST3)
+            {
+                moto_time = 3200;
+            }
+            else if(moto_cur_state == STATE_MOTO_TEST4)
+            {
+                moto_time = 1300;
+            }
+            else if(moto_cur_state == STATE_MOTO_NOD)
+            {
+                // adc_check_time = 200;
+                if(moto_step == 1)
+                {
+                    moto_time = 750;//200;
+                    moto_step++;
+                }
+                else if((moto_step == 3)||(moto_step == 5))
+                {
+                    moto_time = 750;//500;
+                    moto_step++;
+                }
+            }
+            else if(moto_cur_state == STATE_MOTO_NOD1)
+            {
+                // adc_check_time = 900;
+                if((moto_step == 2)||(moto_step == 4))
+                {
+                    moto_time = 750;
+                    moto_step++;
+                }
+                else if(moto_step == 6)
+                {
+                    moto_time = 750;
+                    moto_step++;
+                }
+            }
         break;
         case MOTO_RUN_UP_END:
-            if((adc_check_time==0)&&(moto_adc_get()==FALSE)||(moto_time==0))
+            if((moto_time==0)||((adc_check_time==0)&&(moto_adc_get()==FALSE)))
             {
-                if(moto_cur_state == STATE_MOTO_ON)
+                
+                hugo_ai_moto_up(10000);
+                hugo_ai_moto_down(10000);
+                // tal_system_sleep(100);
+                // hugo_ai_moto_stop();
+                TAL_PR_INFO("=====ADC MOTO_STOP");
+                if((moto_step!=0)&&(moto_step!=7))
                 {
                     moto_flag = MOTO_RUN_DOWN;
-                    moto_time=3000;
+                    moto_time=200;
                 }
                 else
-                    moto_flag = MOTO_STOP;
-                hugo_ai_moto_stop();
-                TAL_PR_INFO("=====ADC MOTO_STOP");
-                moto_time = 0;
+                {                    
+                    
+                    if(moto_cur_state == STATE_MOTO_ON)
+                    {
+                        moto_cur_state = STATE_MOTO_NOD;
+                        moto_flag = MOTO_RUN_UP;
+                        moto_time = 500;
+                        moto_step = 1;
+                    }
+                    else
+                    {
+                        moto_flag = MOTO_STOP;
+                        moto_time = 200;
+                        moto_step = 0;
+                    }
+                }
+                
             }
         break;
         case  MOTO_RUN_DOWN:
@@ -1131,13 +1206,43 @@ VOID hugo_ai_moto_task(VOID)
             hugo_ai_moto_up(0);
             TAL_PR_INFO("=====set hugo_ai_moto_down");
             moto_flag=MOTO_RUN_DOWN_END;
-            adc_check_time = 50;
-            moto_time = 2200;
+            adc_check_time = 100;
+            moto_time = 5000;
             if(moto_cur_state == STATE_MOTO_TEST2)
-            moto_time = 600;
+            {
+                moto_time = 600;
+            }
+            else if(moto_cur_state == STATE_MOTO_NOD)
+            {
+                // adc_check_time = 900;
+                if((moto_step == 2)||(moto_step == 4))
+                {
+                    moto_time = 500;//800;
+                    moto_step++;
+                }
+                else if(moto_step == 6)
+                {
+                    moto_time = 100;
+                    moto_step++;
+                }
+            }
+            else if(moto_cur_state == STATE_MOTO_NOD1)
+            {
+                // adc_check_time = 200;
+                if(moto_step == 1)
+                {
+                    moto_time = 200;
+                    moto_step++;
+                }
+                else if((moto_step == 3)||(moto_step == 5))
+                {
+                    moto_time = 500;
+                    moto_step++;
+                }
+            }
         break;
         case MOTO_RUN_DOWN_END:
-            if((adc_check_time==0)&&(moto_adc_get()==FALSE)||(moto_time==0))
+            if((moto_time==0)||((adc_check_time==0)&&(moto_adc_get()==FALSE)))
             {
                 // if(moto_cur_state == STATE_MOTO_ON)
                 // {
@@ -1145,14 +1250,33 @@ VOID hugo_ai_moto_task(VOID)
                 //     moto_time=3000;
                 // }
                 // else  
-                moto_flag= MOTO_STOP;
-                hugo_ai_moto_stop();
+                hugo_ai_moto_up(10000);
+                hugo_ai_moto_down(10000);
+                // tal_system_sleep(100);
+                
+                // hugo_ai_moto_stop();
                 TAL_PR_INFO("=====ADC MOTO_STOP");
-                moto_time = 0;
+                // moto_time = 0;
+                if((moto_cur_state == STATE_MOTO_ON)||(moto_cur_state == STATE_MOTO_TEST3)||(moto_step!=0)&&(moto_step!=7))
+                {
+                    moto_flag = MOTO_RUN_UP;
+                    moto_time = 200;
+                }
+                else
+                {
+                    moto_flag= MOTO_STOP;
+                    moto_time = 200;
+                    moto_step = 0;
+                }                
             }
         break;
         case MOTO_STOP:
-
+            hugo_ai_moto_stop();
+            moto_flag = MOTO_IDLE;
+            
+        break;
+        case MOTO_IDLE:
+        default:
         break;
     }
 
@@ -1225,7 +1349,7 @@ STATIC UINT8_T hugo_ai_adc_init(VOID)
     OPERATE_RET rt = OPRT_OK;
     STATIC TUYA_ADC_BASE_CFG_T sg_adc_cfg = {
         .ch_list.data = (1<<ADC_CHANNEL_A) | (1<<ADC_CHANNEL_B) | (1<<ADC_CHANNEL_C) | (1<<ADC_CHANNEL_D),
-        // .ch_list.data = (1<<ADC_CHANNEL_A) ,
+        // .ch_list.data = (1<<ADC_CHANNEL_B) ,
         .ch_nums = 4,    //adc Number of channel lists
         .width = 12,
         .mode = TUYA_ADC_CONTINUOUS,
@@ -1236,10 +1360,11 @@ STATIC UINT8_T hugo_ai_adc_init(VOID)
     TUYA_CALL_ERR_GOTO(tkl_adc_init(ADC_NUM, &sg_adc_cfg), __EXIT_ADC);
     return 1;
 __EXIT_ADC:
+    TUYA_CALL_ERR_LOG(tkl_adc_deinit(ADC_NUM));
     return 0;
 }
 
-VOID adc_get(VOID)
+VOID hugo_ai_adc_get(VOID)
 {
     OPERATE_RET rt = OPRT_OK;
     INT32_T adc_value[16] = {0};
@@ -1257,7 +1382,7 @@ VOID adc_get(VOID)
     //     TAL_PR_INFO("ADC%d[%d] get Volt = %d", i, adc_value[i], adc_value[i]/2*3300/4096);
     // }
 
-    // TAL_PR_INFO("ADC get Volt = [%d:%d %d] [%d:%d %d] [%d:%d %d] [%d:%d %d]",\
+    TAL_PR_INFO("ADC get= [%d:%d %d] [%d:%d %d] [%d:%d %d] [%d:%d %d]",\
         ADC_CHANNEL_A, adc_value[0], adc_value[0]/2*3300/4096,\
         ADC_CHANNEL_B, adc_value[1], adc_value[1]/2*3300/4096,\
         ADC_CHANNEL_C, adc_value[2], adc_value[2]/2*3300/4096,\
@@ -1273,8 +1398,10 @@ VOID adc_get(VOID)
 
 STATIC UINT8_T hugo_ai_adc_task(VOID)
 {
-    adc_get();
-    // tal_system_sleep(300);
+    hugo_ai_adc_init();
+    // tal_system_sleep(100);
+    hugo_ai_adc_get();
+    tal_system_sleep(100);
 }
 
 OPERATE_RET hugo_ai_desktop_init(VOID)
@@ -1548,7 +1675,14 @@ OPERATE_RET hugo_ai_desktop_init(VOID)
             
             // moto_state = STATE_MOTO_NOD;
             moto_nod_times = 5;
-            flag_moto_motion = 9;
+            if(turnonkeyflag == 1)
+            {
+                turnonkeyflag = 0;
+            }
+            else
+            {
+                flag_moto_motion = 9;
+            }
 
             // seg_dis_time = 30000;
             // flag_seg_data = 1;
@@ -1585,17 +1719,7 @@ OPERATE_RET hugo_ai_desktop_init(VOID)
         {
             flag_shut_voice = 0;
 
-            if(demo_test_state == 0)
-            {
-                demo_test_flag = 1;
-                demo_test_time = 7200;            
-                audio_data = (CONST CHAR_T*)media_src_introduction_1_zh;
-                audio_size = sizeof(media_src_introduction_1_zh);
-                TUYA_CALL_ERR_LOG(wukong_audio_play_data(AI_AUDIO_CODEC_MP3, audio_data, audio_size));
-                tuya_ai_input_start(TRUE);
-
-                continue;
-            }
+            
             tuya_ai_input_start(TRUE);
             TUYA_CALL_ERR_LOG(wukong_ai_agent_send_text("你好，自我介绍一下吧。"));
             tuya_ai_input_stop();
@@ -1634,6 +1758,21 @@ OPERATE_RET hugo_ai_desktop_init(VOID)
             //     TUYA_CALL_ERR_LOG(wukong_audio_play_data(AI_AUDIO_CODEC_MP3, audio_data, audio_size));
             // }
         }
+        else if(flag_shut_voice == 3)
+        {
+            flag_shut_voice = 0;
+            // if(demo_test_state == 0)
+            {
+                demo_test_flag = 1;
+                demo_test_time = 8300;            
+                audio_data = (CONST CHAR_T*)media_src_introduction_1_zh;
+                audio_size = sizeof(media_src_introduction_1_zh);
+                TUYA_CALL_ERR_LOG(wukong_audio_play_data(AI_AUDIO_CODEC_MP3, audio_data, audio_size));
+                tuya_ai_input_start(TRUE);
+
+                // continue;
+            }
+        }
         // if(flag_shut_voice == 2)
         // {
         //     flag_shut_voice = 0;
@@ -1666,7 +1805,8 @@ OPERATE_RET hugo_ai_desktop_init(VOID)
                 TUYA_CALL_ERR_LOG(wukong_audio_play_data(AI_AUDIO_CODEC_MP3, audio_data, audio_size));
                 tuya_ai_input_start(TRUE);                
                 demo_test_flag++;
-                demo_test_time = 5000;//7100
+                demo_test_time = 7500;//5500;
+                
             }
             else if(demo_test_flag == 2)
             {
@@ -1675,7 +1815,9 @@ OPERATE_RET hugo_ai_desktop_init(VOID)
                 TUYA_CALL_ERR_LOG(wukong_audio_play_data(AI_AUDIO_CODEC_MP3, audio_data, audio_size));
                 tuya_ai_input_start(TRUE);                
                 demo_test_flag++;
-                demo_test_time = 8800;
+                demo_test_time = 9300;//5300;
+                demo_test_cmd = 1;
+                moto_state = STATE_MOTO_NOD1;
             }
             else if(demo_test_flag == 3)
             {
@@ -1684,8 +1826,9 @@ OPERATE_RET hugo_ai_desktop_init(VOID)
                 TUYA_CALL_ERR_LOG(wukong_audio_play_data(AI_AUDIO_CODEC_MP3, audio_data, audio_size));
                 tuya_ai_input_start(TRUE);                
                 demo_test_flag++;
-                demo_test_time = 5400;  //7900
-                demo_test_cmd = 1;
+                demo_test_time = 5300;  //7900
+                demo_test_cmd = 2;
+                moto_state = STATE_MOTO_NOD;
             }
             else if(demo_test_flag == 4)
             {
@@ -1694,196 +1837,156 @@ OPERATE_RET hugo_ai_desktop_init(VOID)
                 TUYA_CALL_ERR_LOG(wukong_audio_play_data(AI_AUDIO_CODEC_MP3, audio_data, audio_size));
                 tuya_ai_input_start(TRUE);                
                 demo_test_flag++;
-                demo_test_time = 7100;//9700
+                demo_test_time = 10700;//6700;
             }
             else if(demo_test_flag == 5)
-            {
-                audio_data = (CONST CHAR_T*)media_src_greeting_3_zh;
-                audio_size = sizeof(media_src_greeting_3_zh);
-                TUYA_CALL_ERR_LOG(wukong_audio_play_data(AI_AUDIO_CODEC_MP3, audio_data, audio_size));
-                tuya_ai_input_start(TRUE);                
-                demo_test_flag++;
-                demo_test_time = 12700;
-            }
-            else if(demo_test_flag == 6)
             {
                 audio_data = (CONST CHAR_T*)media_src_breakfast_1_zh;
                 audio_size = sizeof(media_src_breakfast_1_zh);
                 TUYA_CALL_ERR_LOG(wukong_audio_play_data(AI_AUDIO_CODEC_MP3, audio_data, audio_size));
                 tuya_ai_input_start(TRUE);                
                 demo_test_flag++;
-                demo_test_time = 5000;
-                demo_test_cmd = 2;
-                moto_state = STATE_MOTO_TEST1;
+                demo_test_time = 6000;
+                // demo_test_cmd = 2;
+                moto_state = STATE_MOTO_NOD1;
             }
-            else if(demo_test_flag == 7)
+            else if(demo_test_flag == 6)
             {
                 audio_data = (CONST CHAR_T*)media_src_breakfast_2_zh;
                 audio_size = sizeof(media_src_breakfast_2_zh);
                 TUYA_CALL_ERR_LOG(wukong_audio_play_data(AI_AUDIO_CODEC_MP3, audio_data, audio_size));
                 tuya_ai_input_start(TRUE);                
                 demo_test_flag++;
-                demo_test_time = 5500;
-            }
-            else if(demo_test_flag == 8)
-            {
-                audio_data = (CONST CHAR_T*)media_src_breakfast_3_zh;
-                audio_size = sizeof(media_src_breakfast_3_zh);
-                TUYA_CALL_ERR_LOG(wukong_audio_play_data(AI_AUDIO_CODEC_MP3, audio_data, audio_size));
-                tuya_ai_input_start(TRUE);                
-                demo_test_flag++;
-                demo_test_time = 5500;
-            }
-            else if(demo_test_flag == 9)
-            {
-                audio_data = (CONST CHAR_T*)media_src_breakfast_4_zh;
-                audio_size = sizeof(media_src_breakfast_4_zh);
-                TUYA_CALL_ERR_LOG(wukong_audio_play_data(AI_AUDIO_CODEC_MP3, audio_data, audio_size));
-                tuya_ai_input_start(TRUE);                
-                demo_test_flag++;
-                demo_test_time = 8200;//
-            }
-            else if(demo_test_flag == 10)
-            {
-                audio_data = (CONST CHAR_T*)media_src_order_breakfast_1_zh;
-                audio_size = sizeof(media_src_order_breakfast_1_zh);
-                TUYA_CALL_ERR_LOG(wukong_audio_play_data(AI_AUDIO_CODEC_MP3, audio_data, audio_size));
-                tuya_ai_input_start(TRUE);                
-                demo_test_flag++;
-                demo_test_time = 5800;  //7100
-            }
-            else if(demo_test_flag == 11)
-            {
-                audio_data = (CONST CHAR_T*)media_src_order_breakfast_2_zh;
-                audio_size = sizeof(media_src_order_breakfast_2_zh);
-                TUYA_CALL_ERR_LOG(wukong_audio_play_data(AI_AUDIO_CODEC_MP3, audio_data, audio_size));
-                tuya_ai_input_start(TRUE);                
-                demo_test_flag++;
-                demo_test_time = 7700;
-            }
-            else if(demo_test_flag == 12)
+                demo_test_time = 10000;//6000;
+                
+            }            
+            else if(demo_test_flag == 7)
             {
                 audio_data = (CONST CHAR_T*)media_src_get_moving_1_zh;
                 audio_size = sizeof(media_src_get_moving_1_zh);
                 TUYA_CALL_ERR_LOG(wukong_audio_play_data(AI_AUDIO_CODEC_MP3, audio_data, audio_size));
                 tuya_ai_input_start(TRUE);                
                 demo_test_flag++;
-                demo_test_time = 5700;  //7200
-                demo_test_cmd = 3;             
-                
+                demo_test_time = 3500;  //7200
+                demo_test_cmd = 3;
+                moto_state = STATE_MOTO_TEST3;
             }
-            else if(demo_test_flag == 13)
+            else if(demo_test_flag == 8)
             {
                 audio_data = (CONST CHAR_T*)media_src_get_moving_2_zh;
                 audio_size = sizeof(media_src_get_moving_2_zh);
                 TUYA_CALL_ERR_LOG(wukong_audio_play_data(AI_AUDIO_CODEC_MP3, audio_data, audio_size));
                 tuya_ai_input_start(TRUE);                
                 demo_test_flag++;
-                demo_test_time = 9000;
+                demo_test_time = 7200;//5200;
             }
-            else if(demo_test_flag == 14)
+            else if(demo_test_flag == 9)
             {
-                audio_data = (CONST CHAR_T*)media_src_meeting_targets_zh;
-                audio_size = sizeof(media_src_meeting_targets_zh);
+                audio_data = (CONST CHAR_T*)media_src_get_moving_3_zh;
+                audio_size = sizeof(media_src_get_moving_3_zh);
                 TUYA_CALL_ERR_LOG(wukong_audio_play_data(AI_AUDIO_CODEC_MP3, audio_data, audio_size));
                 tuya_ai_input_start(TRUE);                
                 demo_test_flag++;
-                demo_test_time = 11500;
+                demo_test_time = 2600;
             }
-            else if(demo_test_flag == 15)
+            else if(demo_test_flag == 10)
+            {
+                audio_data = (CONST CHAR_T*)media_src_get_moving_4_zh;
+                audio_size = sizeof(media_src_get_moving_4_zh);
+                TUYA_CALL_ERR_LOG(wukong_audio_play_data(AI_AUDIO_CODEC_MP3, audio_data, audio_size));
+                tuya_ai_input_start(TRUE);                
+                demo_test_flag++;
+                demo_test_time = 9700;//5700;
+            }            
+            else if(demo_test_flag == 11)
             {
                 audio_data = (CONST CHAR_T*)media_src_to_get_testing_1_zh;
                 audio_size = sizeof(media_src_to_get_testing_1_zh);
                 TUYA_CALL_ERR_LOG(wukong_audio_play_data(AI_AUDIO_CODEC_MP3, audio_data, audio_size));
                 tuya_ai_input_start(TRUE);                
                 demo_test_flag++;
-                demo_test_time = 5000;
+                demo_test_time = 8000;//6000;
                 flag_moto_motion = 8;
+                moto_state = STATE_MOTO_NOD;
             }
-            else if(demo_test_flag == 16)
-            {
-                audio_data = (CONST CHAR_T*)media_src_to_get_testing_2_zh;
-                audio_size = sizeof(media_src_to_get_testing_2_zh);
-                TUYA_CALL_ERR_LOG(wukong_audio_play_data(AI_AUDIO_CODEC_MP3, audio_data, audio_size));
-                tuya_ai_input_start(TRUE);                
-                demo_test_flag++;
-                demo_test_time = 12000;
-            }
-            else if(demo_test_flag == 17)
+           
+            else if(demo_test_flag == 12)
             {
                 audio_data = (CONST CHAR_T*)media_src_out_of_range_1_zh;
                 audio_size = sizeof(media_src_out_of_range_1_zh);
                 TUYA_CALL_ERR_LOG(wukong_audio_play_data(AI_AUDIO_CODEC_MP3, audio_data, audio_size));
                 tuya_ai_input_start(TRUE);                
                 demo_test_flag++;
-                demo_test_time = 5000;
+                demo_test_time = 5600;
             }
-            else if(demo_test_flag == 18)
+            else if(demo_test_flag == 13)
             {
                 audio_data = (CONST CHAR_T*)media_src_out_of_range_2_zh;
                 audio_size = sizeof(media_src_out_of_range_2_zh);
                 TUYA_CALL_ERR_LOG(wukong_audio_play_data(AI_AUDIO_CODEC_MP3, audio_data, audio_size));
                 tuya_ai_input_start(TRUE);                
                 demo_test_flag++;
-                demo_test_time = 5300;
-            }
-            else if(demo_test_flag == 19)
-            {
-                audio_data = (CONST CHAR_T*)media_src_out_of_range_3_zh;
-                audio_size = sizeof(media_src_out_of_range_3_zh);
-                TUYA_CALL_ERR_LOG(wukong_audio_play_data(AI_AUDIO_CODEC_MP3, audio_data, audio_size));
-                tuya_ai_input_start(TRUE);                
-                demo_test_flag++;
-                demo_test_time = 9600;
-            }
-            else if(demo_test_flag == 20)
+                demo_test_time = 9600;//5600;
+            }            
+            else if(demo_test_flag == 14)
             {
                 audio_data = (CONST CHAR_T*)media_src_sedentary_remind_1_zh;
                 audio_size = sizeof(media_src_sedentary_remind_1_zh);
                 TUYA_CALL_ERR_LOG(wukong_audio_play_data(AI_AUDIO_CODEC_MP3, audio_data, audio_size));
                 tuya_ai_input_start(TRUE);                
                 demo_test_flag++;
-                demo_test_time = 5000;  //5700
+                demo_test_time = 7400;//5400;
                 demo_test_cmd = 4;
-                moto_state = STATE_MOTO_TEST2;
+                moto_state = STATE_MOTO_TEST4;
 
             }
-            else if(demo_test_flag == 21)
+            else if(demo_test_flag == 15)
             {
                 audio_data = (CONST CHAR_T*)media_src_sedentary_remind_2_zh;
                 audio_size = sizeof(media_src_sedentary_remind_2_zh);
                 TUYA_CALL_ERR_LOG(wukong_audio_play_data(AI_AUDIO_CODEC_MP3, audio_data, audio_size));
                 tuya_ai_input_start(TRUE);                
                 demo_test_flag++;
-                demo_test_time = 15600;
+                demo_test_time = 8300;//4300;
             }
-            else if(demo_test_flag == 22)
+            else if(demo_test_flag == 16)
             {
                 audio_data = (CONST CHAR_T*)media_src_turnoff_remind_1_zh;
                 audio_size = sizeof(media_src_turnoff_remind_1_zh);
                 TUYA_CALL_ERR_LOG(wukong_audio_play_data(AI_AUDIO_CODEC_MP3, audio_data, audio_size));
                 tuya_ai_input_start(TRUE);                
                 demo_test_flag++;
-                demo_test_time = 3100;
-                flag_turn_off_on_cmd = 2;
-                flag_turn_off_on_state = 2;
-                moto_state = 2;
+                demo_test_time = 5700;
+                moto_state = STATE_MOTO_NOD1;
             }
-            else if(demo_test_flag == 23)
+            else if(demo_test_flag == 17)
             {
                 audio_data = (CONST CHAR_T*)media_src_turnoff_remind_2_zh;
                 audio_size = sizeof(media_src_turnoff_remind_2_zh);
                 TUYA_CALL_ERR_LOG(wukong_audio_play_data(AI_AUDIO_CODEC_MP3, audio_data, audio_size));
                 tuya_ai_input_start(TRUE);                
                 demo_test_flag++;
-                flag_shut_voice = 2;
                 // flag_turn_off_on_cmd = 2;
-                demo_test_time = 6000;
+                demo_test_time = 4600;//2600;
             }
-            else if(demo_test_flag == 24)
+            else if(demo_test_flag == 18)
+            {
+                audio_data = (CONST CHAR_T*)media_src_turnoff_remind_3_zh;
+                audio_size = sizeof(media_src_turnoff_remind_3_zh);
+                TUYA_CALL_ERR_LOG(wukong_audio_play_data(AI_AUDIO_CODEC_MP3, audio_data, audio_size));
+                tuya_ai_input_start(TRUE);                
+                demo_test_flag++;
+                // flag_turn_off_on_cmd = 2;
+                demo_test_time = 4200;
+            }
+            else if(demo_test_flag == 19)
             {
                 demo_test_flag = 0;
                 demo_test_state = 1;
+                flag_turn_off_on_cmd = POWER_STATUS_OFF;
+                // flag_turn_off_on_state = 2;
+                flag_turn_off_on_state = POWER_STATUS_OFF;
+                moto_state = 2;
                 tal_queue_post(s_queue_test, &demo_test_state, 0);
             }
             continue;
