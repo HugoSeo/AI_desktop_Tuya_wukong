@@ -19,7 +19,7 @@
 #define I2C_READ            1
 
 /* You can change the I2C frequency by changing this value */
-#define DELAY_US            10
+#define DELAY_US            5
 
 /*
 * Adaptation is needed based on the chip platform.

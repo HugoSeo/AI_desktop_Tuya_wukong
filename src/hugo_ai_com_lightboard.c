@@ -280,7 +280,7 @@ VOID_T hugo_ai_lightboard_process(VOID_T)
         // buf[2] = 0x23;
         // TAL_PR_NOTICE("time: %.2d:%.2d",buf[1],buf[2]);
         lightboard_write_data(0x01,buf,3);
-        // tal_system_sleep(300);
+        tal_system_sleep(300);
         lightboard_write_data(0x01,buf,3);
         time_dis_flag = 0;
         // buf[0] = 6;
@@ -292,7 +292,7 @@ VOID_T hugo_ai_lightboard_process(VOID_T)
         buf[1] = 0x00;
         buf[2] = 0x00;
         lightboard_write_data(0x01,buf,3);
-        // tal_system_sleep(300);
+        tal_system_sleep(300);
         lightboard_write_data(0x01,buf,3);
         flag_seg_data = 0;
     }
@@ -300,7 +300,7 @@ VOID_T hugo_ai_lightboard_process(VOID_T)
     {
         // TAL_PR_INFO("=== flag_rgb_data=%d",flag_rgb_data);
         lightboard_write_data(0x02,&flag_rgb_data,1);
-        // tal_system_sleep(300);
+        tal_system_sleep(300);
         lightboard_write_data(0x02,&flag_rgb_data,1);
         flag_rgb_data = 0xFF;
     }

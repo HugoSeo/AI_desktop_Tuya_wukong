@@ -8,13 +8,13 @@ flash,ram,text,code,rodata,data,bss,dec,hex,filename
 3636,0,3636,3636,0,0,0,3636,`e34,/home/tuya/Documents/tuya/Projects/T5_TuyaOS-3.13.8/software/TuyaOS/vendor/T5/toolchain/gcc-arm-none-eabi-10.3-2021.10/bin/../lib/gcc/arm-none-eabi/10.3.1/thumb/v8-m.main+fp/hard/libgcc.a
 41051,1441,39613,38068,1545,1438,3,41054,`a05e,/home/tuya/Documents/tuya/Projects/T5_TuyaOS-3.13.8/software/TuyaOS/vendor/T5/toolchain/gcc-arm-none-eabi-10.3-2021.10/bin/../lib/gcc/arm-none-eabi/10.3.1/../../../../arm-none-eabi/lib/thumb/v8-m.main+fp/hard/libc.a
 4052,296,4052,2824,1228,0,296,4348,`10fc,armino/cm33/libcm33.a
-86276,6920,85656,72580,13076,620,6300,92576,`169a0,armino/driver/libdriver.a
+83609,6920,82989,70090,12899,620,6300,89909,`15f35,armino/driver/libdriver.a
 1274,76,1273,1192,81,1,75,1349,`545,armino/bk_system/libbk_system.a
 473,4,473,336,137,0,4,477,`1dd,armino/bk_init/libbk_init.a
 19550,9766,19157,15622,3535,393,9373,28923,`70fb,armino/bk_cli/libbk_cli.a
-33174,4412,32120,24090,8030,1054,3358,36532,`8eb4,armino/tuyaos_adapter/libtuyaos_adapter.a
-4197,90,4112,3834,278,85,5,4202,`106a,armino/bk7258_ap/libbk7258_ap.a
-15923,228,15859,14132,1727,64,164,16087,`3ed7,armino/common/libcommon.a
+31887,3558,30851,22934,7917,1036,2522,34409,`8669,armino/tuyaos_adapter/libtuyaos_adapter.a
+4195,90,4110,3832,278,85,5,4200,`1068,armino/bk7258_ap/libbk7258_ap.a
+15769,228,15705,13978,1727,64,164,15933,`3e3d,armino/common/libcommon.a
 251,32,251,246,5,0,32,283,`11b,armino/bk_startup/libbk_startup.a
 2436,17,2436,1958,478,0,17,2453,`995,armino/bk_event/libbk_event.a
 3585,73,3584,3080,504,1,72,3657,`e49,armino/bk_aud_param_ctrl/libbk_aud_param_ctrl.a
@@ -47,7 +47,7 @@ flash,ram,text,code,rodata,data,bss,dec,hex,filename
 104834,18723,104824,91400,13424,10,18713,123547,`1e29b,/home/tuya/Documents/tuya/Projects/T5_TuyaOS-3.13.8/software/TuyaOS/vendor/T5/t5_os/ap/components/bk_libs/bk7258_ap/libs/libbluetooth_host_ble_ap.a
 20,4,20,20,0,0,4,24,`18,/home/tuya/Documents/tuya/Projects/T5_TuyaOS-3.13.8/software/TuyaOS/vendor/T5/t5_os/ap/components/bk_libs/bk7258_ap/libs/libaudio_osi.a
 32,4,32,32,0,0,4,36,`24,/home/tuya/Documents/tuya/Projects/T5_TuyaOS-3.13.8/software/TuyaOS/vendor/T5/t5_os/ap/components/bk_libs/bk7258_ap/libs/libvideo_osi.a
-18590,0,18590,17092,1498,0,0,18590,`489e,/home/tuya/Documents/tuya/Projects/T5_TuyaOS-3.13.8/software/TuyaOS/vendor/T5/toolchain/gcc-arm-none-eabi-10.3-2021.10/bin/../lib/gcc/arm-none-eabi/10.3.1/../../../../arm-none-eabi/lib/thumb/v8-m.main+fp/hard/libm.a
+19426,0,19426,17872,1554,0,0,19426,`4be2,/home/tuya/Documents/tuya/Projects/T5_TuyaOS-3.13.8/software/TuyaOS/vendor/T5/toolchain/gcc-arm-none-eabi-10.3-2021.10/bin/../lib/gcc/arm-none-eabi/10.3.1/../../../../arm-none-eabi/lib/thumb/v8-m.main+fp/hard/libm.a
 132,0,132,132,0,0,0,132,`84,/home/tuya/Documents/tuya/Projects/T5_TuyaOS-3.13.8/software/TuyaOS/vendor/T5/toolchain/gcc-arm-none-eabi-10.3-2021.10/bin/../lib/gcc/arm-none-eabi/10.3.1/../../../../arm-none-eabi/lib/thumb/v8-m.main+fp/hard/libnosys.a
 15180,4,15180,11926,3254,0,4,15184,`3b50,armino/audio_pipeline/libaudio_pipeline.a
 832,0,832,446,386,0,0,832,`340,armino/audio_utils/libaudio_utils.a

@@ -98,7 +98,8 @@
 #define AI_DEVICE_MODE_DEV(b)         ((AI_DEVICE_MODE_E)(((UINT8_T)(b) >> 4) & 0x0F))
 #define AI_DEVICE_MODE_SUB(b)         ((AI_CHAT_SUB_MODE_E)((UINT8_T)(b) & 0x0F))
 
-#define LONG_KEY_TIME         400
+#define AUDIO_KEY_TIME        20
+#define LONG_KEY_TIME         500
 #define SEQ_KEY_TIME          200
 #define TOY_IDLE_TIMEOUT      (30 * 1000)       /* 30 sec */
 #define TOY_LOWPOWER_TIMEOUT  (60 * 1000)  /* 30 min */
@@ -112,7 +113,7 @@
 #define AI_TOY_ALERT_PLAY_ID   "ai_toy_alert"
 
 extern UINT8_T flag_turn_off_on_state;
-extern UINT8_T demo_test_state;
+// extern UINT8_T demo_test_state;
 /* ---------------------------------------------------------------------------
  * File scope variables
  * --------------------------------------------------------------------------- */
@@ -738,7 +739,9 @@ STATIC VOID __on_ai_toy_audio_trigger_pin(UINT_T port, PUSH_KEY_TYPE_E type, INT
     // }
 
     /* Single/long press: pass to wukong key handler (e.g. hold to talk). */
-    if((flag_turn_off_on_state == 2)||(demo_test_state==0))
+
+    // if((flag_turn_off_on_state == 2)||(demo_test_state==0))
+    if(flag_turn_off_on_state != 1)
         return;
     wukong_ai_mode_dispatch(AI_MODE_OP_KEY, &type, 0);
 }
@@ -788,7 +791,7 @@ OPERATE_RET tuya_ai_toy_init(TY_AI_TOY_CFG_T *cfg)
     /* LED and two keys: audio trigger (short/long = SEQ_KEY_TIME/LONG_KEY_TIME), net (long = 10*LONG_KEY_TIME for reset). */
     // TUYA_CALL_ERR_GOTO(tuya_ai_toy_led_init(s_ai_toy->cfg.led_pin), __error);
     // TUYA_CALL_ERR_GOTO(tuya_ai_toy_key_init(s_ai_toy->cfg.audio_trigger_pin, TRUE, SEQ_KEY_TIME, LONG_KEY_TIME, __on_ai_toy_audio_trigger_pin), __error);
-    TUYA_CALL_ERR_GOTO(tuya_ai_toy_key_init(s_ai_toy->cfg.audio_trigger_pin, FALSE, SEQ_KEY_TIME, LONG_KEY_TIME, __on_ai_toy_audio_trigger_pin), __error);
+    TUYA_CALL_ERR_GOTO(tuya_ai_toy_key_init(s_ai_toy->cfg.audio_trigger_pin, FALSE, AUDIO_KEY_TIME, AUDIO_KEY_TIME, __on_ai_toy_audio_trigger_pin), __error);
     // TUYA_CALL_ERR_GOTO(tuya_ai_toy_key_init(s_ai_toy->cfg.net_pin, TRUE, SEQ_KEY_TIME, LONG_KEY_TIME * 10, __on_ai_toy_net_pin), __error);
 
 #if defined(ENABLE_TUYA_CAMERA) && (ENABLE_TUYA_CAMERA == 1)

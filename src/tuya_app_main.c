@@ -132,7 +132,8 @@ STATIC THREAD_HANDLE hugo_self_ai_general_thread = NULL;
 #if (defined(ENABLE_QRCODE_ACTIVE) && (ENABLE_QRCODE_ACTIVE == 1))
 extern INT_T qrcode_exec(INT_T argc, CHAR_T **argv);
 
-extern VOID hugo_ai_moto_timer(VOID);
+// extern VOID hugo_ai_moto_timer(VOID);
+extern VOID_T MOTO_B2_RUN(VOID);
 /**
  * @brief Print a QR code for the given message using qrcode_exec.
  * @param[in] msg String to encode (e.g. short URL). Not modified.
@@ -566,9 +567,15 @@ OPERATE_RET __soc_device_init(VOID_T)
 
 STATIC VOID_T hugo_ai_general_timer_cb(TIMER_ID timer_id, VOID_T *arg)
 {
-    hugo_ai_moto_timer();
+    // hugo_ai_moto_timer();
     hugo_ai_face_timer();
     // hugo_ai_moto_task();
+}
+
+STATIC VOID_T hugo_ai_moto_timer_cb(TIMER_ID timer_id, VOID_T *arg)
+{
+    MOTO_B2_RUN();
+    hugo_ai_moto_timer();
 }
 
 // STATIC VOID_T hugo_ai_general_thread(VOID_T *arg)
@@ -592,13 +599,13 @@ STATIC VOID_T hugo_ai_i2c_thread(VOID_T *arg)
 
     hugo_ai_position_init();
     hugo_ai_lightboard_init();
-    hugo_ai_moto_init();
+    // hugo_ai_moto_init();    
     while(1)
     {
-        // hugo_ai_position_process();
-        hugo_ai_moto_task();
+        hugo_ai_position_process();
+        // hugo_ai_moto_task();
         hugo_ai_lightboard_process();
-        // tal_system_sleep(5);
+        tal_system_sleep(1);
     }
     tal_thread_delete(hugo_self_ai_i2c_thread);
     hugo_self_ai_i2c_thread = NULL;
@@ -669,6 +676,10 @@ STATIC VOID_T user_main(VOID_T)
     TIMER_ID hugo_ai_general_timer_id = NULL;
     tal_sw_timer_create(hugo_ai_general_timer_cb, NULL, &hugo_ai_general_timer_id);
     tal_sw_timer_start(hugo_ai_general_timer_id, 1, TAL_TIMER_CYCLE);
+
+    TIMER_ID hugo_ai_motor_timer_id = NULL;
+    tal_sw_timer_create(hugo_ai_moto_timer_cb, NULL, &hugo_ai_motor_timer_id);
+    tal_sw_timer_start(hugo_ai_motor_timer_id, 1, TAL_TIMER_CYCLE);
 
     //Add by Hugo 26.6.11
     TAL_PR_DEBUG("Hugo desktop init");

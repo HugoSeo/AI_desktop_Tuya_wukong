@@ -580,6 +580,10 @@ STATIC UINT8_T sc7a20B_read_acc(SC7A20_DATA_T *acc_buf, UINT8_T fs)
     UINT8_T i = 0;
     float sens = get_sensitivity(fs);
 
+    static float ax_pre = 0;
+    static float ay_pre = 0;
+    static float az_pre = 0;
+
     // TAL_PR_NOTICE("start");
     // if(sc7a20_read_multi_reg(SC7A20_OUT_X_L, buf, 6))
     //     return 1;
@@ -609,10 +613,6 @@ STATIC UINT8_T sc7a20B_read_acc(SC7A20_DATA_T *acc_buf, UINT8_T fs)
     float ay = raw_y * 0.001f;
     float az = raw_z * 0.001f;
 
-    static float ax_pre = 0;
-    static float ay_pre = 0;
-    static float az_pre = 0;
-
 
      //一阶低通滤波
      ax_pre = ax_pre*(1.0f - SC7A20_FILTER_K) + ax * SC7A20_FILTER_K;
@@ -620,42 +620,36 @@ STATIC UINT8_T sc7a20B_read_acc(SC7A20_DATA_T *acc_buf, UINT8_T fs)
      az_pre = az_pre*(1.0f - SC7A20_FILTER_K) + az * SC7A20_FILTER_K;
 
     // 3. 计算倾斜角度
-    // pitch_out = atan2f(ax, sqrtf(ay*ay + az*az)) * RAD_TO_DEG;    
-    // roll_out  = atan2f(ay, sqrtf(ax*ax + az*az)) * RAD_TO_DEG;
-    // direct_out  = atan2f(az, sqrtf(ax*ax + ay*ay)) * RAD_TO_DEG;
-
     //x
-    pitch_out = atan2f(ay_pre, az_pre) * RAD_TO_DEG;  
-    //y
-    roll_out  = atan2f(-ax_pre, sqrtf(ay_pre*ay_pre + az_pre*az_pre)) * RAD_TO_DEG;
+    // pitch_out = atan2f(ay_pre, az_pre) * RAD_TO_DEG;  
+    // //y
+    // roll_out  = atan2f(-ax_pre, sqrtf(ay_pre*ay_pre + az_pre*az_pre)) * RAD_TO_DEG;
 
-    //z
-    direct_out = atan2f(-az_pre, sqrtf(ax_pre*ax_pre + ay_pre*ay_pre)) * RAD_TO_DEG;
+    // //z
+    // direct_out = atan2f(-az_pre, sqrtf(ax_pre*ax_pre + ay_pre*ay_pre)) * RAD_TO_DEG;
+    // TAL_PR_NOTICE("prd-1[%.2f  %.2f  %.2f   = %.2f]",pitch_out,roll_out,az_pre,direct_out);
 
- 
-    // pitch_out =gcalculate_average(pitch_pre, pitch_out );
-    // roll_out  =gcalculate_average(roll_pre,  roll_out  );
-    // direct_out=gcalculate_average(direct_pre,direct_out);
 
-    // pitch_pre=pitch_out;
-    // roll_pre=roll_out;
-    // direct_pre=direct_out;
+    pitch_out = atan2f(ax_pre, sqrtf(ay_pre*ay_pre + az_pre*az_pre)) * RAD_TO_DEG;    
+    roll_out  = atan2f(ay_pre, sqrtf(ax_pre*ax_pre + az_pre*az_pre)) * RAD_TO_DEG;
+    direct_out  = atan2f(az_pre, sqrtf(ax_pre*ax_pre + ay_pre*ay_pre)) * RAD_TO_DEG;
 
-    // if(roll_out<0)
-    // {
-    //     if(direct_out<0)
-    //     {
-    //         direct_out = -180- direct_out;
-    //     }
-    //     else
-    //     {
-    //         direct_out = 180- direct_out;
-    //     }
-    // }
+    if(roll_out<0)
+    {
+        if(direct_out<0)
+        {
+            direct_out = -180- direct_out;
+        }
+        else
+        {
+            direct_out = 180- direct_out;
+        }
+    }
     
     // TAL_PR_NOTICE("angle = %.2f",direct_out);
 
-    // TAL_PR_NOTICE("prd[%.2f  %.2f  %.2f   = %.2f]",pitch_out,roll_out,direct_pre,direct_out);
+    // TAL_PR_NOTICE("prd[%.2f  %.2f  %.2f   = %.2f]",pitch_out,roll_out,az_pre,direct_out);
+
 
     return 0;
 }
@@ -715,7 +709,7 @@ VOID_T hugo_ai_position_process(VOID_T)
     // }
 
 
-    // if((moto_flag != 0)||(firsrun_flag != 0))
+    if((moto_flag != 0)||(firsrun_flag != 0))
     {
         // 初始化传感器 100Hz ±2G
         if(0 == sc7a20B_init(ODR_100HZ, FS_2G))
