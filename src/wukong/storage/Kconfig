@@ -1,0 +1,45 @@
+# Wukong Storage —— 外部大容量存储介质选择（每板择一）
+# 统一挂载与根路径见 wukong_storage.h；接入步骤与踩坑见 README.md。
+#
+# 注意：下面 choice 的 "default ... if <BOARD>" 只作用于 make app_menuconfig
+# 的交互默认值。板级配置走 build/appconfig/<BOARD> 经 conf2h.py 逐行直译，
+# 不做 Kconfig 依赖/默认值求值——给新板开 SD 必须同时在该板 appconfig 里
+# 加一行 CONFIG_WUKONG_STORAGE_SDCARD=y，只改这里不生效。详见 README.md
+# 「给设备接入新介质 / 新板子」。
+
+menu "Storage Configuration"
+
+choice
+    prompt "External storage backend"
+    default WUKONG_STORAGE_SDCARD if T5AI_BOARD || T5AI_BOARD_DESKTOP
+    default WUKONG_STORAGE_NONE
+    help
+      本设备的外部大容量存储介质，编译期唯一确定。使用者通过
+      WUKONG_STORAGE_ROOT 拿根路径后直接用 tkl_fs 访问。
+      NONE 时不定义 WUKONG_STORAGE_ENABLE/ROOT，依赖方 #if 整块裁剪。
+
+      新板开 SD 要改两处：本 choice 的 default 白名单（仅影响 menuconfig）
+      + build/appconfig/<BOARD> 加 CONFIG_WUKONG_STORAGE_SDCARD=y（决定
+      产品行为）。漏掉后者：编得过，但存储层与 ui_svc_fs 编成惰性桩、
+      闹钟/播放列表静默不落盘。
+
+    config WUKONG_STORAGE_SDCARD
+        bool "SD card (FatFs, mounted at /sdcard)"
+        help
+          FatFs on SDIO。路径与历史固件一致（/sdcard/...），旧数据字节兼容。
+
+    config WUKONG_STORAGE_EXT_FLASH
+        bool "External QSPI flash (littlefs, mounted at /ext-flash)"
+        help
+          littlefs on 外挂 QSPI flash（DEV_EXT_FLASH）。出厂空白 flash 首挂
+          失败时经板级 wukong_storage_port_mkfs 钩子格式化后重挂，板子须
+          提供该强实现（参照 src/boards/common/wukong_storage_port.c）。
+
+    config WUKONG_STORAGE_NONE
+        bool "None (no external mass storage)"
+        help
+          无外部存储：不挂载、ready 恒 FALSE。依赖大容量存储的功能
+          （相册/录音/本地音乐等）应整块裁剪。
+endchoice
+
+endmenu

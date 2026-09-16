@@ -1,0 +1,3 @@
+# ty_app_component_libjpeg_turbo
+
+jpg图片解码库libjpeg-turbo

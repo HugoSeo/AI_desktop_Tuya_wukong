@@ -1,0 +1,677 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Wukong UI · 智能硬件开箱即用的产品 UI 框架</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@500;600;700&family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@500;700&display=swap" rel="stylesheet">
+<style>
+:root {
+  --void:    #060a14;
+  --ink0:    #0a1020;
+  --ink1:    #0e1728;
+  --line:    rgba(120,150,190,.16);
+  --line2:   rgba(120,150,190,.28);
+  --text:    #eaf1fb;
+  --muted:   #a5b6cf;
+  --dim:     #6c7f9c;
+
+  --s-voice:  #34e0d0;
+  --s-core:   #4d8cff;
+  --s-live:   #34d17a;
+  --s-vision: #f7b24b;
+  --s-ops:    #a58bff;
+  --s-comm:   #ff6f9d;
+
+  --font-display: 'Space Grotesk', 'PingFang SC', 'Microsoft YaHei', sans-serif;
+  --font-body:    'Inter', 'PingFang SC', 'Microsoft YaHei', system-ui, sans-serif;
+  --font-mono:    'JetBrains Mono', ui-monospace, 'SFMono-Regular', monospace;
+
+  --maxw: 1200px;
+}
+
+* { box-sizing: border-box; margin: 0; padding: 0; }
+html { scroll-behavior: smooth; }
+body {
+  font-family: var(--font-body);
+  color: var(--text);
+  line-height: 1.7;
+  background: var(--void);
+  background-image:
+    radial-gradient(900px 520px at 82% -8%, rgba(77,140,255,.16), transparent 62%),
+    radial-gradient(760px 480px at 8% 4%, rgba(52,224,208,.11), transparent 60%),
+    radial-gradient(1000px 700px at 50% 120%, rgba(165,139,255,.10), transparent 66%);
+  background-attachment: fixed;
+  -webkit-font-smoothing: antialiased;
+  overflow-x: hidden;
+}
+body::before {
+  content: '';
+  position: fixed; inset: 0; z-index: -1; pointer-events: none;
+  background-image:
+    linear-gradient(rgba(120,150,190,.05) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(120,150,190,.05) 1px, transparent 1px);
+  background-size: 56px 56px;
+  mask-image: radial-gradient(ellipse 80% 60% at 50% 20%, #000 40%, transparent 100%);
+}
+
+a { color: inherit; text-decoration: none; }
+.mono { font-family: var(--font-mono); }
+
+/* ══════════════════ TOPBAR ══════════════════ */
+.topbar {
+  position: sticky; top: 0; z-index: 50;
+  display: flex; align-items: center; justify-content: space-between; gap: 24px;
+  padding: 14px clamp(18px, 5vw, 56px);
+  background: rgba(6,10,20,.72);
+  border-bottom: 1px solid var(--line);
+  backdrop-filter: blur(18px);
+}
+.brand { display: flex; align-items: center; gap: 11px; font-family: var(--font-display); font-weight: 700; font-size: 16px; letter-spacing: -.01em; }
+.brand-mark {
+  width: 26px; height: 26px; border-radius: 8px; position: relative;
+  background: conic-gradient(from 210deg, var(--s-voice), var(--s-core), var(--s-ops), var(--s-vision), var(--s-voice));
+  box-shadow: 0 0 22px rgba(77,140,255,.5), inset 0 0 8px rgba(0,0,0,.4);
+}
+.brand-mark::after { content: ''; position: absolute; inset: 6px; border-radius: 3px; background: var(--void); }
+.nav { display: flex; gap: 2px; overflow-x: auto; }
+.nav::-webkit-scrollbar { height: 0; }
+.nav a {
+  padding: 7px 12px; border-radius: 8px; white-space: nowrap;
+  color: var(--muted); font-size: 13px; font-weight: 600;
+  transition: color .18s, background .18s;
+}
+.nav a:hover { color: var(--text); background: rgba(120,150,190,.10); }
+
+/* ══════════════════ HERO ══════════════════ */
+.hero {
+  position: relative;
+  max-width: var(--maxw); margin: 0 auto;
+  padding: clamp(26px, 3.6vw, 52px) clamp(18px, 5vw, 40px) 18px;
+  min-height: calc(100vh - 56px);
+  min-height: calc(100svh - 56px);
+  display: flex; flex-direction: column;
+}
+.hero-head { margin-bottom: clamp(28px, 4vw, 46px); }
+.hero-main {
+  display: grid; grid-template-columns: minmax(0, 1.05fr) minmax(0, .95fr);
+  gap: clamp(28px, 5vw, 64px); align-items: start;
+}
+.eyebrow {
+  display: inline-flex; align-items: center; gap: 9px;
+  font-family: var(--font-mono); font-size: 12px; font-weight: 700;
+  letter-spacing: .14em; text-transform: uppercase; color: var(--s-voice);
+  padding: 7px 13px; border: 1px solid var(--line2); border-radius: 999px;
+  background: rgba(52,224,208,.06);
+}
+.eyebrow::before { content: ''; width: 7px; height: 7px; border-radius: 50%; background: var(--s-live); box-shadow: 0 0 12px var(--s-live); animation: pulse 2.4s ease-in-out infinite; }
+@keyframes pulse { 0%,100% { opacity: 1; transform: scale(1); } 50% { opacity: .45; transform: scale(.7); } }
+
+.hero h1 { font-family: var(--font-display); font-weight: 700; margin: 16px 0 0; letter-spacing: -.02em; }
+.hero h1 .brandline {
+  display: block; font-size: clamp(50px, 8.8vw, 118px); line-height: .95; letter-spacing: -.035em; margin-bottom: 14px;
+  background: linear-gradient(100deg, var(--s-voice) 0%, var(--s-core) 52%, var(--s-ops) 100%);
+  -webkit-background-clip: text; background-clip: text; -webkit-text-fill-color: transparent;
+  filter: drop-shadow(0 10px 46px rgba(77,140,255,.32));
+}
+.hero h1 .tagline { display: block; font-size: clamp(22px, 2.9vw, 38px); font-weight: 700; line-height: 1.18; color: var(--text); }
+@media (max-width: 1040px) { .hero h1 .tagline { font-size: clamp(21px, 4.6vw, 32px); } }
+.hero h1 .grad {
+  background: linear-gradient(100deg, var(--s-voice), var(--s-core) 55%, var(--s-ops));
+  -webkit-background-clip: text; background-clip: text; -webkit-text-fill-color: transparent;
+}
+.hero-lead { color: var(--muted); font-size: clamp(15px, 1.5vw, 17px); max-width: 560px; }
+.hero-lead b { color: var(--text); font-weight: 600; }
+
+.hero-actions { display: flex; flex-wrap: wrap; gap: 12px; margin-top: 30px; }
+.btn {
+  display: inline-flex; align-items: center; gap: 8px;
+  padding: 12px 20px; border-radius: 10px; font-size: 14px; font-weight: 650;
+  border: 1px solid transparent; transition: transform .16s, box-shadow .16s, background .16s, border-color .16s;
+}
+.btn:hover { transform: translateY(-2px); }
+.btn-primary { color: #051018; background: linear-gradient(100deg, var(--s-voice), var(--s-core)); box-shadow: 0 14px 34px rgba(77,140,255,.34); }
+.btn-primary:hover { box-shadow: 0 18px 44px rgba(77,140,255,.46); }
+.btn-ghost { color: var(--text); border-color: var(--line2); background: rgba(120,150,190,.06); }
+.btn-ghost:hover { border-color: var(--s-core); }
+.btn .arrow { transition: transform .16s; }
+.btn:hover .arrow { transform: translateX(3px); }
+
+.spec-strip {
+  display: grid; grid-template-columns: repeat(3, 1fr); gap: 1px;
+  margin-top: 38px; border: 1px solid var(--line); border-radius: 14px; overflow: hidden;
+  background: var(--line);
+}
+.spec { padding: 18px 16px; background: rgba(10,16,32,.7); }
+.spec-cap { display: block; font-family: var(--font-mono); font-size: 11px; font-weight: 700; letter-spacing: .05em; color: var(--muted); margin: 0 0 10px; }
+.spec b { display: block; font-family: var(--font-display); font-size: clamp(34px, 3.4vw, 44px); font-weight: 700; line-height: 1; letter-spacing: -.02em; }
+.spec b em { font-style: normal; font-size: 15px; font-weight: 700; margin-left: 3px; letter-spacing: 0; }
+.spec-core b { color: var(--s-core); }
+.spec-voice b { color: var(--s-voice); }
+.spec-vision b { color: var(--s-vision); }
+.spec-detail { display: block; margin-top: 9px; color: var(--dim); font-size: 12px; line-height: 1.5; }
+
+/* device panel — home screen mock */
+.device {
+  position: relative; padding: 18px; margin-top: clamp(4px, 2vw, 28px);
+  border: 1px solid var(--line2); border-radius: 20px;
+  background: linear-gradient(160deg, rgba(20,30,52,.9), rgba(8,13,26,.95));
+  box-shadow: 0 40px 100px rgba(0,0,0,.6), inset 0 1px 0 rgba(255,255,255,.05);
+}
+.device::before {
+  content: ''; position: absolute; inset: -1px; border-radius: 20px; padding: 1px; pointer-events: none;
+  background: linear-gradient(140deg, rgba(52,224,208,.5), transparent 30%, transparent 70%, rgba(165,139,255,.4));
+  -webkit-mask: linear-gradient(#000 0 0) content-box, linear-gradient(#000 0 0);
+  -webkit-mask-composite: xor; mask-composite: exclude;
+}
+.screen { border-radius: 13px; overflow: hidden; background: #1a1a1a; border: 1px solid rgba(120,150,190,.12); }
+.screen-head {
+  display: flex; align-items: center; justify-content: space-between;
+  padding: 10px 15px; border-bottom: 1px solid rgba(120,150,190,.1);
+  font-family: var(--font-mono); font-size: 11.5px; color: #cfe0f5;
+}
+.sbar-r { display: inline-flex; align-items: center; gap: 8px; color: var(--muted); }
+.sbar-r .wifi { color: var(--s-live); }
+.sbar-r .batt { display:inline-block; width:20px; height:10px; border:1px solid var(--muted); border-radius:2px; position:relative; }
+.sbar-r .batt::after { content:''; position:absolute; inset:1px; right:5px; background: var(--s-live); border-radius:1px; }
+.sbar-r .batt::before { content:''; position:absolute; right:-3px; top:3px; width:2px; height:4px; background:var(--muted); border-radius:0 1px 1px 0; }
+.home-body { padding: 14px 16px 16px; display: flex; flex-direction: column; gap: 12px; }
+.home-clock { font-family: var(--font-display); font-weight: 700; font-size: 54px; line-height: 1; letter-spacing: -.02em; color: #eaf1fb; }
+.home-date { font-size: 12.5px; color: var(--muted); margin-top: 2px; }
+.home-card { display:flex; align-items:center; gap:12px; padding:11px 13px; border-radius:12px; background: #2a2a2a; }
+.home-card .ic { width:32px; height:32px; border-radius:9px; display:grid; place-items:center; font-size:16px; }
+.home-card .temp { font-family: var(--font-display); font-weight:700; font-size:22px; color:#eaf1fb; }
+.home-card .desc { font-size:12px; color:var(--muted); line-height:1.4; }
+.home-card .desc b { color:#dce6f6; font-weight:600; }
+.home-quick { display:flex; gap:14px; justify-content:center; margin-top:2px; }
+.qbtn { width:56px; height:56px; border-radius:50%; display:grid; place-items:center; font-size:22px;
+  background: rgba(120,150,190,.12); border:1px solid rgba(120,150,190,.22); backdrop-filter: blur(6px); }
+.qbtn.cam { color: var(--s-vision); }
+.qbtn.call { color: var(--s-comm); }
+.home-chips { display: flex; flex-wrap: wrap; gap: 6px; padding: 0 15px 14px; }
+.home-chips span { font-family: var(--font-mono); font-size: 10.5px; font-weight: 500; padding: 4px 8px; border-radius: 6px; background: rgba(120,150,190,.1); color: #a9c6f0; }
+
+/* ══════════════════ SECTIONS ══════════════════ */
+main { padding: 24px clamp(18px, 5vw, 40px) 40px; }
+.section { max-width: var(--maxw); margin: 0 auto clamp(56px, 8vw, 92px); scroll-margin-top: 76px; }
+.sec-head { margin-bottom: 30px; max-width: 760px; }
+.sec-eyebrow {
+  display: inline-flex; align-items: center; gap: 8px;
+  font-family: var(--font-mono); font-size: 12px; font-weight: 700; letter-spacing: .12em; text-transform: uppercase;
+  color: var(--dim); margin-bottom: 14px;
+}
+.sec-eyebrow i { width: 8px; height: 8px; border-radius: 50%; box-shadow: 0 0 12px currentColor; }
+.sec-head h2 { font-family: var(--font-display); font-weight: 700; font-size: clamp(24px, 3.2vw, 38px); line-height: 1.18; letter-spacing: -.02em; }
+.sec-head p { margin-top: 14px; color: var(--muted); font-size: 15px; }
+.sec-head p b { color: var(--text); font-weight: 600; }
+
+.card {
+  position: relative; border: 1px solid var(--line); border-radius: 16px;
+  background: linear-gradient(165deg, rgba(18,27,46,.6), rgba(9,14,27,.55));
+  padding: 22px; transition: transform .2s, border-color .2s, box-shadow .2s;
+}
+.card:hover { transform: translateY(-4px); border-color: var(--line2); box-shadow: 0 24px 50px rgba(0,0,0,.4); }
+
+.grid { display: grid; gap: 14px; }
+.g3 { grid-template-columns: repeat(3, 1fr); }
+.g2 { grid-template-columns: repeat(2, 1fr); }
+
+/* ── product forms table ── */
+.tbl-wrap { border: 1px solid var(--line); border-radius: 16px; overflow: hidden; }
+table { width: 100%; border-collapse: collapse; }
+thead th {
+  text-align: left; font-family: var(--font-mono); font-size: 11px; font-weight: 700; letter-spacing: .08em; text-transform: uppercase;
+  color: var(--muted); padding: 14px 16px; background: rgba(77,140,255,.08); border-bottom: 1px solid var(--line2);
+}
+tbody td { padding: 15px 16px; font-size: 13px; color: var(--muted); border-bottom: 1px solid var(--line); vertical-align: top; }
+tbody tr:last-child td { border-bottom: 0; }
+tbody tr { transition: background .15s; }
+tbody tr:hover { background: rgba(77,140,255,.06); }
+td.form { font-family: var(--font-display); font-weight: 600; font-size: 14px; color: var(--text); white-space: nowrap; }
+td .boards { display: flex; flex-wrap: wrap; gap: 5px; }
+td .boards code { font-family: var(--font-mono); font-size: 11px; padding: 3px 7px; border-radius: 5px; background: rgba(52,224,208,.1); color: var(--s-voice); border: 1px solid rgba(52,224,208,.2); }
+td.scene { color: var(--text); }
+
+/* ── page module groups ── */
+.groups { display: grid; grid-template-columns: repeat(2, 1fr); gap: 14px; }
+.group { padding-top: 22px; }
+.group::before { content: ''; position: absolute; left: 22px; right: 22px; top: 0; height: 2px; border-radius: 2px; background: var(--hue, var(--s-core)); box-shadow: 0 0 16px var(--hue, var(--s-core)); }
+.group .gh { display:flex; align-items:center; gap:10px; margin-bottom: 10px; }
+.group .gh .emoji { font-size: 20px; }
+.group .gh h3 { font-family: var(--font-display); font-size: 17px; font-weight: 600; }
+.group > p { color: var(--muted); font-size: 13px; line-height: 1.6; margin-bottom: 12px; }
+.group .pages { display: flex; flex-wrap: wrap; gap: 6px; }
+.group .pages span { font-family: var(--font-mono); font-size: 11px; padding: 4px 9px; border-radius: 6px; color: var(--hue); background: color-mix(in srgb, var(--hue) 12%, transparent); border: 1px solid color-mix(in srgb, var(--hue) 28%, transparent); }
+.gp-1 { --hue: var(--s-core); } .gp-2 { --hue: var(--s-comm); } .gp-3 { --hue: var(--s-vision); }
+.gp-4 { --hue: var(--s-voice); } .gp-5 { --hue: var(--s-ops); } .gp-6 { --hue: var(--s-live); } .gp-7 { --hue: var(--s-voice); }
+
+/* ── scenarios ── */
+.scenes { display: grid; grid-template-columns: repeat(3, 1fr); gap: 14px; }
+.scene-card { position: relative; overflow: hidden; }
+.scene-card .badge { display: inline-flex; align-items: center; gap: 7px; font-family: var(--font-mono); font-size: 11px; font-weight: 700; color: var(--hue); margin-bottom: 12px; }
+.scene-card .badge::before { content: ''; width: 20px; height: 2px; border-radius: 2px; background: var(--hue); box-shadow: 0 0 8px var(--hue); }
+.scene-card h3 { font-family: var(--font-display); font-size: 17px; font-weight: 600; margin-bottom: 8px; }
+.scene-card p { color: var(--muted); font-size: 13px; }
+.sc-1 { --hue: var(--s-core); } .sc-2 { --hue: var(--s-voice); } .sc-3 { --hue: var(--s-vision); }
+.sc-4 { --hue: var(--s-vision); } .sc-5 { --hue: var(--s-comm); } .sc-6 { --hue: var(--s-ops); }
+
+/* ── why / 选型优势 ── */
+.whys { display: grid; grid-template-columns: repeat(3, 1fr); gap: 14px; }
+.why { padding-top: 24px; }
+.why::before { content: ''; position: absolute; left: 22px; right: 22px; top: 0; height: 2px; border-radius: 2px; background: var(--hue, var(--s-core)); box-shadow: 0 0 16px var(--hue, var(--s-core)); }
+.why .tag {
+  display: inline-flex; align-items: center; gap: 6px; font-family: var(--font-mono);
+  font-size: 11px; font-weight: 700; letter-spacing: .05em; padding: 4px 9px; border-radius: 6px;
+  color: var(--hue, var(--s-core)); background: color-mix(in srgb, var(--hue, var(--s-core)) 14%, transparent);
+  border: 1px solid color-mix(in srgb, var(--hue, var(--s-core)) 34%, transparent); margin-bottom: 14px;
+}
+.why h3 { font-family: var(--font-display); font-size: 18px; font-weight: 600; line-height: 1.3; margin-bottom: 9px; }
+.why p { color: var(--muted); font-size: 13.5px; }
+.w-1 { --hue: var(--s-core); } .w-2 { --hue: var(--s-live); } .w-3 { --hue: var(--s-vision); }
+.w-4 { --hue: var(--s-ops); } .w-5 { --hue: var(--s-voice); } .w-6 { --hue: var(--s-comm); }
+
+/* ── quality / 质量保证 ── */
+.metrics { display: grid; grid-template-columns: repeat(4, 1fr); gap: 12px; }
+.metric { border: 1px solid var(--line); border-radius: 14px; padding: 18px 16px; background: linear-gradient(165deg, rgba(18,27,46,.5), rgba(9,14,27,.5)); }
+.metric .big { font-family: var(--font-display); font-weight: 700; font-size: 26px; line-height: 1; letter-spacing: -.02em; color: var(--hue, var(--s-core)); }
+.metric .big em { font-style: normal; font-size: 13px; margin-left: 3px; color: var(--muted); }
+.metric h4 { font-family: var(--font-display); font-size: 14px; font-weight: 600; margin: 9px 0 5px; }
+.metric p { color: var(--muted); font-size: 12px; line-height: 1.55; }
+.metric .tech { display:block; margin-top: 7px; font-family: var(--font-mono); font-size: 10.5px; color: var(--dim); }
+.m-1 { --hue: var(--s-live); } .m-2 { --hue: var(--s-core); } .m-3 { --hue: var(--s-vision); } .m-4 { --hue: var(--s-voice); }
+
+/* ── delivery path / 量产路径 ── */
+.flow { display: grid; grid-template-columns: repeat(5, 1fr); gap: 12px; counter-reset: step; }
+.step { position: relative; border: 1px solid var(--line); border-radius: 14px; padding: 20px 16px; background: linear-gradient(165deg, rgba(18,27,46,.5), rgba(9,14,27,.5)); }
+.step::before {
+  counter-increment: step; content: counter(step, decimal-leading-zero);
+  font-family: var(--font-mono); font-size: 12px; font-weight: 700; color: var(--void);
+  background: linear-gradient(120deg, var(--s-voice), var(--s-core)); padding: 3px 8px; border-radius: 6px; display: inline-block; margin-bottom: 12px;
+}
+.step:not(:last-child)::after {
+  content: ''; position: absolute; right: -8px; top: 50%; width: 14px; height: 2px; background: var(--line2); z-index: 1;
+}
+.step strong { display: block; font-family: var(--font-display); font-size: 15.5px; font-weight: 600; margin-bottom: 6px; }
+.step span { color: var(--dim); font-size: 12.5px; line-height: 1.55; }
+
+/* ── closing ── */
+.closing { display: grid; grid-template-columns: 1fr 1.15fr; gap: 16px; align-items: stretch; }
+.thesis {
+  border-radius: 18px; padding: 34px; position: relative; overflow: hidden;
+  border: 1px solid var(--line2);
+  background: linear-gradient(150deg, rgba(77,140,255,.16), rgba(52,224,208,.08) 60%, rgba(165,139,255,.12));
+}
+.thesis::after { content: ''; position: absolute; right: -60px; bottom: -60px; width: 200px; height: 200px; border-radius: 50%; background: radial-gradient(circle, rgba(52,224,208,.3), transparent 70%); }
+.thesis .lbl { font-family: var(--font-mono); font-size: 12px; letter-spacing: .12em; text-transform: uppercase; color: var(--s-voice); }
+.thesis strong { display: block; font-family: var(--font-display); font-size: clamp(20px, 2.4vw, 28px); font-weight: 700; line-height: 1.3; margin: 14px 0; letter-spacing: -.01em; }
+.thesis p { color: rgba(234,241,251,.82); font-size: 14px; }
+
+.cta {
+  max-width: var(--maxw); margin: 0 auto; padding: clamp(36px,5vw,52px) clamp(24px,5vw,48px);
+  border-radius: 20px; position: relative; overflow: hidden;
+  border: 1px solid var(--line2);
+  background: linear-gradient(115deg, rgba(52,224,208,.14), rgba(77,140,255,.14) 55%, rgba(165,139,255,.14));
+  display: grid; grid-template-columns: 1fr auto; gap: 28px; align-items: center;
+}
+.cta::before { content: ''; position: absolute; inset: 0; background-image: linear-gradient(rgba(255,255,255,.03) 1px, transparent 1px), linear-gradient(90deg, rgba(255,255,255,.03) 1px, transparent 1px); background-size: 30px 30px; pointer-events: none; }
+.cta h2 { font-family: var(--font-display); font-weight: 700; font-size: clamp(22px, 3vw, 32px); line-height: 1.25; letter-spacing: -.02em; position: relative; }
+.cta p { margin-top: 12px; color: rgba(234,241,251,.82); font-size: 14px; max-width: 640px; position: relative; }
+.cta .btn { position: relative; white-space: nowrap; }
+
+.foot { max-width: var(--maxw); margin: 32px auto 0; padding: 0 clamp(18px,5vw,40px); color: var(--dim); font-size: 12.5px; font-family: var(--font-mono); text-align: center; }
+
+/* ══════════════════ RESPONSIVE ══════════════════ */
+@media (max-width: 1000px) {
+  .hero-main { grid-template-columns: 1fr; }
+  .scenes, .whys, .g3 { grid-template-columns: 1fr; }
+  .groups, .g2 { grid-template-columns: 1fr; }
+  .metrics { grid-template-columns: repeat(2, 1fr); }
+  .flow { grid-template-columns: 1fr; }
+  .step:not(:last-child)::after { display: none; }
+  .closing, .cta { grid-template-columns: 1fr; }
+}
+@media (max-width: 620px) {
+  .spec-strip { grid-template-columns: 1fr; }
+  .metrics, .g4 { grid-template-columns: 1fr; }
+  .nav { display: none; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .eyebrow::before { animation: none !important; }
+  html { scroll-behavior: auto; }
+}
+</style>
+</head>
+<body>
+<span id="top" aria-hidden="true"></span>
+
+<header class="topbar">
+  <a class="brand" href="#top"><span class="brand-mark"></span><span>Wukong UI</span></a>
+  <nav class="nav" aria-label="页面导航">
+    <a href="#forms">产品形态</a>
+    <a href="#pages">功能页面</a>
+    <a href="#scenes">应用场景</a>
+    <a href="#why">选型优势</a>
+    <a href="#quality">质量保证</a>
+    <a href="#path">量产路径</a>
+  </nav>
+</header>
+
+<!-- ═════════ HERO ═════════ -->
+<section class="hero">
+  <div class="hero-head">
+      <span class="eyebrow">开箱即用 · 面向 AI 硬件的产品级 UI 框架</span>
+      <h1><span class="brandline">Wukong UI</span><span class="tagline">让每一台 AI 硬件，<span class="grad">开箱即用一整套产品 UI</span></span></h1>
+  </div>
+  <div class="hero-main">
+    <div class="hero-left">
+      <p class="hero-lead">
+        不用从零搭建 UI。Wukong UI 把智能硬件的高频交互——<b>AI 对话、通话、相册、音乐、时钟、相机、录音转写</b>——做成
+        <b>20 个成品页面、13 类组件</b>，覆盖 <b>6 类产品形态</b>。客户选好形态、勾选页面、定制风格，就能从样机走向量产，
+        省下从零搭建 UI 的人月与踩坑。
+      </p>
+      <div class="hero-actions">
+        <a class="btn btn-primary" href="#forms">查看可落地的产品形态 <span class="arrow">→</span></a>
+        <a class="btn btn-ghost" href="#pages">浏览 20 个开箱页面</a>
+      </div>
+      <div class="spec-strip">
+        <div class="spec spec-core">
+          <span class="spec-cap">成品页面</span>
+          <b>20<em>个</em></b>
+          <span class="spec-detail">对话 / 通话 / 相册 / 音乐 / 相机… 拿来即用</span>
+        </div>
+        <div class="spec spec-vision">
+          <span class="spec-cap">产品形态</span>
+          <b>6<em>类</em></b>
+          <span class="spec-detail">带屏 / 闹钟 / 视觉 / 机器人 / 翻译 / 看护</span>
+        </div>
+        <div class="spec spec-voice">
+          <span class="spec-cap">语言支持</span>
+          <b>中英<em>双语</em></b>
+          <span class="spec-detail">一套 UI 出海口内海外，运行时切换</span>
+        </div>
+      </div>
+    </div>
+    <div class="device" aria-label="Wukong UI 主屏示意">
+      <div class="screen">
+        <div class="screen-head">
+          <span>Wukong UI · Home</span>
+          <span class="sbar-r"><span class="wifi">▮▮▮</span><span class="batt"></span></span>
+        </div>
+        <div class="home-body">
+          <div>
+            <div class="home-clock">09:41</div>
+            <div class="home-date">7月17日 星期四 · 晴</div>
+          </div>
+          <div class="home-card">
+            <div class="ic" style="background:rgba(247,178,75,.16);color:var(--s-vision)">☀</div>
+            <div style="flex:1">
+              <div class="temp">26°</div>
+              <div class="desc"><b>晴</b> · 高 29° / 低 21°</div>
+            </div>
+          </div>
+          <div class="home-card">
+            <div class="ic" style="background:rgba(165,139,255,.16);color:var(--s-ops)">⏰</div>
+            <div class="desc" style="flex:1">下一个闹钟<br><b>07:00 · 工作日</b></div>
+          </div>
+          <div class="home-quick">
+            <div class="qbtn cam">📷</div>
+            <div class="qbtn call">📞</div>
+          </div>
+        </div>
+        <div class="home-chips">
+          <span>HOME</span><span>CHAT</span><span>CALL</span><span>PHOTO</span><span>MUSIC</span><span>CLOCK</span>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+
+<main>
+
+<!-- ═════════ 产品形态 ═════════ -->
+<section id="forms" class="section">
+  <div class="sec-head">
+    <div class="sec-eyebrow"><i style="color:var(--s-vision)"></i>产品形态 / PRODUCT FORMS</div>
+    <h2>一套 UI，覆盖 6 类可量产的硬件形态</h2>
+    <p>无论客户做哪种 AI 硬件，都能在 Wukong UI 里找到现成的页面组合。<b>选好形态 = 勾选对应页面</b>，不必为每款产品重新设计交互。</p>
+  </div>
+  <div class="tbl-wrap">
+    <table>
+      <thead>
+        <tr><th>产品形态</th><th>开箱页面</th><th>关键体验</th><th>适合客户</th></tr>
+      </thead>
+      <tbody>
+        <tr>
+          <td class="form">带屏 AI 助手</td>
+          <td><div class="boards"><code>Home</code><code>Chat</code><code>Pulldown</code><code>Music</code><code>Settings</code></div></td>
+          <td>屏显对话、语音交互、下拉控制中心、天气与闹钟</td>
+          <td class="scene">桌面助手、学习机、家居中控</td>
+        </tr>
+        <tr>
+          <td class="form">AI 闹钟 / 时钟</td>
+          <td><div class="boards"><code>Home</code><code>Clock</code><code>Schedule</code><code>Pomodoro</code></div></td>
+          <td>闹钟、倒计时、秒表、日程、番茄钟，屏显时间</td>
+          <td class="scene">床头 AI 闹钟、桌面时钟、起床唤醒</td>
+        </tr>
+        <tr>
+          <td class="form">视觉 AI 设备</td>
+          <td><div class="boards"><code>Camera</code><code>Photo</code><code>Chat</code><code>Detection</code></div></td>
+          <td>拍照识别、AI 生图、视觉问答、相册管理、移动侦测</td>
+          <td class="scene">拍照识别、内容创作、视觉问答</td>
+        </tr>
+        <tr>
+          <td class="form">陪伴机器人</td>
+          <td><div class="boards"><code>Home</code><code>Chat</code><code>Camera</code><code>Photo</code></div></td>
+          <td>机器人 UI、表情屏、对话互动、拍照玩耍</td>
+          <td class="scene">儿童陪伴、宠物机器人、互动玩具</td>
+        </tr>
+        <tr>
+          <td class="form">翻译 / 录音终端</td>
+          <td><div class="boards"><code>Chat</code><code>Recording</code><code>Recording List</code><code>Transcribe</code></div></td>
+          <td>实时翻译、录音、列表回放、云端转写与总结</td>
+          <td class="scene">会议记录、课堂记录、跨语言沟通</td>
+        </tr>
+        <tr>
+          <td class="form">P2P 看护设备</td>
+          <td><div class="boards"><code>Call</code><code>Camera</code><code>Home</code></div></td>
+          <td>App 与设备直连语音 + 单向视频对讲、来电响铃</td>
+          <td class="scene">家庭看护、远程陪伴、设备呼叫</td>
+        </tr>
+      </tbody>
+    </table>
+  </div>
+</section>
+
+<!-- ═════════ 功能页面（按业务模块分组） ═════════ -->
+<section id="pages" class="section">
+  <div class="sec-head">
+    <div class="sec-eyebrow"><i style="color:var(--s-core)"></i>功能页面 / READY PAGES</div>
+    <h2>20 个开箱页面，按业务模块归类</h2>
+    <p>不用自己写。每一组都是一个现成的功能模块——<b>做翻译机看「录音与转写」，做机器人看「AI 对话 + 影像」</b>，按产品需要勾选即可。</p>
+  </div>
+  <div class="groups">
+    <div class="card group gp-1">
+      <div class="gh"><span class="emoji">💬</span><h3>AI 对话与交互</h3></div>
+      <p>设备的核心交互入口：锁屏主屏、多轮 AI 对话、模式切换。屏显对话流、流式回复、附件与看图。</p>
+      <div class="pages"><span>Home 主屏</span><span>Chat AI 对话</span><span>Mode 设备模式</span></div>
+    </div>
+    <div class="card group gp-2">
+      <div class="gh"><span class="emoji">📞</span><h3>通信与看护</h3></div>
+      <p>App 与设备 P2P 直连：语音通话 + 单向视频对讲，来电响铃、接听/拒接、通话计时。</p>
+      <div class="pages"><span>Call 通话</span></div>
+    </div>
+    <div class="card group gp-3">
+      <div class="gh"><span class="emoji">📷</span><h3>影像与创作</h3></div>
+      <p>拍照、相册、AI 识图、生图、移动侦测。相机预览与抓拍、相册大图浏览与批量管理。</p>
+      <div class="pages"><span>Camera 相机</span><span>Photo 相册</span><span>Detection 侦测</span></div>
+    </div>
+    <div class="card group gp-4">
+      <div class="gh"><span class="emoji">🎵</span><h3>媒体与娱乐</h3></div>
+      <p>云端点歌、播放列表、顺序/循环/随机播放，打开即播、唱片动画、进度同步。</p>
+      <div class="pages"><span>Music 音乐</span><span>Music List 播放列表</span></div>
+    </div>
+    <div class="card group gp-5">
+      <div class="gh"><span class="emoji">⏰</span><h3>时间与效率</h3></div>
+      <p>闹钟、倒计时、秒表、日程提醒、番茄钟五类时间管理，本地定时引擎驱动。</p>
+      <div class="pages"><span>Clock 时钟</span><span>Schedule 日程</span><span>Pomodoro 番茄钟</span></div>
+    </div>
+    <div class="card group gp-6">
+      <div class="gh"><span class="emoji">🎙️</span><h3>录音与转写</h3></div>
+      <p>录音、列表回放、上传云端转写、总结阅读。语音沉淀为可检索文本。</p>
+      <div class="pages"><span>Recording 录音</span><span>Recording List</span><span>Transcribe 转写</span></div>
+    </div>
+    <div class="card group gp-7" style="grid-column: 1 / -1">
+      <div class="gh"><span class="emoji">⚙️</span><h3>系统与管理</h3></div>
+      <p>下拉控制中心、设置、关于、文件浏览、音频诊断——设备管理与快捷控制的完整后台。</p>
+      <div class="pages"><span>Pulldown 下拉面板</span><span>Settings 设置</span><span>About 关于</span><span>Files 文件</span><span>Audio Diag 音频诊断</span></div>
+    </div>
+  </div>
+</section>
+
+<!-- ═════════ 应用场景 ═════════ -->
+<section id="scenes" class="section">
+  <div class="sec-head">
+    <div class="sec-eyebrow"><i style="color:var(--s-comm)"></i>应用场景 / SCENARIOS</div>
+    <h2>客户能拿它做出哪些产品</h2>
+    <p>不只是"能聊天"。Wukong UI 支撑的体验覆盖翻译、记录、生图、看护、陪伴等高频场景，<b>每个场景都有对应的现成页面</b>。</p>
+  </div>
+  <div class="scenes">
+    <div class="card scene-card sc-1"><span class="badge">桌面助手</span><h3>带屏 AI 对话设备</h3><p>屏显多轮对话、天气、闹钟、音乐点播，语音唤醒与打断，适合桌面与家居中控。</p></div>
+    <div class="card scene-card sc-2"><span class="badge">实时翻译</span><h3>随身与桌面翻译机</h3><p>语音输入返回翻译文本与播报，适合办公、旅行、门店接待与跨语言家庭交流。</p></div>
+    <div class="card scene-card sc-3"><span class="badge">录音转写</span><h3>会议与课堂记录仪</h3><p>录音、列表管理、本地回放、云端转写与总结，让语音沉淀为可检索文本。</p></div>
+    <div class="card scene-card sc-4"><span class="badge">AI 生图</span><h3>图片生成与相册</h3><p>云端生成图片下发到设备、相册保存与屏幕展示，用于创作、陪伴与互动内容。</p></div>
+    <div class="card scene-card sc-5"><span class="badge">拍照识别</span><h3>看图问答与看护</h3><p>摄像头抓拍作为多模态输入，结合文本完成识别、描述与问答；可做家庭看护对讲。</p></div>
+    <div class="card scene-card sc-6"><span class="badge">陪伴机器人</span><h3>儿童与宠物机器人</h3><p>机器人 UI、表情屏、对话与拍照互动，一台设备适配不同人群与产品定位。</p></div>
+  </div>
+</section>
+
+<!-- ═════════ 选型优势 ═════════ -->
+<section id="why" class="section">
+  <div class="sec-head">
+    <div class="sec-eyebrow"><i style="color:var(--s-core)"></i>选型优势 / WHY WUKONG UI</div>
+    <h2>为什么选它，而不是从零自研</h2>
+    <p>自研一套产品级 UI 通常需要数月、数人、踩遍嵌入式图形的坑。Wukong UI 把这条路<b>已经走完</b>，客户直接享受成果。</p>
+  </div>
+  <div class="whys">
+    <div class="card why w-1">
+      <span class="tag">开箱即用</span>
+      <h3>20 个页面拿来就用</h3>
+      <p>对话、通话、相册、音乐、相机、转写……都是成品。客户不必从零搭建，直接聚焦业务差异化。</p>
+    </div>
+    <div class="card why w-2">
+      <span class="tag">量产级质量</span>
+      <h3>已在真实硬件跑通</h3>
+      <p>不是 Demo。已在带屏 SoC 上验证流畅与稳定，省去自研从原型到量产的漫长调优与踩坑。</p>
+    </div>
+    <div class="card why w-3">
+      <span class="tag">低成本定制</span>
+      <h3>换风格不动业务</h3>
+      <p>UI 与业务分层解耦，换主题色、换图标、换布局只动一层；改云端、改芯片也不波及 UI。</p>
+    </div>
+    <div class="card why w-4">
+      <span class="tag">多形态复用</span>
+      <h3>一套 UI 多款产品</h3>
+      <p>带屏、闹钟、视觉、机器人、翻译、看护共享同一套页面与组件，摊薄研发成本，加速产品线扩张。</p>
+    </div>
+    <div class="card why w-5">
+      <span class="tag">双语出海</span>
+      <h3>中英一套 UI</h3>
+      <p>内置中英双语与运行时切换，一套 UI 同时面向国内与海外市场，降低国际化成本。</p>
+    </div>
+    <div class="card why w-6">
+      <span class="tag">可持续演进</span>
+      <h3>上线后持续增长</h3>
+      <p>支持 OTA 升级、AI 角色与技能扩展，产品上线后仍能持续迭代体验，不为首发困住手脚。</p>
+    </div>
+  </div>
+</section>
+
+<!-- ═════════ 质量保证 ═════════ -->
+<section id="quality" class="section">
+  <div class="sec-head">
+    <div class="sec-eyebrow"><i style="color:var(--s-live)"></i>质量保证 / QUALITY</div>
+    <h2>顺、稳、省，扛得住量产</h2>
+    <p>客户最关心的三件事——<b>流畅、稳定、能在合理成本的芯片上跑</b>。Wukong UI 在这三点上有具体的工程设计背书。</p>
+  </div>
+  <div class="metrics">
+    <div class="metric m-1">
+      <div class="big">流畅<em>不卡顿</em></div>
+      <h4>按需刷新</h4>
+      <p>只有状态变化时才刷新对应区域，无变化零开销，交互跟手不拖影。</p>
+      <span class="tech">dirty 位图 · 30ms 驱动</span>
+    </div>
+    <div class="metric m-2">
+      <div class="big">稳定<em>不崩溃</em></div>
+      <h4>跨线程安全</h4>
+      <p>后台任务与界面分离，数据回调统一线程封送，无悬挂回调与内存越界。</p>
+      <span class="tech">单槽回调 · latest-wins</span>
+    </div>
+    <div class="metric m-3">
+      <div class="big">省资源<em>低成本</em></div>
+      <h4>跑得动主流芯片</h4>
+      <p>定点缩放免浮点、硬件加速拷贝、图片零拷贝，对芯片内存与算力友好。</p>
+      <span class="tech">DMA2D · 零拷贝 · ×256 定点</span>
+    </div>
+    <div class="metric m-4">
+      <div class="big">可维护<em>易演进</em></div>
+      <h4>分层与设计令牌</h4>
+      <p>颜色、字体、间距统一为令牌，分层架构清晰，二次开发与长期维护成本低。</p>
+      <span class="tech">design tokens · 七层架构</span>
+    </div>
+  </div>
+  <div class="metric" style="margin-top:14px;border-color:var(--line2);background:linear-gradient(165deg,rgba(52,209,122,.06),rgba(9,14,27,.5))">
+    <div class="big" style="color:var(--s-live)">113 文件 · 21,649 行 <em style="color:var(--muted)">自写代码</em></div>
+    <p style="color:var(--muted);font-size:13px;margin-top:8px">不含 LVGL / 第三方库的纯自研规模，分 core / pages / widgets / services / style / port / i18n 七层；基于 LVGL 8.3.11、运行在 TuyaOS / ARM Cortex-M33，面向 T5AI 等带屏 SoC。所有数据为同机实测与代码静态统计，非估算。</p>
+  </div>
+</section>
+
+<!-- ═════════ 量产路径 ═════════ -->
+<section id="path" class="section">
+  <div class="sec-head">
+    <div class="sec-eyebrow"><i style="color:var(--s-ops)"></i>量产路径 / DELIVERY</div>
+    <h2>从选型到量产的 5 步</h2>
+    <p>从确定形态、勾选页面、定制风格，到样机验证与 OTA 量产，路径清晰、周期可控。</p>
+  </div>
+  <div class="flow">
+    <div class="step"><strong>确定产品形态</strong><span>在 6 类形态中选定目标产品（带屏 / 闹钟 / 视觉 / 机器人 / 翻译 / 看护）。</span></div>
+    <div class="step"><strong>勾选页面与能力</strong><span>从 20 个成品页面中勾选产品所需的功能模块组合。</span></div>
+    <div class="step"><strong>定制 UI 风格</strong><span>换主题色、图标、布局与文案，对齐客户品牌与产品定位。</span></div>
+    <div class="step"><strong>样机验证</strong><span>基于参考板完成 PoC、演示与客户验收，确认体验达标。</span></div>
+    <div class="step"><strong>量产与升级</strong><span>通过 OTA、日志与版本节奏持续优化，支撑上线后迭代。</span></div>
+  </div>
+</section>
+
+<!-- ═════════ 定位 ═════════ -->
+<section class="section">
+  <div class="closing">
+    <div class="thesis">
+      <div class="lbl">一句话定位</div>
+      <strong>让 AI 硬件客户，省下从零搭 UI 的时间，直接做出可量产的产品。</strong>
+      <p>20 个成品页面、6 类产品形态、中英双语，开箱即用、量产级质量、低成本定制——Wukong UI 把智能硬件的交互做成了现成资产，客户拿来就能用、改了就能上、卖了能持续长。</p>
+    </div>
+    <div class="grid g3" style="gap:14px">
+      <div class="card" style="border-top:2px solid var(--s-core)"><h3 style="font-family:var(--font-display);font-size:17px;font-weight:600;margin-bottom:8px;color:var(--s-core)">做得快</h3><p style="color:var(--muted);font-size:13px">成品页面 + 分层定制，从选型到样机周期大幅缩短。</p></div>
+      <div class="card" style="border-top:2px solid var(--s-live)"><h3 style="font-family:var(--font-display);font-size:17px;font-weight:600;margin-bottom:8px;color:var(--s-live)">做得稳</h3><p style="color:var(--muted);font-size:13px">已在真实硬件验证的流畅与稳定，扛得住量产交付。</p></div>
+      <div class="card" style="border-top:2px solid var(--s-vision)"><h3 style="font-family:var(--font-display);font-size:17px;font-weight:600;margin-bottom:8px;color:var(--s-vision)">做得广</h3><p style="color:var(--muted);font-size:13px">一套 UI 覆盖 6 类形态，摊薄成本、支撑产品线扩张。</p></div>
+    </div>
+  </div>
+</section>
+
+<!-- ═════════ CTA ═════════ -->
+<div class="cta">
+  <div>
+    <h2>选好形态，20 个页面直接量产</h2>
+    <p>开箱即用的产品级 UI 框架，覆盖带屏、闹钟、视觉、机器人、翻译、看护 6 类硬件形态，中英双语，支撑客户从样机到量产。</p>
+  </div>
+  <a class="btn btn-primary" href="#top">返回顶部 <span class="arrow">↑</span></a>
+</div>
+
+<div class="foot">© Tuya · Wukong UI — 智能硬件开箱即用的产品 UI 框架 · 20 页面 / 6 形态 / 中英双语 · 量产级质量</div>
+
+</main>
+</body>
+</html>

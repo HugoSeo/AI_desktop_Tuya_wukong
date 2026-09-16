@@ -1,0 +1,313 @@
+menuconfig APP_CONFIG
+
+    # ==========================================================================
+    # Hidden configs: auto-selected by board type, not shown in menuconfig
+    # ==========================================================================
+    config TUYA_MODULE_T5
+        bool
+        default n
+
+    config ENABLE_DEFAULT_SESSION
+        bool
+        default y
+
+    # ============================================================
+    # Layer 1: Board Selection
+    # ============================================================
+    choice
+        prompt "Board type (use 'make app_config_choice' to switch)"
+        default T5AI_BOARD
+
+        config T5AI_BOARD
+            bool "T5AI_BOARD"
+            select TUYA_MODULE_T5
+
+        config T5AI_BOARD_EYES
+            bool "T5AI_BOARD_EYES"
+            select TUYA_MODULE_T5
+
+        config T5AI_BOARD_EVB
+            bool "T5AI_BOARD_EVB"
+            select TUYA_MODULE_T5
+
+        config T5AI_BOARD_EVB_PRO
+            bool "T5AI_BOARD_EVB_PRO"
+            select TUYA_MODULE_T5
+
+        config T5AI_BOARD_ROBOT
+            bool "T5AI_BOARD_ROBOT"
+            select TUYA_MODULE_T5
+
+        config T5AI_BOARD_DESKTOP
+            bool "T5AI_BOARD_DESKTOP"
+            select TUYA_MODULE_T5
+
+        config T2AI_BOARD
+            bool "T2AI_BOARD"
+
+        config LE270AI_BOARD
+            bool "LE270AI_BOARD"
+
+        config L511_Y6E_BOARD
+            bool "L511_Y6E_BOARD"
+
+        config L511_Y7PM_BOARD
+            bool "L511_Y7PM_BOARD"
+
+        config T1AI_BOARD
+            bool "T1AI_BOARD"
+
+        config T3AI_BOARD
+            bool "T3AI_BOARD"
+
+        config T3_V_PRO_BOARD
+            bool "T3_V_PRO_BOARD"
+
+        config RTL8720CF_VU2_BOARD
+            bool "RTL8720CF_VU2_BOARD"
+
+        config WUKONG_BOARD_UBUNTU
+            bool "UBUNTU"
+
+        config WUKONG_BOARD_QEMU_M33
+            bool "QEMU_M33_BOARD (QEMU mps2-an521)"
+            select TUYA_MODULE_T5
+
+    endchoice
+
+    # ============================================================
+    # Layer 2: Board Hardware Configuration
+    # ============================================================
+    rsource "../src/boards/Kconfig"
+    rsource "../src/mode/Kconfig"
+    rsource "../src/miscs/battery/Kconfig"
+    rsource "../src/drivers/app_tuya_camera/Kconfig"
+
+    # ============================================================
+    # Layer 3: Feature / Software Configuration
+    # ============================================================
+    # picture "depends on WUKONG_STORAGE_*"; source order does not matter
+    # (Kconfig resolves symbols after parsing), so storage sits last for menu order.
+    rsource "../src/wukong/picture/Kconfig"
+    rsource "../src/wukong/toolkits/mcp/Kconfig"
+    rsource "../src/miscs/tuya_avi_service/Kconfig"
+    rsource "../src/ui/Kconfig"
+    rsource "../src/miscs/audio_player/Kconfig"
+    rsource "../src/wukong/video/Kconfig"
+    rsource "../src/wukong/storage/Kconfig"
+
+    # --- AI Cloud Provider ---
+    choice
+        prompt "AI Cloud Provider"
+        default ENABLE_PROVIDER_TUYA
+
+        config ENABLE_PROVIDER_TUYA
+            bool "Tuya Cloud"
+            help
+                使用涂鸦云作为AI服务提供商
+
+        config ENABLE_PROVIDER_JD
+            bool "JD JoyInside"
+            help
+                使用京东JoyInside作为AI服务提供商
+
+        config ENABLE_PROVIDER_CUBE
+            bool "Cube (xiaozhi)"
+            select AI_PLAYER_DECODER_OPUS_VBR_ENABLE if !AI_PLAYER_LITE
+            help
+                使用 Cube（小智）作为AI服务提供商
+                （下行 TTS 为 OPUS VBR，自动启用对应解码器；
+                LITE 播放器不编入 OPUS 系解码器，与 Cube 不兼容）
+
+        config ENABLE_PROVIDER_CLAW
+            bool "Claw (device-side LLM over HTTP)"
+            help
+                设备侧运行 agent loop,直连 OpenAI 兼容大模型(HTTP)
+    endchoice
+
+    config CLAW_LLM_BACKEND
+        int "Claw LLM backend (0=openai)"
+        depends on ENABLE_PROVIDER_CLAW
+        default 0
+    config CLAW_LLM_BASE_URL
+        string "Claw LLM base URL"
+        depends on ENABLE_PROVIDER_CLAW
+        default "https://api.openai.com/v1"
+    config CLAW_LLM_API_KEY
+        string "Claw LLM API key"
+        depends on ENABLE_PROVIDER_CLAW
+        default ""
+        help
+          LLM 服务的 API key。仅落在 git-ignored 的生成配置中，严禁提交入库。
+    config CLAW_LLM_MODEL
+        string "Claw LLM model"
+        depends on ENABLE_PROVIDER_CLAW
+        default "gpt-4o"
+
+    # Cube backend: Tuya gateway (device JWT auth) vs public xiaozhi/tenclass server
+    choice
+        prompt "Cube backend"
+        depends on ENABLE_PROVIDER_CUBE
+        default CUBE_BACKEND_TUYA
+
+        config CUBE_BACKEND_TUYA
+            bool "Tuya gateway"
+            help
+                连接涂鸦云网关（thing.solution.gateway.entrance.get 获取设备JWT+网关地址），设备JWT鉴权，无需配对码激活
+
+        config CUBE_BACKEND_XIAOZHI
+            bool "Xiaozhi server (tenclass)"
+            help
+                连接小智公开服务器（tenclass），走配对码激活流程
+    endchoice
+
+    # ============================================================
+    # Layer 3.5: IM Channel Configuration
+    # ============================================================
+    menu "IM Channels"
+        config ENABLE_CHAN_WECHAT
+            bool "Enable WeChat iLink channel"
+            default n
+            help
+              启用微信 iLink 机器人通道。
+              无 token 时设备启动后自动进入扫码登录流程，
+              登录成功后 token 持久化到 KV，下次无需再扫码。
+
+        config ENABLE_CHAN_FEISHU
+            bool "Enable Feishu (Lark) bot channel"
+            default n
+            help
+              启用飞书（Lark）机器人通道。设备通过 WebSocket 长连接接收消息，
+              经 REST API 发送回复，无需公网 IP。需在飞书开放平台创建应用并把
+              App ID / App Secret 填入下方两项。
+
+        config FEISHU_APP_ID
+            string "Feishu App ID"
+            depends on ENABLE_CHAN_FEISHU
+            default ""
+            help
+              飞书开放平台应用的 App ID（cli_ 开头）。仅落在 git-ignored 的生成
+              配置中，严禁提交入库。
+
+        config FEISHU_APP_SECRET
+            string "Feishu App Secret"
+            depends on ENABLE_CHAN_FEISHU
+            default ""
+            help
+              飞书开放平台应用的 App Secret。仅落在 git-ignored 的生成配置中，
+              严禁提交入库。
+    endmenu
+
+    # ============================================================
+    # Layer 4: Device Defaults
+    # ============================================================
+    menu "Device Defaults"
+        config TY_SPK_DEFAULT_VOL
+            int "Default speaker volume (0-100)"
+            range 0 100
+            default 70
+            help
+              默认扬声器音量，上电后初始音量值
+
+        config TY_AI_DEFAULT_LANG
+            int "Default language (0=Chinese, 1=English)"
+            range 0 1
+            default 1
+            help
+              默认语言：0=中文，1=英文
+
+        config ENABLE_AUDIO_ANALYSIS
+            bool "Enable audio analysis"
+            default n
+            help
+              启用音频分析功能
+
+        config ENABLE_APP_AI_MONITOR
+            bool "Enable AI monitor"
+            default n
+            help
+              启用AI监控功能（调试/诊断用）
+
+        config ENABLE_CLOUD_ALERT
+            bool "Enable cloud alert sounds"
+            default n
+            help
+              启用云端提示音，优先使用云端TTS播报
+
+
+        config ENABLE_AI_MF_TEST
+            bool "Enable AI mf test"
+            default y
+            help
+              启用AI产测功能
+
+        menuconfig ENABLE_LOW_POWER
+            bool "Enable low-power mode"
+            default n
+            help
+              启用低功耗模式。空闲超时后自动进入低功耗状态，
+              按键唤醒后恢复正常工作。关闭则不进入低功耗
+
+        if ENABLE_LOW_POWER
+            choice
+                prompt "Low-power sleep level"
+                default LOW_POWER_LIGHT_SLEEP
+
+                config LOW_POWER_LIGHT_SLEEP
+                    bool "Light sleep (TUYA_CPU_SLEEP)"
+                    help
+                      轻度休眠：关闭外设、降低功耗，按键后快速恢复。
+                      适合需要快速响应的场景
+
+                config LOW_POWER_DEEP_SLEEP
+                    bool "Deep sleep (TUYA_CPU_DEEP_SLEEP)"
+                    help
+                      深度休眠：功耗最低，按键唤醒后重启系统。
+                      适合对功耗要求极高、可接受较长恢复时间的场景
+
+                config LOW_POWER_ULTRA_SLEEP
+                    bool "Ultra sleep (AP keep-alive, WiFi DTIM-10)"
+                    help
+                      超低功耗（AP长保活）：WiFi 进入 DTIM-10 监听 + lpmgr 托管，
+                      AP 保活不重启，按键快速恢复。
+                      适合功耗要求高且需及时响应的场景。
+                      依赖：需同时在 SDK 配置（svc_wifi）开启 ENABLE_WIFI_ULTRA_LOWPOWER。
+            endchoice
+
+            config TY_AI_LOW_POWER_MODE
+                int
+                default 0 if LOW_POWER_LIGHT_SLEEP
+                default 1 if LOW_POWER_DEEP_SLEEP
+                default 2 if LOW_POWER_ULTRA_SLEEP
+        endif
+
+        config ENABLE_CLI_TEXT_INPUT
+            bool "Enable CLI text input (for automated testing)"
+            default n
+            help
+              启用CLI文本输入命令(ai_text)，通过串口发送文本代替语音输入，
+              用于自动化测试场景，T5 Only
+
+        config ENABLE_APP_KV_CACHE
+            bool "Enable KV cache (defer Flash writes, hold off during playback)"
+            default n
+            help
+              启用KV cache功能：将KV写操作缓存到RAM，定期同步到Flash，
+              减少Flash写次数、降低写延迟。
+              开启后设备播放音频时自动延迟同步，防止Flash操作影响音频播放。
+              注意：需要base_db组件开启ENABLE_KV_CACHE支持（已在tuya_iot_config.h中定义）。
+
+    config ENABLE_TUYA_NFC
+        bool "Enable PN532 NFC module"
+        default n
+        help
+          启用PN532 NFC模组驱动（HSU/UART模式），支持MIFARE Classic卡读写。
+          接线：P10(GPIO_10)=UART0_RX，P11(GPIO_11)=UART0_TX
+
+    config ENABLE_CELLULAR_DONGLE
+        bool "Enable USB cellular dongle (4G)"
+        default n
+        help
+          启用USB蜂窝网络模块，通过4G联网代替WiFi
+
+    endmenu

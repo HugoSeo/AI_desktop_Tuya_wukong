@@ -1,0 +1,628 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>TEF 表情动画格式 · 技术规范</title>
+<script src="https://cdn.jsdelivr.net/npm/mermaid@10/dist/mermaid.min.js"></script>
+<style>
+:root{
+  --fg:#1c2530; --muted:#5b6b7c; --bg:#f6f7f9; --card:#ffffff;
+  --accent:#2f6f6a; --accent2:#0f766e; --border:#e2e6ea; --code-bg:#f3f5f7;
+  --th:#eef4f3; --zebra:#fafbfc; --win:#0f766e;
+}
+*{box-sizing:border-box}
+html{scroll-behavior:smooth}
+body{
+  margin:0; background:var(--bg); color:var(--fg);
+  font-family:-apple-system,BlinkMacSystemFont,"Segoe UI","PingFang SC","Hiragino Sans GB","Microsoft YaHei",sans-serif;
+  line-height:1.7; font-size:15.5px;
+}
+.wrap{max-width:960px; margin:0 auto; padding:48px 28px 80px;}
+.doc{background:var(--card); border:1px solid var(--border); border-radius:14px;
+     padding:44px 52px; box-shadow:0 1px 3px rgba(0,0,0,.04);}
+h1{font-size:30px; line-height:1.25; margin:.2em 0 .1em; letter-spacing:-.01em;}
+h1 + blockquote{margin-top:14px;}
+h2{font-size:22px; margin:2.2em 0 .7em; padding-bottom:.3em; border-bottom:2px solid var(--border);}
+h3{font-size:17px; margin:1.6em 0 .5em; color:var(--accent2);}
+h2::before{content:""; }
+p{margin:.7em 0;}
+a{color:var(--accent2); text-decoration:none;}
+a:hover{text-decoration:underline;}
+blockquote{margin:1em 0; padding:.6em 1.1em; background:#eef4f3;
+  border-left:4px solid var(--accent); border-radius:0 8px 8px 0; color:#2a3a44;}
+blockquote p{margin:.3em 0;}
+code{background:var(--code-bg); padding:.12em .4em; border-radius:5px;
+  font-family:"SF Mono",Menlo,Consolas,"Liberation Mono",monospace; font-size:.88em; color:#b0347a;}
+pre{background:#1e2733; color:#e6edf3; padding:16px 18px; border-radius:10px; overflow:auto; font-size:13px; line-height:1.5;}
+pre code{background:none; color:inherit; padding:0; font-size:13px;}
+table{border-collapse:collapse; width:100%; margin:1.1em 0; font-size:14px; overflow:hidden; border-radius:10px; box-shadow:0 0 0 1px var(--border);}
+th,td{padding:9px 13px; text-align:left; border-bottom:1px solid var(--border);}
+th{background:var(--th); font-weight:600; color:#243b39;}
+tr:nth-child(even) td{background:var(--zebra);}
+td:first-child,th:first-child{padding-left:16px;}
+strong{color:#12303a;}
+hr{border:none; border-top:1px solid var(--border); margin:2.4em 0;}
+.mermaid{background:#fbfdfd; border:1px solid var(--border); border-radius:12px; padding:22px; margin:1.6em 0; text-align:center; overflow-x:auto;}
+.mermaid svg{max-width:none !important; height:auto;}
+.diagram-wide{width:100vw; position:relative; left:50%; right:50%; margin-left:-50vw; margin-right:-50vw; padding:0 24px; box-sizing:border-box;}
+ul,ol{padding-left:1.4em;}
+li{margin:.28em 0;}
+.badge-legend{color:var(--muted); font-size:13px;}
+::selection{background:#cdeae6;}
+@media (max-width:640px){.doc{padding:26px 18px;} .wrap{padding:20px 10px 50px;} table{font-size:12.5px;}}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <div class="doc">
+<h1 id="tef">TEF 表情动画格式 · 技术规范</h1>
+<p><strong>TEF（Tuya Emotion Format）</strong> 是一种面向嵌入式小屏设备的表情动画文件格式。它与 GIF 类似——定义了一套"调色板 + 帧序列 + 帧间差分"的动画表达模式——但针对嵌入式设备的解码算力、内存与显示带宽做了重新设计。目标:在<strong>存储、CPU、RAM、显示带宽</strong>四个维度上同时优于 GIF 与同类嵌入式方案(如乐鑫 EAF),并对表情类素材保持无损。</p>
+<p>本规范定义 TEF 的数据格式,并<strong>详细描述编码与解码的完整过程</strong>及各环节技术选型。</p>
+<hr>
+<h2 id="1">1. 概述</h2>
+<h3 id="11-tef">1.1 TEF 是什么</h3>
+<p>TEF 是一种<strong>离线转码、设备端播放</strong>的表情动画格式:</p>
+<ul>
+<li><strong>离线</strong>:主机端编码器把源动画(当前支持 <strong>GIF</strong>)转换为 <code>.tef</code> 文件;</li>
+<li><strong>设备端</strong>:解码器解析 <code>.tef</code>,逐帧产出<strong>可直接经 SPI / QSPI / RGB 等接口刷到屏幕的像素数据</strong>。</li>
+</ul>
+<p>核心表达模式:把动画视为"一张全局调色板 + 一串帧",每帧只记录<strong>相对上一帧变化的区域(脏块)</strong>,并对该区域按内容选择最省的编码方式(调色板索引压缩 或 JPEG)。</p>
+<h3 id="12">1.2 设计目标(按优先级)</h3>
+<ol>
+<li><strong>运行时最省</strong>:CPU、RAM、显示带宽尽量低。</li>
+<li><strong>存储不吃亏</strong>:表情类素材体积显著小于 GIF;写实类素材提供 JPEG 路径兜底。</li>
+<li><strong>画质无损</strong>:表情类(少色、色块)做到 bit-exact;写实类允许有损。</li>
+<li><strong>单一容器通吃</strong>:一个格式同时承载"色块表情"与"写实过场",解码器按帧自动分派。</li>
+</ol>
+<hr>
+<h2 id="2">2. 设计原理</h2>
+<p>TEF 由五个机制协同,这是它同时赢下多个维度的根本原因。</p>
+<table>
+<thead>
+<tr>
+<th>机制</th>
+<th>作用</th>
+<th>主要收益维度</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><strong>块级帧间差分</strong>:帧切成 tile 网格,只记录/解码/刷新变化的 tile</td>
+<td>跳过未变区域</td>
+<td>存储·CPU·带宽</td>
+</tr>
+<tr>
+<td><strong>全局调色板 + 位深自适应(1/4/8bit)</strong></td>
+<td>按色数把索引压到最小</td>
+<td>存储·RAM</td>
+</tr>
+<tr>
+<td><strong>自适应 tile 尺寸</strong></td>
+<td>编码时扫描最优 tile,平衡脏块粒度与元数据开销</td>
+<td>存储</td>
+</tr>
+<tr>
+<td><strong>多帧成段压缩(共享字典 + 位图并入流)</strong></td>
+<td>吃跨帧冗余,摊薄逐帧元数据/压缩头</td>
+<td>存储</td>
+</tr>
+<tr>
+<td><strong>逐帧最优编码(调色板+熵编码 或 JPEG)</strong></td>
+<td>按内容选最省编码</td>
+<td>存储·CPU</td>
+</tr>
+</tbody>
+</table>
+<h3 id="21">2.1 全链路概览</h3>
+<div class="mermaid">flowchart TD
+    subgraph ENC[&quot;编码器（主机端）&quot;]
+    direction TB
+    A[&quot;GIF 源&quot;] --&gt; B[&quot;解码 + disposal 合成&lt;br/&gt;不透明 RGB 帧序列&quot;]
+    B --&gt; C[&quot;全局调色板量化&lt;br/&gt;位深自适应 1 / 4 / 8bit&quot;]
+    C --&gt; D[&quot;自适应 tile 扫描&lt;br/&gt;8 / 16 / 32 / 64 选最优&quot;]
+    D --&gt; E[&quot;逐帧 tile 差分&lt;br/&gt;生成脏块位图&quot;]
+    E --&gt; F{&quot;逐帧编码择优&quot;}
+    F --&gt;|&quot;色块帧&quot;| G[&quot;脏 tile 索引 → 位打包&lt;br/&gt;位图并入 → 多帧成段&lt;br/&gt;best-of: heatshrink / deflate&quot;]
+    F --&gt;|&quot;写实帧&quot;| J[&quot;脏矩形 → baseline JPEG&quot;]
+    end
+
+    G --&gt; FILE[&quot;.tef 文件&quot;]
+    J --&gt; FILE
+
+    subgraph DEC[&quot;解码器（设备端）&quot;]
+    direction TB
+    I[&quot;解析头 + 全局调色板 + 段表&quot;] --&gt; K{&quot;段类型&quot;}
+    K --&gt;|&quot;调色板段&quot;| L[&quot;整段解压 → 逐帧&lt;br/&gt;读位图 → 位解包 → 查调色板 LUT&quot;]
+    K --&gt;|&quot;JPEG 段&quot;| M[&quot;硬件/软件 JPEG 解码脏矩形&quot;]
+    L --&gt; N{&quot;刷屏模式&quot;}
+    M --&gt; N
+    N --&gt;|&quot;有 GRAM&quot;| O[&quot;设窗口 CASET/RASET + DMA 推脏区&lt;br/&gt;未变区由面板 GRAM 保持&quot;]
+    N --&gt;|&quot;无 GRAM&quot;| P[&quot;写入自缓存整帧缓冲&lt;br/&gt;显示控制器持续扫描&quot;]
+    end
+
+    FILE --&gt; I
+
+    classDef file fill:#e8eef7,stroke:#3060a0,color:#1c2530,font-weight:bold;
+    class FILE file;
+</div>
+<hr>
+<h2 id="3">3. 数据格式规范</h2>
+<h3 id="31">3.1 约定</h3>
+<ul>
+<li>多字节字段采用<strong>小端序</strong>。</li>
+<li>像素输出为 <strong>RGB565</strong>(默认)或 RGB888(可选),<code>bpp</code> 为每像素字节数。</li>
+<li>坐标原点为画布左上角。</li>
+<li><code>n_tiles = ceil(canvas_w / tile_w) × ceil(canvas_h / tile_h)</code>,边缘 tile 按画布裁剪。</li>
+</ul>
+<h3 id="32">3.2 总体布局</h3>
+<pre><code>偏移              内容
+0                 文件头 tef_header (32 字节)
+palette_off       全局调色板    ncolors × u16 (RGB565)
+...               段负载 0 / 1 / ...(调色板段或 JPEG 段)
+seg_table_off     段表          seg_count × tef_seg (每段 16 字节)
+</code></pre>
+<p>TEF 以<strong>段(segment)</strong>为组织单位。一个段覆盖一段<strong>连续帧</strong>,分两类:调色板段(一段连续的色块帧,合并为一条压缩流)或 JPEG 段(单个写实帧)。</p>
+<h3 id="33">3.3 文件头</h3>
+<pre><code class="language-c">struct tef_header {          // 32 字节,小端
+    char     magic[4];       // &quot;TEF1&quot;
+    uint16_t version;        // 1
+    uint16_t canvas_w;       // 画布宽
+    uint16_t canvas_h;       // 画布高
+    uint8_t  tile_w;         // tile 宽(编码时自适应选定)
+    uint8_t  tile_h;         // tile 高
+    uint16_t frame_count;    // 帧数
+    uint16_t fps;            // 默认帧率
+    uint16_t ncolors;        // 全局调色板色数(≤256;纯 JPEG 素材可为 0)
+    uint8_t  index_bits;     // 索引位深:1 / 4 / 8
+    uint8_t  flags;          // bit0: 输出 RGB888(否则 RGB565)
+    uint16_t seg_count;      // 段数量
+    uint16_t _pad;
+    uint32_t palette_off;    // 全局调色板偏移
+    uint32_t seg_table_off;  // 段表偏移
+};
+</code></pre>
+<h3 id="34">3.4 全局调色板</h3>
+<p><code>ncolors</code> 个 <code>uint16</code> RGB565 颜色,整段动画共享,只存一次。位深由色数自动决定:≤2 色 → 1bit,≤16 色 → 4bit,≤256 色 → 8bit。</p>
+<h3 id="35">3.5 段表项</h3>
+<pre><code class="language-c">struct tef_seg {             // 16 字节
+    uint8_t  method;         // 0 = 调色板段, 1 = JPEG 段
+    uint8_t  comp;           // 调色板段:0=heatshrink,1=deflate;JPEG 段忽略
+    uint16_t frame_start;    // 本段起始帧号
+    uint16_t frame_count;    // 本段覆盖帧数
+    uint16_t _r;
+    uint32_t offset;         // 段负载文件偏移
+    uint32_t comp_len;       // 段负载字节数
+};
+</code></pre>
+<h3 id="36-method-0">3.6 调色板段负载(method = 0)</h3>
+<p>段负载是一条熵编码流(heatshrink 或 deflate)。<strong>解压后</strong>得到一个原始 blob,按帧顺序排列,每帧:</p>
+<pre><code>[dirty_bitmap: ceil(n_tiles/8) 字节]   每 bit 对应一个 tile,置位=该 tile 本帧变化
+[packed_indices]                       所有脏 tile 的调色板索引,按 tile 行主序拼接,
+                                        再按 index_bits(1/4/8)打包;本帧内字节对齐
+</code></pre>
+<p><strong>要点:脏块位图被放进压缩流内部</strong>(bitmap-in-stream)。位图高度稀疏且规整,与索引流一起熵编码后开销极小——这是相对"位图未压缩独立存储"的关键优化,尤其利于大画布素材。</p>
+<h3 id="37-jpeg-method-1">3.7 JPEG 段负载(method = 1)</h3>
+<pre><code>[u16 x][u16 y][u16 w][u16 h]   脏区包围盒(w、h 按 8 对齐,适配 JPEG 8×8 块)
+[baseline JPEG 字节]
+</code></pre>
+<h3 id="38-replace">3.8 关键帧与 replace 语义</h3>
+<ul>
+<li>第 0 帧所有 tile 均为脏(整屏铺底);播放起点/切换新表情时第一帧自然重绘整个背景。</li>
+<li><strong>replace 语义</strong>:段负载记录的是脏区<strong>新像素</strong>(不是差值),写入即覆盖;未变区域的保持由显示侧负责(见 §5.4)。故解码不需要保留上一帧用于叠加。</li>
+</ul>
+<hr>
+<h2 id="4">4. 编码流程(详细)</h2>
+<p><strong>输入:GIF 文件(当前编码器仅支持 GIF 源;其他格式作为后续扩展)。</strong></p>
+<p>编码分七步。</p>
+<h3 id="1-gif">步骤 1 — GIF 解码与合成</h3>
+<p>逐帧 LZW 解码,按 disposal 规则合成为<strong>不透明 RGB 帧序列</strong>(合成掉透明/背景层,避免设备端再合成)。</p>
+<blockquote>
+<p>技术:标准 GIF/LZW 解码 + disposal 合成。这是唯一与源格式相关的步骤,后续步骤与源无关。</p>
+</blockquote>
+<h3 id="2_1">步骤 2 — 全局调色板量化与位深选择</h3>
+<p>统计整个帧序列的精确颜色(RGB565 域)。
+- 若唯一色数 ≤ 256:建立<strong>精确全局调色板</strong>,每像素映射为索引——<strong>无损</strong>;
+- 若 &gt; 256(写实素材):中位切分量化到 256 色(有损),或转入 JPEG 路径。
+按色数选 <code>index_bits</code>:≤2→1,≤16→4,≤256→8。</p>
+<blockquote>
+<p>选型:全局调色板 vs GIF 的每帧局部调色板——全局只存一次,省去逐帧重复;位深自适应把索引数据按色数压到理论最小(2 色仅 1bit/像素)。</p>
+</blockquote>
+<h3 id="3-tile">步骤 3 — 自适应 tile 尺寸扫描</h3>
+<p>对候选 tile 尺寸集合(如 8/16/32/64)分别执行步骤 4–7 的完整编码,比较最终文件大小,<strong>选最小者</strong>,并把选定的 <code>tile_w/tile_h</code> 写入文件头。</p>
+<blockquote>
+<p>选型:固定 tile 无法兼顾"变化集中的小画布"(宜小 tile,脏块贴合)与"少色大画布"(宜大 tile,压低位图开销)。自适应扫描以离线时间换最优体积。</p>
+</blockquote>
+<h3 id="4_1">步骤 4 — 逐帧脏块检测</h3>
+<p>对每帧,按 tile 网格与前一帧逐 tile 比对(第 0 帧全脏),生成<strong>脏块位图</strong>;记录脏 tile 的像素与整体包围盒。</p>
+<blockquote>
+<p>选型:块级差分 vs EAF 的整帧分条带——块级可离散跳过多处分离的变化,不重解未变背景。</p>
+</blockquote>
+<h3 id="5-vs-jpeg">步骤 5 — 逐帧编码方式判定(调色板 vs JPEG)</h3>
+<p>对每帧计算两个候选的<strong>压缩后</strong>大小:
+- 候选 A(调色板):脏 tile 索引按位深打包后,用 best-of(heatshrink, deflate)压缩;
+- 候选 B(JPEG):脏区包围盒像素编码为 baseline JPEG。
+取较小者作为该帧的编码方式。</p>
+<blockquote>
+<p>选型:表情帧候选 A 远小,写实帧候选 B 远小;逐帧判定使单一容器兼容两类内容。实测表情素材全部选中 A,写实素材几乎全选 B。</p>
+</blockquote>
+<h3 id="6">步骤 6 — 成段与压缩</h3>
+<p>把<strong>连续的调色板帧</strong>分组为段(每段至多 SEG 帧,默认 16);JPEG 帧各自成段。
+对每个调色板段:按 §3.6 拼出"逐帧(位图 + 打包索引)"的原始 blob,整段用 best-of(heatshrink, deflate)压缩为一条流。</p>
+<blockquote>
+<p>选型:多帧共享一条压缩流,吃<strong>跨帧冗余</strong>(循环/重复动作),并摊薄每帧独立压缩头。SEG 越大压缩越好、解码 scratch 越大——是体积/内存的可调旋钮。</p>
+</blockquote>
+<h3 id="7">步骤 7 — 写文件</h3>
+<p>写文件头 + 全局调色板 + 各段负载 + 段表。</p>
+<p><strong>编码伪代码(简化):</strong></p>
+<pre><code>best = ∞
+for TW in {8,16,32,64}:
+    size = encode_with_tile(TW)      # 步骤 4-7,返回文件大小
+    if size &lt; best: best, bestTW = size, TW
+emit encode_with_tile(bestTW) 到 .tef
+
+encode_with_tile(TW):
+    for each frame i: classify(i) → 调色板 or JPEG   # 步骤 5
+    group 连续调色板帧为段(≤SEG),JPEG 帧独立成段    # 步骤 6
+    for each 调色板段:
+        blob = concat over frames { dirty_bitmap(i) + packbits(dirty_indices(i)) }
+        payload = best_of_compress(blob)             # heatshrink / deflate
+    for each JPEG 段:
+        payload = [x,y,w,h] + jpeg(bbox_pixels)
+    写 header + palette + payloads + seg_table
+</code></pre>
+<hr>
+<h2 id="5">5. 解码流程(详细)</h2>
+<p><strong>输出:可直接经 SPI / QSPI / RGB 等接口刷到屏幕的像素数据(RGB565 / RGB888)。</strong></p>
+<h3 id="1_1">步骤 1 — 解析与预处理(开播一次)</h3>
+<p>读文件头,校验 magic/version;载入全局调色板并<strong>一次性预转成屏幕字节序的 RGB565/888,缓存为 LUT</strong>;读段表。</p>
+<blockquote>
+<p>选型:调色板预转缓存一次,使后续逐像素上色退化为一次数组查表(O(1)),避免逐像素现算。</p>
+</blockquote>
+<h3 id="2_2">步骤 2 — 按段解码</h3>
+<p>遍历段表。对每个段:</p>
+<p><strong>若为调色板段(method = 0):</strong>
+1. 用段的 <code>comp</code> 指定的解码器(heatshrink / deflate)<strong>整段解压</strong>为 blob;
+2. 按帧遍历(<code>frame_count</code> 帧),每帧:
+   a. 从 blob 读 <code>ceil(n_tiles/8)</code> 字节<strong>脏块位图</strong>;
+   b. 依位图统计本帧脏 tile 及脏像素总数,据 <code>index_bits</code> 算出打包字节数,读取并<strong>位解包</strong>为 8bit 索引;
+   c. 对每个脏 tile:索引经调色板 LUT → RGB565,得到该 tile 像素;
+   d. 将各脏 tile 输出到屏(见 §5.4)。</p>
+<p><strong>若为 JPEG 段(method = 1):</strong>
+1. 读 <code>[x,y,w,h]</code>;
+2. 用<strong>硬件或软件 JPEG 解码器</strong>解码脏矩形 → RGB565;
+3. 将脏矩形输出到屏。</p>
+<h3 id="3_1">步骤 3 — 帧调度</h3>
+<p>按 <code>fps</code>(或后续扩展的逐帧时长)调度下一帧的输出时刻。</p>
+<h3 id="4-gram">步骤 4 — 输出到屏:两种刷屏模式(是否支持 GRAM)</h3>
+<p>TEF 差分为 replace 语义,"未变区域如何保持"取决于屏是否自带显存(GRAM),解码器<strong>支持二选一</strong>:</p>
+<p><strong>模式 A — 屏幕自带 GRAM(局部刷新):</strong>
+适用于带 GRAM 的控制器(多数 SPI/QSPI LCD)。只输出脏区:设地址窗口 <code>CASET/RASET = [x, x+w-1] / [y, y+h-1]</code>,<code>RAMWR</code> 后 DMA 推送脏区像素。<strong>未变区域由面板 GRAM 自动保持,MCU 侧无需整帧缓冲。</strong></p>
+<p><strong>模式 B — 屏幕无 GRAM(解码器自缓存):</strong>
+适用于需持续扫描输出的接口(如 RGB 并口 LCD)。解码器在内存中自维护一块 <code>canvas_w × canvas_h × bpp</code> 的整帧缓冲("自缓存 GRAM"),每帧把脏区结果写入其对应位置,由显示控制器持续扫描该缓冲。此模式需额外整帧缓冲,但<strong>解码工作量仍只涉及脏区</strong>,CPU 优势不变。</p>
+<p>两模式共用同一 <code>.tef</code> 与同一套解码逻辑,仅"输出目标"不同。</p>
+<p><strong>解码伪代码(简化):</strong></p>
+<pre><code>LUT = 预转调色板到 RGB565
+for seg in 段表:
+    if seg.method == 调色板:
+        blob = decompress[seg.comp](seg.payload)
+        p = 0
+        repeat seg.frame_count 次:
+            bitmap = blob[p : p+ceil(n_tiles/8)]; p += ceil(n_tiles/8)
+            dpx = 统计脏像素; pkb = 按位深算打包字节
+            idx = unpack_bits(blob[p : p+pkb], index_bits); p += pkb
+            for 每个脏 tile: 像素 = LUT[idx...]; 输出该 tile
+    else: # JPEG 段
+        (x,y,w,h) = seg 头; 像素 = jpeg_decode(seg.jpeg); 输出该矩形
+    输出 = 模式A(设窗口+DMA) 或 模式B(写自缓存缓冲)
+</code></pre>
+<hr>
+<h2 id="6_1">6. 各节点技术选型总览</h2>
+<table>
+<thead>
+<tr>
+<th>环节</th>
+<th>TEF 选择</th>
+<th>备选</th>
+<th>取舍</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>帧间冗余</td>
+<td>块级脏块差分</td>
+<td>无差分(EAF)/ 文件自带子矩形(GIF)</td>
+<td>块级最贴合局部变化,不依赖源优化</td>
+</tr>
+<tr>
+<td>分块粒度</td>
+<td>自适应 tile(8/16/32/64)</td>
+<td>固定 tile / 水平条带 / 整帧</td>
+<td>平衡脏块贴合度与位图开销</td>
+</tr>
+<tr>
+<td>色彩</td>
+<td>全局调色板 + 1/4/8bit</td>
+<td>每帧局部调色板 / 真彩</td>
+<td>全局省重复;位深按色数压到最小</td>
+</tr>
+<tr>
+<td>帧内元数据</td>
+<td>脏块位图并入压缩流</td>
+<td>位图未压缩独立存</td>
+<td>稀疏位图熵编码后近乎免费</td>
+</tr>
+<tr>
+<td>帧间打包</td>
+<td>多帧成段共享字典</td>
+<td>每帧独立流</td>
+<td>吃跨帧冗余 + 摊薄压缩头</td>
+</tr>
+<tr>
+<td>无损压缩</td>
+<td>best-of(heatshrink, deflate)</td>
+<td>RLE / LZMA</td>
+<td>前者弱、后者重;两档覆盖 RAM 紧/松</td>
+</tr>
+<tr>
+<td>写实内容</td>
+<td>脏矩形 JPEG(可硬解)</td>
+<td>调色板硬扛</td>
+<td>调色板压不动噪点;JPEG 对症且可硬解</td>
+</tr>
+<tr>
+<td>未变区保持</td>
+<td>面板 GRAM / 自缓存缓冲</td>
+<td>强制整帧 framebuffer</td>
+<td>有 GRAM 时零额外内存</td>
+</tr>
+</tbody>
+</table>
+<hr>
+<h2 id="7-gif-eaf-tef">7. 竞对量化对比(GIF / EAF / TEF)</h2>
+<p>真实素材、可编译实现实测。<strong>为保证公平,GIF 基准与 TEF 使用完全相同的帧序列</strong>(等帧数);三方使用同族编码器,差异只来自机制。</p>
+<h3 id="71-gif">7.1 存储:全库合计(相对 GIF)</h3>
+<table>
+<thead>
+<tr>
+<th>素材库(真实)</th>
+<th>数量</th>
+<th>尺寸</th>
+<th>色数</th>
+<th>GIF</th>
+<th>TEF</th>
+<th>TEF/GIF</th>
+<th>TEF≤GIF</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>彩色眼睛</td>
+<td>12</td>
+<td>128²</td>
+<td>~180</td>
+<td>1,111,328</td>
+<td>493,105</td>
+<td><strong>0.44×</strong></td>
+<td>12/12</td>
+</tr>
+<tr>
+<td>黑白表情</td>
+<td>23</td>
+<td>848²</td>
+<td>2</td>
+<td>558,475</td>
+<td>162,658</td>
+<td><strong>0.29×</strong></td>
+<td>23/23</td>
+</tr>
+</tbody>
+</table>
+<h3 id="72-gif">7.2 存储:单素材示例(相对 GIF,均无损)</h3>
+<table>
+<thead>
+<tr>
+<th>素材</th>
+<th>尺寸</th>
+<th>色数</th>
+<th>index_bits</th>
+<th>GIF</th>
+<th>TEF</th>
+<th>TEF/GIF</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>黑白 smile</td>
+<td>848²</td>
+<td>2</td>
+<td>1</td>
+<td>52,875</td>
+<td>3,267</td>
+<td><strong>0.06×</strong></td>
+</tr>
+<tr>
+<td>卡通</td>
+<td>240²</td>
+<td>6</td>
+<td>4</td>
+<td>9,709</td>
+<td>3,909</td>
+<td><strong>0.40×</strong></td>
+</tr>
+<tr>
+<td>彩色眼睛 Happy</td>
+<td>128²</td>
+<td>~180</td>
+<td>8</td>
+<td>43,239</td>
+<td>30,034</td>
+<td><strong>0.69×</strong></td>
+</tr>
+<tr>
+<td>写实开场 (JPEG q75)</td>
+<td>320×240</td>
+<td>真彩</td>
+<td>—</td>
+<td>384,792</td>
+<td>500,948</td>
+<td>1.30×(有损)</td>
+</tr>
+</tbody>
+</table>
+<h3 id="73-cpu">7.3 CPU:每次播放需解码产出的像素量(占"整帧 × 全帧数"的比例)</h3>
+<table>
+<thead>
+<tr>
+<th>素材</th>
+<th>GIF</th>
+<th>EAF</th>
+<th>TEF</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>黑白 smile</td>
+<td>LZW 全子图</td>
+<td>100%</td>
+<td><strong>4%</strong></td>
+</tr>
+<tr>
+<td>卡通</td>
+<td>LZW 全子图</td>
+<td>100%</td>
+<td><strong>5%</strong></td>
+</tr>
+<tr>
+<td>彩色眼睛</td>
+<td>LZW 全子图</td>
+<td>100%</td>
+<td><strong>12–27%</strong></td>
+</tr>
+<tr>
+<td>写实开场</td>
+<td>LZW 全子图</td>
+<td>100%</td>
+<td><strong>42%</strong>(JPEG,可硬解)</td>
+</tr>
+</tbody>
+</table>
+<ul>
+<li>EAF 每帧重画整帧,恒 100%;</li>
+<li>TEF 只解码脏 tile,表情类仅 4%–27%;</li>
+<li>GIF 虽也只解码文件自带子图,但 <strong>LZW 逐符号串行、需维护字典,单像素成本高于 TEF 的"解包 + 查表"</strong>;写实帧走硬件 JPEG 时 CPU 近乎为零。</li>
+</ul>
+<h3 id="74-ram320240rgb565deflate">7.4 RAM:解码工作内存(320×240、RGB565、deflate 示例)</h3>
+<table>
+<thead>
+<tr>
+<th>方案</th>
+<th>峰值工作内存</th>
+<th>需整帧 framebuffer</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>GIF</td>
+<td>~245 KB(150K 画布 + 75K 索引画布 + 20K LZW 表)</td>
+<td>强制</td>
+</tr>
+<tr>
+<td>EAF</td>
+<td>~42 KB(10K 条带 + 32K deflate)</td>
+<td>无</td>
+</tr>
+<tr>
+<td><strong>TEF 模式 A(有 GRAM)</strong></td>
+<td><strong>~35 KB(32K deflate 窗口 + tile/段 scratch + LUT)</strong></td>
+<td><strong>无</strong></td>
+</tr>
+<tr>
+<td>TEF 模式 B(无 GRAM)</td>
+<td>~185 KB(模式 A + 150K 自缓存整帧)</td>
+<td>自缓存</td>
+</tr>
+</tbody>
+</table>
+<ul>
+<li>有 GRAM 时,TEF 工作内存最低且无整帧缓冲(约为 GIF 的 1/7);</li>
+<li>无 GRAM 时需自缓存整帧,但仍省去 GIF 的索引画布与 LZW 表,且解码只碰脏区;</li>
+<li>段长 SEG 控制段解压 scratch 大小,可按内存预算调整。</li>
+</ul>
+<h3 id="75">7.5 显示带宽:每次播放向屏幕推送的像素量</h3>
+<table>
+<thead>
+<tr>
+<th>素材</th>
+<th>GIF</th>
+<th>EAF</th>
+<th>TEF(模式 A)</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>黑白 / 卡通 / 眼睛</td>
+<td>子矩形</td>
+<td><strong>整帧 × 全帧(100%)</strong></td>
+<td><strong>4% / 5% / 12–27%</strong></td>
+</tr>
+<tr>
+<td>写实</td>
+<td>子矩形</td>
+<td>100%</td>
+<td>42%</td>
+</tr>
+</tbody>
+</table>
+<p>模式 A(GRAM)下 TEF 只推脏区,带宽随变化面积线性下降;EAF 每帧全推。模式 B(RGB 持续扫描)下面板带宽由接口固定,TEF 收益体现为只更新脏区的内存写入量。</p>
+<h3 id="76">7.6 画质</h3>
+<table>
+<thead>
+<tr>
+<th></th>
+<th>GIF</th>
+<th>EAF</th>
+<th>TEF</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>表情类</td>
+<td>8bit 有损</td>
+<td>4/8bit 有损</td>
+<td><strong>无损(bit-exact)</strong></td>
+</tr>
+<tr>
+<td>写实类</td>
+<td>8bit 有损</td>
+<td>8bit 有损</td>
+<td>JPEG 有损(质量可调)</td>
+</tr>
+</tbody>
+</table>
+<hr>
+<h2 id="8">8. 适用边界与已知局限</h2>
+<p><strong>最适合 TEF 的素材</strong>:少色到中等色数、静止背景 + 局部动作的表情动画——存储显著小于 GIF(实测全库 0.29×~0.44×)、无损、CPU/RAM/带宽全面领先。</p>
+<p><strong>已知局限:</strong></p>
+<ol>
+<li><strong>写实/噪点内容</strong>:调色板压不动,需走 JPEG 路径,存储仍高于 GIF(约 1.30×);此类内容更适合视频编码,JPEG 帧为有损。</li>
+<li><strong>随机定位</strong>:差分帧需从最近关键帧顺序重放;当前每段首帧非强制关键帧,如需频繁跳帧应提高关键帧密度。</li>
+<li><strong>编码耗时</strong>:自适应 tile 扫描 + 逐帧 best-of(两种熵编码 + JPEG 试编)增加离线编码时间;不影响运行时。</li>
+<li><strong>段解压内存</strong>:模式 A 下段越长,解压 scratch 越大;由 SEG 调节。</li>
+<li><strong>输入格式</strong>:编码器当前仅支持 GIF 源。</li>
+</ol>
+<hr>
+<h2 id="_1">附录:参考实现</h2>
+<p>规范配套一套可编译的参考实现(编码器 + 解码器 + 校验)。编码器实现自适应 tile 扫描、多帧成段、位图并入流、1/4/8bit 调色板 best-of(heatshrink/deflate)与 JPEG 帧;解码器实现两种刷屏模式的回放与逐像素/PSNR 校验。移植到具体平台时,仅需实现"输出到屏"(设窗口 + DMA,或写入自缓存缓冲)与可选的硬件 JPEG 解码接口,核心解码逻辑与平台无关。</p>
+  </div>
+</div>
+<script>
+mermaid.initialize({
+  startOnLoad:true, theme:'neutral',
+  themeVariables:{ primaryColor:'#eef4f3', primaryBorderColor:'#2f6f6a',
+    primaryTextColor:'#1c2530', lineColor:'#5b6b7c', fontSize:'16px' },
+  flowchart:{ nodeSpacing:55, rankSpacing:60, padding:12, useMaxWidth:true, htmlLabels:true }
+});
+</script>
+</body>
+</html>

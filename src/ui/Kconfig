@@ -1,0 +1,154 @@
+# UI 总开关（首页直接勾选）。UI 仅有新框架（Vue-inspired LVGL）一套实现，
+# 不再区分新旧（旧 ENABLE_UI_FRAMEWORK 已移除）——勾选 ENABLE_TUYA_UI 即启用。
+# 不外套 menu，使本项直接出现在 APPconfig 的 Feature 层（首页可勾）。
+menuconfig ENABLE_TUYA_UI
+    bool "Enable UI Framework"
+    depends on ENABLE_TUYA_DISPLAY
+    select TUYA_CPU_ARCH_SMP
+    select TUYA_LIBJPEG_TURBO
+    default n
+    help
+      启用 UI 显示系统（Vue-inspired LVGL 框架）。需要 SMP 多核支持，
+      且依赖显示硬件开关 ENABLE_TUYA_DISPLAY（boards/Kconfig）。
+
+if ENABLE_TUYA_UI
+
+    # ---- 平台 / 驱动依赖 ----
+    # 经 tuya_app_config.h 生成无前缀宏，被 tal_image / local.mk 实际使用。
+    # (TUYA_MULTI_TYPES_LCD / TUYA_APP_DRIVERS_TP 已随显示解耦迁至
+    #  boards/Kconfig，由 ENABLE_TUYA_DISPLAY select。)
+    config TUYA_CPU_ARCH_SMP
+        bool
+        default n
+
+    # (TUYA_DMA2D_SHARE 已移除：DMA2D 共享逻辑迁至 miscs/display/tuya_dma2d，
+    #  与 UI 解耦，按 ENABLE_TUYA_CAMERA || UI_DMA2D_ENABLE 自动编入，无需此开关。)
+
+    config TUYA_LIBJPEG_TURBO
+        bool
+        default n
+
+    # ---- 新 UI 框架配置 ----
+    config UI_TASK_STACK_SIZE
+        int "UI thread stack size (bytes)"
+        default 4096
+        help
+          LVGL 主循环线程（ui_loop）的栈大小（字节）。页面渲染回调在此
+          线程内执行，栈溢出跑飞时优先调大此项。
+
+    config UI_DMA2D_ENABLE
+        bool "DMA2D GPU acceleration"
+        default y
+        help
+          Use DMA2D for accelerated fills and blends.
+
+    config UI_WUKONG_PAGES
+        bool "Build the standard Wukong page set + services"
+        default y
+        help
+          Compile the standard Wukong UI (home/chat/settings/camera/music/...
+          pages and their background services). Used by T5AI_BOARD / DESKTOP.
+          Disable for boards that provide their own root UI via
+          ui_app_register_board_ui() (e.g. ROBOT/EVB/EYES) — then only the
+          framework core builds, dropping the pages/services and their
+          camera/jpeg/p2p dependencies (saves flash).
+
+    config UI_LCD_RGB565_BYTE_SWAP
+        bool "RGB565 byte swap for 8-bit SPI panels"
+        default n
+        help
+          Swap the two bytes of every RGB565 pixel when flushing to the panel.
+          Required for 8-bit SPI-interface LCDs (e.g. st7789v2 on T5AI_BOARD_DESKTOP)
+          whose controller expects MSB-first byte order. The framework otherwise
+          composes native little-endian RGB565, which is correct for RGB parallel
+          panels (e.g. ili9488 on T5AI_BOARD) — leave this disabled for those.
+          Implemented as a one-pass swap into a dedicated scan buffer at flush time
+          (ui_port_disp_dma2d.c), so UI, camera and album content are all handled.
+
+    menu "Input Devices"
+
+    config UI_INDEV_TOUCH
+        bool "Touch screen"
+        default y
+
+    config UI_INDEV_KEYPAD
+        bool "Physical keypad"
+        default n
+
+    config UI_INDEV_ENCODER
+        bool "Rotary encoder"
+        default n
+
+    config UI_INDEV_GESTURE
+        bool "Gesture / IMU"
+        default n
+
+    endmenu
+
+    menu "Languages"
+
+    config UI_I18N_LANG_ZH
+        bool "Chinese Simplified"
+        default y
+
+    config UI_I18N_LANG_EN
+        bool "English"
+        default y
+
+    endmenu
+
+    if UI_WUKONG_PAGES
+
+    menu "UI Features"
+
+    config UI_FEATURE_CAMERA
+        bool "Camera & photo album"
+        default y
+        depends on ENABLE_TUYA_CAMERA
+
+    config UI_FEATURE_VIDEO
+        bool "Local AVI video recording and playback"
+        default y
+        depends on UI_FEATURE_CAMERA
+        depends on ENABLE_TY_AVI_MEDIA
+
+    config UI_FEATURE_MUSIC
+        bool "Music player"
+        default y
+
+    config UI_FEATURE_RECORDING
+        bool "Recording & cloud transcribe"
+        default y
+        depends on ENABLE_AI_MODE_RECORD
+
+    config UI_FEATURE_TIME
+        bool "Time management (alarm/schedule/pomodoro)"
+        default y
+
+    config UI_FEATURE_DETECTION
+        bool "AI detection records"
+        default y
+        depends on ENABLE_AI_MODE_DETECTION
+
+    config UI_FEATURE_CALL
+        bool "P2P call"
+        default y
+        depends on ENABLE_AI_MODE_P2P
+
+    config UI_FEATURE_FILES
+        bool "File browser"
+        default y
+
+    config UI_FEATURE_AUDIO_DIAG
+        bool "Audio diagnostics"
+        default y
+
+    config UI_FEATURE_WEATHER
+        bool "Weather"
+        default y
+
+    endmenu
+
+    endif # UI_WUKONG_PAGES
+
+endif # ENABLE_TUYA_UI

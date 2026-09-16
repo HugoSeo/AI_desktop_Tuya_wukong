@@ -1,0 +1,391 @@
+# Audio Configuration
+# Sourced from: src/miscs/audio_player/
+
+menu "Audio Configuration"
+    menu "Audio Input"
+        comment "--- Source ---"
+
+        choice
+        prompt "Audio input source"
+        default USING_UART_AUDIO_INPUT if LE270AI_BOARD
+        default USING_BOARD_AUDIO_INPUT
+
+        config USING_UART_AUDIO_INPUT
+            bool "UART (external codec)"
+            help
+              通过UART外接音频编解码芯片采集音频
+        config USING_BOARD_AUDIO_INPUT
+            bool "Onboard microphone"
+            help
+              使用板载麦克风采集音频
+        endchoice
+
+        config INPUT_BOARD_STACK_SIZE
+            int "Audio input thread stack size (bytes)"
+            range 2560 41472
+            default 2560
+            help
+              音频采集线程栈大小（字节），通常无需修改
+
+        comment "--- Frontend ---"
+
+        choice
+        prompt "Audio frontend engine"
+        default USING_TUYA_AUDIO_FRONTEND
+
+        config USING_TUYA_AUDIO_FRONTEND
+            bool "Tuya (AEC/AGC/NS)"
+            help
+              使用涂鸦自研音频前端（AEC/AGC/NS），单麦 + REF。现状默认。
+        config USING_SPRS_AUDIO_FRONTEND
+            bool "SPRS ESNR (dual-mic)"
+            depends on TUYA_MODULE_T5
+            help
+              使用 SPRS ESNR 双麦(dual-mic)前端：MIC1+MIC2+REF，32ms/512样点，含 AEC/NR/VAD。
+              DMIC 提供 MIC1/MIC2(LR)，ADC 提供 REF。板载双麦为 T5 专属方案。
+        config USING_3RD_AUDIO_FRONTEND
+            bool "Third-party (reserved, not implemented)"
+            help
+              第三方音频前端占位项，本次不实现；保留以兼容现有各板 appconfig 默认值。
+        endchoice
+
+        config SPRS_AGC_TARGET_LEVEL
+            int "SPRS AGC target level (0-9, 0=off)"
+            range 0 9
+            default 5
+            depends on USING_SPRS_AUDIO_FRONTEND
+            help
+              SPRS AGC 目标电平，0 关闭。
+        config SPRS_ENABLE_AEC
+            bool "SPRS enable AEC"
+            default n
+            depends on USING_SPRS_AUDIO_FRONTEND
+            help
+              开启 SPRS 额外 AEC（增性能消耗）。默认关，回消效果不足时开启并实测。
+
+        comment "--- Encoder ---"
+
+        config ENABLE_APP_OPUS_ENCODER
+            bool "Enable OPUS encoder"
+            default y if TUYA_MODULE_T5
+            default n
+            help
+              启用OPUS编码器，T5模组默认开启
+
+        config ENABLE_APP_SPEEX_ENCODER
+            bool "Enable SPEEX encoder"
+            default n
+            help
+              启用SPEEX编码器（压缩率低于OPUS但CPU占用更少）
+
+        config APP_OPUS_ENCODER_BITRATE
+            depends on ENABLE_APP_OPUS_ENCODER
+            int "OPUS encoder bitrate (bps)"
+            default 16000
+            range 8000 128000
+            help
+              OPUS编码比特率（bps），值越高音质越好但带宽占用越大
+
+        config APP_OPUS_ENCODER_VBR_ENABLE
+            depends on ENABLE_APP_OPUS_ENCODER
+            bool "Enable OPUS VBR encoder"
+            default n
+            help
+              启用变比特率OPUS编码器（VBR），启用后将自动采用raw-prefixed容器上传变长帧
+
+        config APP_OPUS_ENCODER_DTX_ENABLE
+            depends on ENABLE_APP_OPUS_ENCODER && APP_OPUS_ENCODER_VBR_ENABLE
+            bool "Enable OPUS DTX (Discontinuous Transmission)"
+            default n
+            help
+              启用不连续传输（DTX）。在静音期间停止发送音频数据，进一步节省流量。建议在环境噪声小、云端兼容时开启。
+
+        config APP_OPUS_ENCODER_BANDWIDTH
+            depends on ENABLE_APP_OPUS_ENCODER
+            int "OPUS encoder bandwidth (1101-1105)"
+            default 1102
+            range 1101 1105
+            help
+              OPUS编码带宽：1101=窄带4kHz，1102=中带6kHz，1103=宽带8kHz，1104=超宽带12kHz，1105=全带20kHz
+    endmenu
+
+    menu "Audio Output"
+        comment "--- Target ---"
+
+        choice
+        prompt "Audio output target"
+        default USING_UART_AUDIO_OUTPUT if LE270AI_BOARD
+        default USING_BOARD_AUDIO_OUTPUT
+
+        config USING_UART_AUDIO_OUTPUT
+            bool "UART (external codec)"
+            help
+              通过UART外接音频编解码芯片播放音频
+        config USING_BOARD_AUDIO_OUTPUT
+            bool "Onboard DAC/I2S"
+            help
+              使用板载DAC/I2S播放音频
+        endchoice
+    endmenu
+
+    menu "Audio Player"
+        comment "--- Mode ---"
+
+        config AI_PLAYER_LITE
+            bool "Enable lite player (reduced RAM)"
+            default n
+            help
+              精简播放器模式，减少RAM占用（仅支持内存数据源，禁用OPUS/OGG解码器）
+
+        comment "--- Decoders (MP3/WAV always built-in) ---"
+
+        # ---- OPUS 系解码器与 LITE 互斥: 精简模式一律不编入 ----
+        if !AI_PLAYER_LITE
+
+        config AI_PLAYER_DECODER_OPUS_ENABLE
+            bool "Enable OPUS decoder (raw stream)"
+            default y
+            help
+              启用原始OPUS解码器（无容器封装），用于实时AI语音流
+
+        config AI_PLAYER_DECODER_OPUS_FRAME_SIZE
+            depends on AI_PLAYER_DECODER_OPUS_ENABLE
+            int "OPUS decoder frame size (ms)"
+            default 40
+            range 10 60
+            help
+              OPUS解码帧长（毫秒），影响延迟和CPU占用的平衡
+
+        config AI_PLAYER_DECODER_OPUS_KBPS
+            depends on AI_PLAYER_DECODER_OPUS_ENABLE
+            int "OPUS decoder bitrate (kbps)"
+            default 16
+            range 16 128
+            help
+              OPUS解码比特率（kbps），需与服务端编码设置匹配
+
+        config AI_PLAYER_DECODER_OGGOPUS_ENABLE
+            bool "Enable OGG-OPUS decoder"
+            default y
+            help
+              启用OGG封装的OPUS解码器，用于播放OGG格式音频文件
+
+        config AI_PLAYER_DECODER_OPUS_VBR_ENABLE
+            bool "Enable OPUS VBR decoder (length-prefixed frames)"
+            default n
+            help
+              启用变比特率OPUS解码器，帧格式为[2字节大端长度][OPUS数据]，用于小智AI等TTS下行
+
+        endif # !AI_PLAYER_LITE
+
+        comment "--- RAM / Buffers ---"
+
+        config AI_PLAYER_STACK_SIZE
+            int "Player thread stack size (bytes)"
+            depends on !AI_PLAYER_LITE
+            default 12288 if AI_PLAYER_DECODER_OPUS_ENABLE || AI_PLAYER_DECODER_OGGOPUS_ENABLE || AI_PLAYER_DECODER_OPUS_VBR_ENABLE
+            default 6144
+            help
+              播放线程栈大小（字节）。启用任一OPUS系解码器时需要12KB。
+              LITE模式为同步调用、无播放线程，此项不适用
+
+        config AI_PLAYER_FRAMEBUF_SIZE
+            int "Encoded frame buffer size (bytes)"
+            default 4096
+            help
+              待解码数据帧缓冲大小（字节），待解码的编码数据暂存于此
+
+        config AI_PLAYER_DECODEBUF_SIZE
+            int "Decoded PCM buffer size (bytes)"
+            default 9600 if AI_PLAYER_DECODER_OGGOPUS_ENABLE
+            default 8192
+            help
+              解码输出PCM缓冲大小（字节）。OGG-OPUS单帧输出更大，需9600
+
+        # ---- 以下仅完整播放器适用(线程 + datasink + mixer/resample 管线);
+        #      LITE 模式为同步内存源直通, 整段隐藏 ----
+        if !AI_PLAYER_LITE
+
+        config AI_PLAYER_RINGBUF_SIZE
+            int "Memory datasink ring buffer size (bytes)"
+            default 16384
+            help
+              内存数据源（TTS流式）环形缓冲大小（字节）
+
+        comment "--- Streaming pre-buffer ---"
+
+        config AI_PLAYER_MEM_PREBUF_BYTES
+            int "Mem sink pre-buffer watermark (bytes, 0=off)"
+            default 2048
+            range 0 AI_PLAYER_RINGBUF_SIZE
+            help
+              内存数据源起播/断流蓄水水位（字节）：攒够该水位或EOF或超时才开始
+              解码出声，防止网络抖动导致的碎卡。置0关闭该机制。
+              须显著小于 AI_PLAYER_RINGBUF_SIZE（环形缓冲写满即停，
+              水位配到接近或超过缓冲容量将永远攒不满，只能靠超时兜底放行）
+
+        config AI_PLAYER_MEM_PREBUF_TIMEOUT_MS
+            int "Mem sink pre-buffer timeout (ms)"
+            default 500
+            help
+              蓄水超时兜底（毫秒）：上游流卡死或码率过低攒不满水位时，超时后照常放行
+
+        comment "--- URL datasink (HTTP) ---"
+
+        config AI_PLAYER_HTTP_YIELD_MS
+            int "HTTP read poll interval (ms)"
+            range 1 100
+            default 10
+            help
+              URL数据源HTTP读超时/让出间隔（毫秒）
+
+        config AI_PLAYER_HTTP_TIMEOUT_S
+            int "HTTP stall timeout (seconds)"
+            range 60 300
+            default 180
+            help
+              URL数据源持续无数据的放弃阈值（秒），超时前会自动断线重连续传
+
+        endif # !AI_PLAYER_LITE
+
+        comment "--- Features / Debug ---"
+
+        if !AI_PLAYER_LITE
+
+        config AI_PLAYER_SUPPORT_MIX_MODE
+            bool "Support FG/BG mixing mode"
+            default y
+            help
+              支持前台/后台双路混音播放（tuya_ai_player_set_mix_mode）
+
+        config AI_PLAYER_SUPPORT_RESAMPLE
+            bool "Support resampling"
+            default y
+            help
+              支持将解码输出重采样到统一输出采样率（源与输出格式不一致时必需）
+
+        config AI_PLAYER_SUPPORT_DIGITAL_VOLUME
+            bool "Support per-player digital volume"
+            default y
+            help
+              支持实例级数字音量（tuya_ai_player_set_volume 带 handle 调用）
+
+        endif # !AI_PLAYER_LITE
+
+        config AI_PLAYER_SUPPORT_DEFAULT_CONSUMER
+            bool "Use built-in speaker consumer"
+            default n
+            help
+              使用播放器内置的tal_audio喇叭输出。wukong app自带consumer，保持关闭；
+              组件独立使用且无自定义consumer时开启
+
+        config AI_PLAYER_DEBUG_STATS
+            bool "Enable [AP-STAT] playback diagnostics"
+            depends on !AI_PLAYER_LITE
+            default n
+            help
+              编入[AP-STAT]诊断统计代码：播放期间每2s聚合输出一行诊断日志
+              （下载/解码/重采样/写出耗时与流量），用于区分「网络饿」与
+              「CPU饿」两类卡顿；仅完整播放器管线生效。
+              编入后默认不打印：由运行时开关控制
+              （tuya_ai_player_debug_stats_set，内存态默认关，
+              wukong app 诊断页提供动态开关）
+    endmenu
+
+    config ENABLE_WUKONG_AUDIO_PIPELINE
+        bool "ENABLE_WUKONG_AUDIO_PIPELINE: enable wukong audio pipeline (tal_audio input/output, app-layer AFE)"
+        depends on TUYA_MODULE_T5
+        default y if USING_SPRS_AUDIO_FRONTEND
+        default n
+        help
+          y: wukong audio pipeline -- tal_audio new driver path (raw stereo capture,
+             app-layer AEC/frontend). Required by SPRS dual-mic frontend; the new
+             driver is only adapted for T5 so far (hence depends on TUYA_MODULE_T5).
+          n: platform mechanism (default) -- legacy vendor tkl_audio path shared by
+             all chips, driver-internal AFE, processed mono frames delivered directly.
+          Switching is self-healing (the app top-level local.mk purges stale build
+          objects on config change). See section 7 of the tal_audio component
+          repository README (checked out at src/drivers/app_tuya_audio/tal_audio
+          in the wukong app) for the mechanism details.
+
+    menu "UART Codec"
+        depends on USING_UART_AUDIO_INPUT
+
+        choice
+            prompt "UART codec chip vendor"
+            default UART_CODEC_VENDOR_GX8006 if LE270AI_BOARD
+            default UART_CODEC_VENDOR_CI1302
+
+            config UART_CODEC_VENDOR_GX8006
+                bool "GX8006 (Nationalchip)"
+                help
+                  国芯GX8006语音编解码芯片
+            config UART_CODEC_VENDOR_CI1302
+                bool "CI1302 (Chipintelli)"
+                help
+                  启英泰伦CI1302语音编解码芯片
+        endchoice
+
+        config UART_CODEC_UART_PORT_NUM
+            int "UART port number (0 or 2)"
+            default 0 if WUKONG_BOARD_UBUNTU
+            default 2
+            range 0 2
+            help
+              与外接编解码芯片通信的UART端口号
+
+        config UART_CODEC_BOOT_IO_NUM
+            int "Codec BOOT mode GPIO"
+            default 25 if LE270AI_BOARD
+            default 2
+            range 0 64
+            help
+              外接编解码芯片的BOOT模式引脚
+
+        config UART_CODEC_POWER_IO_NUM
+            int "Codec power control GPIO"
+            default 31 if LE270AI_BOARD
+            default 3
+            range 0 64
+            help
+              外接编解码芯片的电源控制引脚
+
+        config UART_CODEC_SPK_FLOWCTL_IO_NUM
+            int "Speaker flow-control GPIO"
+            default 6  if LE270AI_BOARD
+            default 32
+            range 0 64
+            help
+              喇叭播放流控引脚，控制编解码芯片的播放时序
+
+        config UART_CODEC_SPK_FLOWCTL_ACTIVE_HIGH
+            bool "Speaker flow-control active HIGH"
+            default n if WUKONG_BOARD_UBUNTU
+            default y
+            help
+              流控引脚有效电平：y=高电平有效，n=低电平有效
+
+        choice
+            prompt "UART codec upload audio format"
+            default UART_CODEC_FMT_OPUS  if LE270AI_BOARD
+            default UART_CODEC_FMT_SPEEX
+
+            config UART_CODEC_FMT_SPEEX
+                bool "SPEEX"
+                help
+                  使用SPEEX格式上传音频（CPU占用低）
+            config UART_CODEC_FMT_OPUS
+                bool "OPUS"
+                help
+                  使用OPUS格式上传音频（压缩率更高）
+        endchoice
+    endmenu
+
+    # --- Codec bench test ---
+    config CODEC_BENCH_TEST
+        bool "Enable codec encoder benchmark test"
+        default n
+        help
+          编解码器性能基准测试模式。开启后跳过AI玩具初始化，
+          仅通过按键触发编码器性能测试（IoT/WiFi正常运行）
+endmenu

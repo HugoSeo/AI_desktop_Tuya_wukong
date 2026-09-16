@@ -1,0 +1,1025 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>UI Widgets 组件库文档</title>
+<style>
+:root {
+    --primary: #4A90D9;
+    --primary-dark: #2E6BAD;
+    --bg: #1A1A1A;
+    --bg-card: #2A2A2A;
+    --text: #FFFFFF;
+    --text-sec: #AAAAAA;
+    --success: #4CAF50;
+    --warning: #FFC107;
+    --error: #F44336;
+    --accent: #FFF37B;
+    --battery-ok: #4CD964;
+    --code-bg: #0d1117;
+}
+* { box-sizing: border-box; margin: 0; padding: 0; }
+body {
+    font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+    background: #0f0f0f;
+    color: #e0e0e0;
+    line-height: 1.6;
+    padding: 2rem;
+}
+.container { max-width: 1200px; margin: 0 auto; }
+h1 {
+    font-size: 2.2rem;
+    color: var(--primary);
+    margin-bottom: 0.5rem;
+    border-bottom: 2px solid var(--primary);
+    padding-bottom: 0.5rem;
+}
+h2 {
+    font-size: 1.6rem;
+    color: var(--text);
+    margin: 2.5rem 0 1rem;
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+}
+h2 .badge {
+    font-size: 0.7rem;
+    background: var(--primary);
+    color: white;
+    padding: 2px 8px;
+    border-radius: 10px;
+    font-weight: normal;
+}
+h3 { font-size: 1.1rem; color: var(--text-sec); margin: 1.2rem 0 0.5rem; }
+p { margin: 0.5rem 0; color: var(--text-sec); }
+.subtitle { color: var(--text-sec); margin-bottom: 2rem; font-size: 1.1rem; }
+
+.widget-card {
+    background: var(--bg-card);
+    border-radius: 12px;
+    padding: 1.5rem;
+    margin: 1rem 0;
+    border: 1px solid #333;
+}
+.widget-card:hover { border-color: var(--primary); }
+
+.api-table {
+    width: 100%;
+    border-collapse: collapse;
+    margin: 1rem 0;
+    font-size: 0.9rem;
+}
+.api-table th {
+    background: #333;
+    color: var(--text);
+    padding: 8px 12px;
+    text-align: left;
+    border-bottom: 2px solid var(--primary);
+}
+.api-table td {
+    padding: 8px 12px;
+    border-bottom: 1px solid #333;
+    color: var(--text-sec);
+}
+.api-table code {
+    background: var(--code-bg);
+    padding: 2px 6px;
+    border-radius: 4px;
+    font-size: 0.85rem;
+    color: #79c0ff;
+}
+
+pre {
+    background: var(--code-bg);
+    border-radius: 8px;
+    padding: 1rem;
+    overflow-x: auto;
+    margin: 0.8rem 0;
+    border: 1px solid #333;
+}
+code {
+    font-family: 'JetBrains Mono', 'Fira Code', monospace;
+    font-size: 0.85rem;
+    color: #c9d1d9;
+}
+.kw { color: #ff7b72; }
+.fn { color: #d2a8ff; }
+.str { color: #a5d6ff; }
+.cm { color: #8b949e; }
+.type { color: #79c0ff; }
+.num { color: #79c0ff; }
+
+/* Mock device frame */
+.device-frame {
+    width: 240px;
+    height: 320px;
+    background: var(--bg);
+    border-radius: 16px;
+    border: 3px solid #444;
+    position: relative;
+    overflow: hidden;
+    margin: 1rem auto;
+    box-shadow: 0 8px 32px rgba(0,0,0,0.5);
+}
+.device-frame .statusbar-mock {
+    height: 32px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 0 12px;
+    font-size: 11px;
+    color: white;
+}
+.device-frame .statusbar-mock .left { }
+.device-frame .statusbar-mock .center {
+    display: flex; gap: 4px; align-items: center;
+}
+.device-frame .statusbar-mock .center .icon { color: var(--accent); font-size: 10px; }
+.device-frame .statusbar-mock .center .count { color: var(--accent); }
+.device-frame .statusbar-mock .right { display: flex; gap: 6px; align-items: center; }
+.wifi-icon { width: 14px; height: 14px; }
+.battery-mock {
+    width: 19px; height: 11px;
+    border: 1px solid white;
+    border-radius: 2px;
+    position: relative;
+    display: inline-block;
+}
+.battery-mock::after {
+    content: ''; position: absolute; right: -3px; top: 2px;
+    width: 2px; height: 5px; background: white; border-radius: 0 1px 1px 0;
+}
+.battery-mock .fill {
+    height: 100%; background: var(--battery-ok); border-radius: 1px;
+}
+
+/* Component mockups */
+.mock-btn {
+    display: inline-block;
+    padding: 8px 16px;
+    border-radius: 8px;
+    font-size: 13px;
+    cursor: pointer;
+    text-align: center;
+}
+.mock-btn-primary { background: var(--primary); color: white; }
+.mock-btn-secondary { background: transparent; border: 1px solid var(--primary); color: var(--primary); }
+.mock-btn-text { background: transparent; color: var(--primary); }
+.mock-btn-icon { background: transparent; padding: 4px 8px; }
+.mock-btn-disabled { opacity: 0.5; }
+
+.mock-card {
+    background: var(--bg-card);
+    border-radius: 16px;
+    padding: 12px;
+    margin: 8px;
+    border: 1px solid #444;
+}
+.mock-card-title { font-size: 14px; color: white; margin-bottom: 4px; }
+
+.mock-bar-track {
+    width: 100%;
+    height: 8px;
+    background: #444;
+    border-radius: 100px;
+    overflow: hidden;
+    margin: 8px 0;
+}
+.mock-bar-fill { height: 100%; border-radius: 100px; transition: width 0.3s; }
+
+.mock-list-item {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    padding: 8px 0;
+    border-bottom: 1px solid #333;
+    font-size: 12px;
+}
+.mock-list-icon { width: 20px; height: 20px; background: #555; border-radius: 4px; }
+.mock-list-text { flex: 1; }
+.mock-list-text .secondary { color: var(--text-sec); font-size: 10px; }
+
+.mock-navbar {
+    display: flex;
+    justify-content: space-evenly;
+    align-items: center;
+    height: 48px;
+    background: var(--bg-card);
+    border-radius: 0 0 12px 12px;
+    position: absolute;
+    bottom: 0;
+    left: 0;
+    right: 0;
+}
+.mock-navbar-item { text-align: center; font-size: 10px; color: var(--text-sec); }
+.mock-navbar-item.active { color: var(--primary); }
+.mock-navbar-item .nav-icon { font-size: 16px; margin-bottom: 2px; }
+
+.mock-popup-overlay {
+    position: absolute; inset: 0;
+    background: rgba(0,0,0,0.5);
+    display: flex; align-items: center; justify-content: center;
+}
+.mock-popup-box {
+    width: 80%; background: var(--bg-card);
+    border-radius: 12px; padding: 16px;
+    text-align: center;
+}
+.mock-popup-title { font-size: 14px; color: white; margin-bottom: 8px; }
+.mock-popup-msg { font-size: 12px; color: var(--text-sec); margin-bottom: 12px; }
+.mock-popup-btns { display: flex; justify-content: flex-end; gap: 8px; }
+
+.mock-label-title { font-size: 16px; color: white; font-weight: bold; }
+.mock-label-body { font-size: 14px; color: white; }
+.mock-label-caption { font-size: 11px; color: var(--text-sec); }
+
+.flex-row { display: flex; gap: 1rem; flex-wrap: wrap; align-items: flex-start; }
+.flex-row .device-frame { flex-shrink: 0; }
+
+.prop-list { list-style: none; padding: 0; }
+.prop-list li {
+    padding: 4px 0;
+    font-size: 0.9rem;
+    color: var(--text-sec);
+    border-bottom: 1px solid #222;
+}
+.prop-list li code { color: #79c0ff; }
+.prop-list li .type-hint { color: #ff7b72; font-size: 0.8rem; }
+
+.toc { background: var(--bg-card); border-radius: 12px; padding: 1.5rem; margin: 1.5rem 0; }
+.toc ul { list-style: none; display: flex; flex-wrap: wrap; gap: 0.5rem; }
+.toc li a {
+    display: inline-block;
+    padding: 4px 12px;
+    background: #333;
+    border-radius: 6px;
+    color: var(--primary);
+    text-decoration: none;
+    font-size: 0.9rem;
+    transition: background 0.2s;
+}
+.toc li a:hover { background: var(--primary); color: white; }
+
+.enum-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(150px, 1fr)); gap: 8px; margin: 0.5rem 0; }
+.enum-item { background: #333; padding: 6px 10px; border-radius: 6px; font-size: 0.85rem; text-align: center; }
+</style>
+</head>
+<body>
+<div class="container">
+
+<h1>UI Widgets 组件库</h1>
+<p class="subtitle">TuyaOS Wukong AI &mdash; 嵌入式 LVGL 8.3 组件系统 &mdash; 240&times;320 暗色主题</p>
+
+<div class="toc">
+<ul>
+<li><a href="#statusbar">StatusBar</a></li>
+<li><a href="#btn">Button</a></li>
+<li><a href="#label">Label</a></li>
+<li><a href="#card">Card</a></li>
+<li><a href="#bar">Bar</a></li>
+<li><a href="#icon">Icon</a></li>
+<li><a href="#list">List</a></li>
+<li><a href="#navbar">NavBar</a></li>
+<li><a href="#slider">Slider</a></li>
+<li><a href="#link">Link</a></li>
+<li><a href="#picture">Picture</a></li>
+<li><a href="#ring_alarm">RingAlarm</a></li>
+<li><a href="#popup">Popup</a></li>
+</ul>
+</div>
+
+<!-- ===== STATUSBAR ===== -->
+<h2 id="statusbar">StatusBar <span class="badge">Singleton</span></h2>
+<div class="widget-card">
+<p>全局状态栏，创建在 <code>lv_layer_top()</code> 上，跨页面存活。支持 Full/Minimal 两种模式。</p>
+
+<div class="flex-row">
+<div>
+<h3>Full 模式</h3>
+<div class="device-frame" style="height:50px;border-radius:8px;width:240px;">
+<div class="statusbar-mock">
+    <span class="left">09:30</span>
+    <span class="center">
+        <span class="icon">📅</span><span class="count">2</span>
+        &nbsp;
+        <span class="icon">⏰</span><span class="count">1</span>
+    </span>
+    <span class="right">
+        <span style="font-size:12px;">📶</span>
+        <span class="battery-mock"><span class="fill" style="width:75%"></span></span>
+    </span>
+</div>
+</div>
+<h3>Minimal 模式 (Home 页)</h3>
+<div class="device-frame" style="height:50px;border-radius:8px;width:240px;">
+<div class="statusbar-mock" style="justify-content:flex-end;">
+    <span class="right">
+        <span style="font-size:12px;">📶</span>
+        <span class="battery-mock"><span class="fill" style="width:75%"></span></span>
+    </span>
+</div>
+</div>
+</div>
+
+<div>
+<h3>API</h3>
+<table class="api-table">
+<tr><th>函数</th><th>说明</th></tr>
+<tr><td><code>ui_comp_statusbar_init()</code></td><td>初始化单例（仅调用一次）</td></tr>
+<tr><td><code>ui_comp_statusbar_refresh(props)</code></td><td>刷新所有字段（时间、日历、闹钟、WiFi、电量）</td></tr>
+<tr><td><code>ui_comp_statusbar_set_visible(bool)</code></td><td>显示/隐藏状态栏</td></tr>
+<tr><td><code>ui_comp_statusbar_set_mode(mode)</code></td><td>切换 FULL / MINIMAL 模式</td></tr>
+</table>
+
+<h3>Props 结构</h3>
+<ul class="prop-list">
+<li><code>hour</code> / <code>minute</code> <span class="type-hint">uint8_t</span> &mdash; 当前时间</li>
+<li><code>calendar_count</code> <span class="type-hint">uint8_t</span> &mdash; 今日日程数</li>
+<li><code>alarm_count</code> <span class="type-hint">uint8_t</span> &mdash; 闹钟数</li>
+<li><code>wifi_strength</code> <span class="type-hint">uint8_t</span> &mdash; WiFi 信号强度 (0-3)</li>
+<li><code>battery_level</code> <span class="type-hint">uint8_t</span> &mdash; 电量百分比 (0-100)</li>
+<li><code>is_charging</code> <span class="type-hint">bool</span> &mdash; 是否充电中</li>
+<li><code>wifi_connected</code> <span class="type-hint">bool</span> &mdash; 是否在线</li>
+</ul>
+
+<h3>电量颜色规则</h3>
+<div class="enum-grid">
+<div class="enum-item" style="background:#4CD964;color:#000;">&gt;40% 正常</div>
+<div class="enum-item" style="background:#FFC107;color:#000;">11-40% 警告</div>
+<div class="enum-item" style="background:#F44336;color:#fff;">&le;10% 低电量</div>
+</div>
+</div>
+</div>
+
+<h3>使用示例</h3>
+<pre><code><span class="cm">// 初始化 (ui_app_init 中调用一次)</span>
+<span class="fn">ui_comp_statusbar_init</span>();
+
+<span class="cm">// 页面 on_enter 中控制模式</span>
+<span class="fn">ui_comp_statusbar_set_mode</span>(<span class="type">UI_STATUSBAR_MODE_FULL</span>);
+<span class="fn">ui_comp_statusbar_set_visible</span>(<span class="kw">true</span>);
+</code></pre>
+</div>
+
+<!-- ===== BUTTON ===== -->
+<h2 id="btn">Button <span class="badge">Multi-instance</span></h2>
+<div class="widget-card">
+<p>多风格按钮组件：Primary / Secondary / Text / Icon 四种填充，外加<b>圆形按钮</b>（透明环 + 按下半透明填充，仿 iPhone 锁屏）和<b>图标+文字按钮</b>（图标可在左/右/上）。可禁用。</p>
+<p style="color:var(--accent);font-size:0.85rem;">⚠️ 所有按钮在创建时会 <code>lv_obj_remove_style_all()</code> 清掉 LVGL 默认主题（阴影/内边距），再贴自有样式，确保前景（图标/文字）<b>居中无偏移</b>。</p>
+
+<h3>效果预览</h3>
+<div style="display:flex; gap:12px; align-items:center; flex-wrap:wrap; margin:1rem 0; padding:1rem; background:var(--bg); border-radius:8px;">
+<div class="mock-btn mock-btn-primary">确定</div>
+<div class="mock-btn mock-btn-secondary">取消</div>
+<div class="mock-btn mock-btn-text">跳过</div>
+<div class="mock-btn mock-btn-icon">🔊</div>
+<div class="mock-btn mock-btn-primary mock-btn-disabled">禁用</div>
+</div>
+
+<h3>圆形按钮 / 图标+文字按钮</h3>
+<div style="display:flex; gap:20px; align-items:center; flex-wrap:wrap; margin:1rem 0; padding:1rem; background:var(--bg); border-radius:8px;">
+<div style="display:flex;flex-direction:column;align-items:center;gap:6px;">
+    <div style="width:56px;height:56px;border-radius:50%;border:2px solid rgba(184,189,222,0.5);display:flex;align-items:center;justify-content:center;font-size:24px;color:#fff;">📷</div>
+    <span style="font-size:10px;color:var(--text-sec);">circle (纯图标)</span>
+</div>
+<div style="display:flex;flex-direction:column;align-items:center;gap:6px;">
+    <div style="display:flex;flex-direction:column;align-items:center;gap:4px;">
+        <div style="width:56px;height:56px;border-radius:50%;border:2px solid rgba(184,189,222,0.5);display:flex;align-items:center;justify-content:center;font-size:24px;color:#fff;">📞</div>
+        <span style="font-size:12px;color:#fff;">通话</span>
+    </div>
+    <span style="font-size:10px;color:var(--text-sec);">circle + 文字</span>
+</div>
+<div style="display:flex;flex-direction:column;align-items:center;gap:6px;">
+    <div class="mock-btn mock-btn-primary" style="display:inline-flex;align-items:center;gap:6px;">▶ 播放</div>
+    <span style="font-size:10px;color:var(--text-sec);">icon 在左 (LEFT)</span>
+</div>
+<div style="display:flex;flex-direction:column;align-items:center;gap:6px;">
+    <div class="mock-btn mock-btn-primary" style="display:inline-flex;flex-direction:column;align-items:center;gap:4px;padding:10px 16px;"><span style="font-size:18px;">⚙️</span><span>设置</span></div>
+    <span style="font-size:10px;color:var(--text-sec);">icon 在上 (TOP)</span>
+</div>
+</div>
+
+<h3>API</h3>
+<table class="api-table">
+<tr><th>函数</th><th>说明</th></tr>
+<tr><td><code>ui_comp_btn_create(parent, text, cb)</code></td><td>创建 Primary 按钮</td></tr>
+<tr><td><code>ui_comp_btn_create_styled(parent, text, style, cb)</code></td><td>创建指定样式按钮</td></tr>
+<tr><td><code>ui_comp_btn_icon_create(parent, icon_src, cb)</code></td><td>创建图标按钮（透明 ghost）</td></tr>
+<tr><td><code>ui_comp_btn_circle_create(parent, icon_src, text, cb)</code></td><td>圆形按钮；<code>text=NULL</code> 为纯图标，否则圆下方带文字</td></tr>
+<tr><td><code>ui_comp_btn_create_with_icon(parent, icon_src, text, style, pos, cb)</code></td><td>图标+文字按钮；<code>style</code> 选填充，<code>pos</code> 选图标位置</td></tr>
+<tr><td><code>ui_comp_btn_set_text(btn, text)</code></td><td>更新文字（查找首个 label 子节点，对图标+文字按钮同样适用）</td></tr>
+<tr><td><code>ui_comp_btn_set_enabled(btn, bool)</code></td><td>启用/禁用 (50% 透明度)</td></tr>
+</table>
+
+<h3>样式枚举 <code>ui_comp_btn_style_t</code></h3>
+<div class="enum-grid">
+<div class="enum-item">UI_COMP_BTN_PRIMARY</div>
+<div class="enum-item">UI_COMP_BTN_SECONDARY</div>
+<div class="enum-item">UI_COMP_BTN_TEXT</div>
+<div class="enum-item">UI_COMP_BTN_ICON</div>
+<div class="enum-item">UI_COMP_BTN_CIRCLE</div>
+</div>
+
+<h3>图标位置枚举 <code>ui_comp_btn_icon_pos_t</code></h3>
+<div class="enum-grid">
+<div class="enum-item">UI_COMP_BTN_ICON_LEFT</div>
+<div class="enum-item">UI_COMP_BTN_ICON_RIGHT</div>
+<div class="enum-item">UI_COMP_BTN_ICON_TOP</div>
+</div>
+
+<h3>使用示例</h3>
+<pre><code><span class="cm">// Primary 按钮</span>
+<span class="type">lv_obj_t</span> *btn = <span class="fn">ui_comp_btn_create</span>(parent, <span class="str">"确定"</span>, my_click_cb);
+
+<span class="cm">// Secondary 风格</span>
+<span class="type">lv_obj_t</span> *btn2 = <span class="fn">ui_comp_btn_create_styled</span>(parent, <span class="str">"取消"</span>,
+    <span class="type">UI_COMP_BTN_SECONDARY</span>, cancel_cb);
+
+<span class="cm">// 图标按钮</span>
+<span class="type">lv_obj_t</span> *vol = <span class="fn">ui_comp_btn_icon_create</span>(parent, &icon_volume, vol_cb);
+
+<span class="cm">// 圆形按钮 (纯图标 / 带文字)</span>
+<span class="fn">ui_comp_btn_circle_create</span>(parent, &icon_camera, <span class="type">NULL</span>, cam_cb);
+<span class="fn">ui_comp_btn_circle_create</span>(parent, &icon_call, <span class="str">"通话"</span>, call_cb);
+
+<span class="cm">// 图标+文字按钮 (图标在左 / 在上)</span>
+<span class="fn">ui_comp_btn_create_with_icon</span>(parent, &icon_play, <span class="str">"播放"</span>,
+    <span class="type">UI_COMP_BTN_PRIMARY</span>, <span class="type">UI_COMP_BTN_ICON_LEFT</span>, play_cb);
+<span class="fn">ui_comp_btn_create_with_icon</span>(parent, &icon_gear, <span class="str">"设置"</span>,
+    <span class="type">UI_COMP_BTN_TEXT</span>, <span class="type">UI_COMP_BTN_ICON_TOP</span>, gear_cb);
+
+<span class="cm">// 注: create_with_icon 的 cb 不带 user_data。若需按实例区分,</span>
+<span class="cm">//     传 cb=NULL 再自行 lv_obj_add_event_cb(btn, cb, LV_EVENT_CLICKED, data)</span>
+
+<span class="cm">// 禁用</span>
+<span class="fn">ui_comp_btn_set_enabled</span>(btn, <span class="kw">false</span>);
+</code></pre>
+</div>
+
+<!-- ===== LABEL ===== -->
+<h2 id="label">Label <span class="badge">Multi-instance</span></h2>
+<div class="widget-card">
+<p>文本标签组件，支持三种排版级别 (Title/Body/Caption)，支持 i18n 和格式化。</p>
+
+<h3>效果预览</h3>
+<div style="padding:1rem; background:var(--bg); border-radius:8px; margin:1rem 0;">
+<div class="mock-label-title">标题文字 Title</div>
+<div class="mock-label-body" style="margin-top:4px;">正文文字 Body</div>
+<div class="mock-label-caption" style="margin-top:4px;">注释文字 Caption</div>
+</div>
+
+<h3>API</h3>
+<table class="api-table">
+<tr><th>函数</th><th>说明</th></tr>
+<tr><td><code>ui_comp_label_create(parent, text)</code></td><td>创建 Body 标签</td></tr>
+<tr><td><code>ui_comp_label_create_i18n(parent, key)</code></td><td>创建 i18n 标签（自动翻译）</td></tr>
+<tr><td><code>ui_comp_label_create_variant(parent, text, variant)</code></td><td>创建指定级别标签</td></tr>
+<tr><td><code>ui_comp_label_set_text(lbl, text)</code></td><td>更新文本</td></tr>
+<tr><td><code>ui_comp_label_set_text_fmt(lbl, fmt, ...)</code></td><td>格式化更新 (printf 风格)</td></tr>
+<tr><td><code>ui_comp_label_set_i18n(lbl, key)</code></td><td>按 i18n key 更新</td></tr>
+</table>
+
+<h3>变体枚举</h3>
+<div class="enum-grid">
+<div class="enum-item">UI_COMP_LABEL_TITLE</div>
+<div class="enum-item">UI_COMP_LABEL_BODY</div>
+<div class="enum-item">UI_COMP_LABEL_CAPTION</div>
+</div>
+
+<h3>使用示例</h3>
+<pre><code><span class="cm">// 标题</span>
+<span class="fn">ui_comp_label_create_variant</span>(card, <span class="str">"设置"</span>, <span class="type">UI_COMP_LABEL_TITLE</span>);
+
+<span class="cm">// i18n 标签</span>
+<span class="type">lv_obj_t</span> *lbl = <span class="fn">ui_comp_label_create_i18n</span>(parent, <span class="type">UI_TEXT_HOME_ALARM</span>);
+
+<span class="cm">// 格式化更新</span>
+<span class="fn">ui_comp_label_set_text_fmt</span>(lbl, <span class="str">"%d%%"</span>, battery);
+</code></pre>
+</div>
+
+<!-- ===== CARD ===== -->
+<h2 id="card">Card <span class="badge">Multi-instance</span></h2>
+<div class="widget-card">
+<p>圆角卡片容器，使用全局 <code>ui_style_card</code> 样式。支持带标题和无标题两种创建方式。</p>
+
+<h3>效果预览</h3>
+<div style="padding:1rem; background:var(--bg); border-radius:8px; margin:1rem 0;">
+<div class="mock-card">
+    <div class="mock-card-title">天气</div>
+    <div style="font-size:12px;color:var(--text-sec);">25&deg; 晴</div>
+    <div style="font-size:11px;color:var(--text-sec);">最高 28&deg; / 最低 18&deg;</div>
+</div>
+<div class="mock-card" style="margin-top:8px;">
+    <div style="font-size:12px;color:var(--text-sec);">无标题卡片 &mdash; 自由内容区域</div>
+</div>
+</div>
+
+<h3>API</h3>
+<table class="api-table">
+<tr><th>函数</th><th>说明</th></tr>
+<tr><td><code>ui_comp_card_create(parent)</code></td><td>创建空卡片（Flex Column 布局）</td></tr>
+<tr><td><code>ui_comp_card_create_titled(parent, title)</code></td><td>创建带标题卡片</td></tr>
+<tr><td><code>ui_comp_card_set_title(card, title)</code></td><td>更新标题文本</td></tr>
+</table>
+
+<h3>使用示例</h3>
+<pre><code><span class="cm">// 带标题卡片</span>
+<span class="type">lv_obj_t</span> *card = <span class="fn">ui_comp_card_create_titled</span>(parent, <span class="str">"闹钟"</span>);
+<span class="fn">ui_comp_label_create</span>(card, <span class="str">"07:30  起床"</span>);
+
+<span class="cm">// 空卡片自由布局</span>
+<span class="type">lv_obj_t</span> *card2 = <span class="fn">ui_comp_card_create</span>(parent);
+<span class="fn">ui_comp_bar_create</span>(card2, <span class="num">0</span>, <span class="num">100</span>);
+</code></pre>
+</div>
+
+<!-- ===== BAR ===== -->
+<h2 id="bar">Bar <span class="badge">Multi-instance</span></h2>
+<div class="widget-card">
+<p>进度条/滑块组件，主题色填充，支持动画过渡。</p>
+
+<h3>效果预览</h3>
+<div style="padding:1rem; background:var(--bg); border-radius:8px; margin:1rem 0; width:240px;">
+<div style="font-size:11px;color:var(--text-sec);margin-bottom:4px;">音量 75%</div>
+<div class="mock-bar-track"><div class="mock-bar-fill" style="width:75%;background:var(--primary);"></div></div>
+<div style="font-size:11px;color:var(--text-sec);margin:8px 0 4px;">亮度 40%</div>
+<div class="mock-bar-track"><div class="mock-bar-fill" style="width:40%;background:var(--primary);"></div></div>
+<div style="font-size:11px;color:var(--text-sec);margin:8px 0 4px;">下载 10%</div>
+<div class="mock-bar-track"><div class="mock-bar-fill" style="width:10%;background:var(--primary);"></div></div>
+</div>
+
+<h3>API</h3>
+<table class="api-table">
+<tr><th>函数</th><th>说明</th></tr>
+<tr><td><code>ui_comp_bar_create(parent, min, max)</code></td><td>创建进度条（宽100%, 高8px）</td></tr>
+<tr><td><code>ui_comp_bar_set_value(bar, value)</code></td><td>设置值（无动画）</td></tr>
+<tr><td><code>ui_comp_bar_set_value_anim(bar, value, ms)</code></td><td>设置值（带动画过渡）</td></tr>
+</table>
+
+<h3>使用示例</h3>
+<pre><code><span class="type">lv_obj_t</span> *vol_bar = <span class="fn">ui_comp_bar_create</span>(card, <span class="num">0</span>, <span class="num">100</span>);
+<span class="fn">ui_comp_bar_set_value</span>(vol_bar, <span class="num">75</span>);
+
+<span class="cm">// 带动画</span>
+<span class="fn">ui_comp_bar_set_value_anim</span>(vol_bar, <span class="num">50</span>, <span class="num">300</span>);
+</code></pre>
+</div>
+
+<!-- ===== ICON ===== -->
+<h2 id="icon">Icon <span class="badge">Multi-instance</span></h2>
+<div class="widget-card">
+<p>图标封装，简化 <code>lv_img</code> 创建和更新。使用 C 数组编译的 LVGL 图片资源。</p>
+
+<h3>API</h3>
+<table class="api-table">
+<tr><th>函数</th><th>说明</th></tr>
+<tr><td><code>ui_comp_icon_create(parent, src)</code></td><td>创建图标 (src 为 LV_IMG_DECLARE 的资源指针)</td></tr>
+<tr><td><code>ui_comp_icon_set_src(icon, src)</code></td><td>切换图标源</td></tr>
+</table>
+
+<h3>使用示例</h3>
+<pre><code><span class="type">LV_IMG_DECLARE</span>(icon_weather);
+<span class="type">lv_obj_t</span> *ico = <span class="fn">ui_comp_icon_create</span>(row, &icon_weather);
+
+<span class="cm">// 切换图标</span>
+<span class="type">LV_IMG_DECLARE</span>(icon_sunny);
+<span class="fn">ui_comp_icon_set_src</span>(ico, &icon_sunny);
+</code></pre>
+</div>
+
+<!-- ===== LIST ===== -->
+<h2 id="list">List <span class="badge">Multi-instance</span></h2>
+<div class="widget-card">
+<p>列表组件，每项支持图标 + 主文本 + 副文本 + 点击回调。可动态增删。</p>
+
+<h3>效果预览</h3>
+<div style="padding:1rem; background:var(--bg); border-radius:8px; margin:1rem 0; width:240px;">
+<div class="mock-list-item">
+    <div class="mock-list-icon" style="display:flex;align-items:center;justify-content:center;font-size:12px;">📶</div>
+    <div class="mock-list-text"><div>Wi-Fi</div><div class="secondary">已连接 Home_5G</div></div>
+</div>
+<div class="mock-list-item">
+    <div class="mock-list-icon" style="display:flex;align-items:center;justify-content:center;font-size:12px;">🔊</div>
+    <div class="mock-list-text"><div>音量</div><div class="secondary">75%</div></div>
+</div>
+<div class="mock-list-item">
+    <div class="mock-list-icon" style="display:flex;align-items:center;justify-content:center;font-size:12px;">🔆</div>
+    <div class="mock-list-text"><div>亮度</div><div class="secondary">自动</div></div>
+</div>
+</div>
+
+<h3>API</h3>
+<table class="api-table">
+<tr><th>函数</th><th>说明</th></tr>
+<tr><td><code>ui_comp_list_create(parent, items, count)</code></td><td>创建列表</td></tr>
+<tr><td><code>ui_comp_list_set_items(list, items, count)</code></td><td>重建列表项（先清空再创建）</td></tr>
+<tr><td><code>ui_comp_list_clear(list)</code></td><td>清空所有列表项</td></tr>
+</table>
+
+<h3>Item 结构</h3>
+<ul class="prop-list">
+<li><code>text</code> <span class="type-hint">const char*</span> &mdash; 主文本</li>
+<li><code>secondary</code> <span class="type-hint">const char*</span> &mdash; 副文本 (可选, NULL 则不显示)</li>
+<li><code>icon</code> <span class="type-hint">const void*</span> &mdash; 图标资源 (可选)</li>
+<li><code>on_click</code> <span class="type-hint">callback</span> &mdash; 点击回调 (可选, NULL 则不可点击)</li>
+</ul>
+
+<h3>使用示例</h3>
+<pre><code><span class="kw">static</span> <span class="type">ui_comp_list_item_t</span> items[] = {
+    { .text = <span class="str">"Wi-Fi"</span>,  .secondary = <span class="str">"已连接"</span>, .icon = &icon_wifi, .on_click = wifi_cb },
+    { .text = <span class="str">"音量"</span>,   .secondary = <span class="str">"75%"</span>,   .icon = &icon_vol,  .on_click = vol_cb },
+    { .text = <span class="str">"亮度"</span>,   .secondary = <span class="str">"自动"</span>,  .icon = &icon_bri,  .on_click = bri_cb },
+};
+<span class="type">lv_obj_t</span> *list = <span class="fn">ui_comp_list_create</span>(parent, items, <span class="num">3</span>);
+
+<span class="cm">// 动态更新</span>
+items[<span class="num">1</span>].secondary = <span class="str">"50%"</span>;
+<span class="fn">ui_comp_list_set_items</span>(list, items, <span class="num">3</span>);
+</code></pre>
+</div>
+
+<!-- ===== NAVBAR ===== -->
+<h2 id="navbar">NavBar <span class="badge">Multi-instance</span></h2>
+<div class="widget-card">
+<p>底部导航栏，均匀分布图标+文字项，点击切换页面 (<code>ui_route_replace</code>)。</p>
+
+<h3>效果预览</h3>
+<div class="device-frame" style="height:80px; border-radius:8px; width:240px; position:relative;">
+<div class="mock-navbar">
+    <div class="mock-navbar-item active"><div class="nav-icon">💬</div>聊天</div>
+    <div class="mock-navbar-item"><div class="nav-icon">🏠</div>首页</div>
+    <div class="mock-navbar-item"><div class="nav-icon">⚙️</div>设置</div>
+</div>
+</div>
+
+<h3>API</h3>
+<table class="api-table">
+<tr><th>函数</th><th>说明</th></tr>
+<tr><td><code>ui_comp_navbar_create(parent, items, count)</code></td><td>创建导航栏 (高度 48px)</td></tr>
+<tr><td><code>ui_comp_navbar_set_active(nav, index)</code></td><td>高亮指定项 (Primary 色)</td></tr>
+</table>
+
+<h3>Item 结构</h3>
+<ul class="prop-list">
+<li><code>icon</code> <span class="type-hint">const void*</span> &mdash; 图标资源</li>
+<li><code>label</code> <span class="type-hint">const char*</span> &mdash; 文字标签</li>
+<li><code>target</code> <span class="type-hint">ui_page_id_t</span> &mdash; 目标页面 ID (点击时 route_replace)</li>
+</ul>
+
+<h3>使用示例</h3>
+<pre><code><span class="kw">static const</span> <span class="type">ui_comp_navbar_item_t</span> nav_items[] = {
+    { .icon = &icon_chat, .label = <span class="str">"聊天"</span>, .target = <span class="type">UI_PAGE_CHAT</span> },
+    { .icon = &icon_home, .label = <span class="str">"首页"</span>, .target = <span class="type">UI_PAGE_HOME</span> },
+    { .icon = &icon_gear, .label = <span class="str">"设置"</span>, .target = <span class="type">UI_PAGE_SETTINGS</span> },
+};
+<span class="type">lv_obj_t</span> *nav = <span class="fn">ui_comp_navbar_create</span>(screen, nav_items, <span class="num">3</span>);
+<span class="fn">ui_comp_navbar_set_active</span>(nav, <span class="num">0</span>);
+</code></pre>
+</div>
+
+<!-- ===== SLIDER ===== -->
+<h2 id="slider">Slider <span class="badge">Multi-instance</span></h2>
+<div class="widget-card">
+<p>带可选左侧图标的水平滑块（隐藏旋钮、圆角轨道），下拉面板的音量/亮度使用。</p>
+
+<h3>API</h3>
+<table class="api-table">
+<tr><th>函数</th><th>说明</th></tr>
+<tr><td><code>ui_comp_slider_create(parent, icon_src, value)</code></td><td>创建滑块（0~100；<code>icon_src</code> 为 NULL 则无左侧图标）</td></tr>
+<tr><td><code>ui_comp_slider_set_value(slider, value)</code></td><td>设置值（无动画）</td></tr>
+</table>
+
+<h3>使用示例</h3>
+<pre><code><span class="type">LV_IMG_DECLARE</span>(icon_volume);
+<span class="type">lv_obj_t</span> *vol = <span class="fn">ui_comp_slider_create</span>(panel, &icon_volume, <span class="num">75</span>);
+<span class="fn">ui_comp_slider_set_value</span>(vol, <span class="num">50</span>);
+</code></pre>
+</div>
+
+<!-- ===== LINK ===== -->
+<h2 id="link">Link <span class="badge">Multi-instance</span></h2>
+<div class="widget-card">
+<p>带颜色 + 下划线的可点击文字（如对话页"查看图片"）。<code>arg</code> 被<strong>拷贝</strong>进 widget（LVGL 堆），随 widget 删除自动释放——调用方可随意清除父节点不泄漏；每次点击把拷贝传回 <code>cb</code>。</p>
+
+<h3>API</h3>
+<table class="api-table">
+<tr><th>函数</th><th>说明</th></tr>
+<tr><td><code>ui_comp_link_create(parent, text, cb, arg, arg_len)</code></td><td>创建超链接标签（<code>text</code> 由调用方先做 i18n 解析；<code>arg</code> 拷贝 <code>arg_len</code> 字节，NULL/0 表示无参数）</td></tr>
+</table>
+
+<h3>使用示例</h3>
+<pre><code><span class="kw">static void</span> <span class="fn">view_image_cb</span>(<span class="kw">const void</span> *arg, <span class="type">uint32_t</span> len) {
+    <span class="cm">// arg 是创建时拷贝的文件名</span>
+}
+<span class="kw">const char</span> *name = <span class="str">"img_0007.jpg"</span>;
+<span class="type">lv_obj_t</span> *link = <span class="fn">ui_comp_link_create</span>(bubble, <span class="fn">ui_i18n_text</span>(UI_TEXT_PICTURE_VIEW),
+                                    view_image_cb, name, <span class="fn">strlen</span>(name) + <span class="num">1</span>);
+</code></pre>
+</div>
+
+<!-- ===== PICTURE ===== -->
+<h2 id="picture">Picture <span class="badge">Multi-instance</span></h2>
+<div class="widget-card">
+<p><strong>纯渲染器</strong>：在父容器中央按原始尺寸绘制一块 RGB565 缓冲（不做 JPEG 解码、不依赖任何业务/平台头文件——解码在 <code>ui_svc_picture</code>）。缓冲所有权由 <code>set_rgb565</code> 的 <code>free_fn</code> 决定。</p>
+
+<h3>API</h3>
+<table class="api-table">
+<tr><th>函数</th><th>说明</th></tr>
+<tr><td><code>ui_comp_picture_create(parent)</code></td><td>创建图片画布</td></tr>
+<tr><td><code>ui_comp_picture_set_rgb565(obj, w, h, data, free_fn)</code></td><td>显示 RGB565 图（<code>free_fn==NULL</code> 仅引用、调用方保留所有权；非 NULL 则所有权转移给 widget，替换/清除/删除时自动 <code>free_fn(data)</code>）</td></tr>
+<tr><td><code>ui_comp_picture_clear(obj)</code></td><td>释放持有的缓冲并显示空占位</td></tr>
+</table>
+
+<h3>使用示例</h3>
+<pre><code><span class="type">lv_obj_t</span> *pic = <span class="fn">ui_comp_picture_create</span>(screen);
+
+<span class="cm">// 借用服务缩略图列表：零拷贝，调用方保留所有权</span>
+<span class="fn">ui_comp_picture_set_rgb565</span>(pic, w, h, thumb-&gt;rgb565, <span class="kw">NULL</span>);
+
+<span class="cm">// 大图：所有权转移给 widget</span>
+<span class="fn">ui_comp_picture_set_rgb565</span>(pic, w, h, big, ui_svc_picture_free_rgb565);
+</code></pre>
+</div>
+
+<!-- ===== RING ALARM ===== -->
+<h2 id="ring_alarm">RingAlarm <span class="badge">Singleton</span></h2>
+<div class="widget-card">
+<p>闹钟/提醒/倒计时到点时弹出的全局响铃覆盖层（仅 UI 线程调用）。由 <code>ui_svc_tm</code> 的到点事件触发。</p>
+
+<h3>类型枚举（<code>ui_ring_kind_t</code>）</h3>
+<ul class="prop-list">
+<li><code>UI_RING_KIND_ALARM</code> &mdash; 闹钟：显示 Snooze + Stop</li>
+<li><code>UI_RING_KIND_REMINDER</code> &mdash; 提醒：仅 Stop</li>
+<li><code>UI_RING_KIND_COUNTDOWN</code> &mdash; 倒计时：仅 Confirm</li>
+</ul>
+
+<h3>API</h3>
+<table class="api-table">
+<tr><th>函数</th><th>说明</th></tr>
+<tr><td><code>ui_comp_ring_alarm_show(kind, id, message, on_stop)</code></td><td>弹出响铃（<code>id</code> 可 NULL/空）；用户点击主操作时在 overlay 关闭<strong>前</strong>回调 <code>on_stop</code>，由调用方接到对应业务动作</td></tr>
+<tr><td><code>ui_comp_ring_alarm_dismiss()</code></td><td>手动关闭</td></tr>
+</table>
+
+<h3>使用示例</h3>
+<pre><code><span class="kw">static void</span> <span class="fn">on_stop</span>(<span class="type">ui_ring_kind_t</span> kind, <span class="kw">const char</span> *id) {
+    <span class="cm">// 确认闹钟 / 停止倒计时…</span>
+}
+<span class="fn">ui_comp_ring_alarm_show</span>(UI_RING_KIND_ALARM, alarm_id, <span class="str">"起床啦"</span>, on_stop);
+</code></pre>
+</div>
+
+<!-- ===== POPUP ===== -->
+<h2 id="popup">Popup <span class="badge">Singleton</span></h2>
+<div class="widget-card">
+<p>模态弹窗组件，覆盖在 <code>lv_layer_top()</code> 上。支持 Info / Confirm / Loading / Toast 四种类型。</p>
+
+<h3>效果预览</h3>
+<div class="flex-row" style="gap:1.5rem;">
+
+<div>
+<h3 style="text-align:center;margin-bottom:8px;">Info</h3>
+<div class="device-frame" style="height:200px; width:200px;">
+<div class="mock-popup-overlay">
+<div class="mock-popup-box">
+    <div class="mock-popup-title">提示</div>
+    <div class="mock-popup-msg">网络连接已恢复</div>
+    <div class="mock-popup-btns"><div class="mock-btn mock-btn-primary" style="font-size:11px;padding:4px 12px;">确定</div></div>
+</div>
+</div>
+</div>
+</div>
+
+<div>
+<h3 style="text-align:center;margin-bottom:8px;">Confirm</h3>
+<div class="device-frame" style="height:200px; width:200px;">
+<div class="mock-popup-overlay">
+<div class="mock-popup-box">
+    <div class="mock-popup-title">确认</div>
+    <div class="mock-popup-msg">是否恢复出厂设置？</div>
+    <div class="mock-popup-btns">
+        <div class="mock-btn mock-btn-secondary" style="font-size:11px;padding:4px 12px;">取消</div>
+        <div class="mock-btn mock-btn-primary" style="font-size:11px;padding:4px 12px;">确定</div>
+    </div>
+</div>
+</div>
+</div>
+</div>
+
+<div>
+<h3 style="text-align:center;margin-bottom:8px;">Loading</h3>
+<div class="device-frame" style="height:200px; width:200px;">
+<div class="mock-popup-overlay">
+<div class="mock-popup-box">
+    <div class="mock-popup-title">请稍候</div>
+    <div class="mock-popup-msg">正在连接网络...</div>
+    <div style="margin:8px auto; width:30px; height:30px; border:3px solid #333; border-top:3px solid var(--primary); border-radius:50%; animation: spin 1s linear infinite;"></div>
+</div>
+</div>
+</div>
+</div>
+
+<div>
+<h3 style="text-align:center;margin-bottom:8px;">Toast</h3>
+<div class="device-frame" style="height:200px; width:200px;">
+<div style="position:absolute;inset:0;display:flex;align-items:center;justify-content:center;">
+    <div style="background:#333;opacity:0.92;padding:6px 20px;border-radius:50px;font-size:12px;color:white;">已复制到剪贴板</div>
+</div>
+</div>
+</div>
+
+</div>
+
+<h3>API</h3>
+<table class="api-table">
+<tr><th>函数</th><th>说明</th></tr>
+<tr><td><code>ui_comp_popup_show(type, title, msg, cb)</code></td><td>显示弹窗 (自动 dismiss 上一个)</td></tr>
+<tr><td><code>ui_comp_popup_toast(msg, duration_ms)</code></td><td>显示 Toast 提示 (默认 2s 自动消失)</td></tr>
+<tr><td><code>ui_comp_popup_dismiss()</code></td><td>关闭弹窗/Toast</td></tr>
+</table>
+
+<h3>类型枚举</h3>
+<div class="enum-grid">
+<div class="enum-item">UI_COMP_POPUP_INFO</div>
+<div class="enum-item">UI_COMP_POPUP_CONFIRM</div>
+<div class="enum-item">UI_COMP_POPUP_LOADING</div>
+<div class="enum-item">UI_COMP_POPUP_TOAST</div>
+</div>
+
+<h3>回调</h3>
+<p><code>ui_comp_popup_cb_t</code> &mdash; <code>void (*)(bool confirmed)</code>，Confirm 时 true=确认 / false=取消；Info 时 true=确定。</p>
+
+<h3>使用示例</h3>
+<pre><code><span class="kw">static void</span> <span class="fn">on_reset_result</span>(<span class="type">bool</span> confirmed) {
+    <span class="kw">if</span> (confirmed) do_factory_reset();
+}
+
+<span class="cm">// 确认弹窗</span>
+<span class="fn">ui_comp_popup_show</span>(<span class="type">UI_COMP_POPUP_CONFIRM</span>,
+    <span class="str">"确认"</span>, <span class="str">"是否恢复出厂设置？"</span>, on_reset_result);
+
+<span class="cm">// Loading 弹窗 (无回调)</span>
+<span class="fn">ui_comp_popup_show</span>(<span class="type">UI_COMP_POPUP_LOADING</span>,
+    <span class="str">"请稍候"</span>, <span class="str">"正在连接..."</span>, <span class="type">NULL</span>);
+
+<span class="cm">// 操作完成后手动关闭</span>
+<span class="fn">ui_comp_popup_dismiss</span>();
+
+<span class="cm">// Toast 轻提示 (2秒自动消失)</span>
+<span class="fn">ui_comp_popup_toast</span>(<span class="str">"已复制到剪贴板"</span>, <span class="num">2000</span>);
+
+<span class="cm">// 3秒 Toast</span>
+<span class="fn">ui_comp_popup_toast</span>(<span class="str">"网络已断开"</span>, <span class="num">3000</span>);
+</code></pre>
+</div>
+
+<!-- ===== THEME TOKENS ===== -->
+<h2>主题色板</h2>
+<div class="widget-card">
+<p>所有组件使用统一的主题 token，定义在 <code>ui_theme.h</code> 中。</p>
+<div style="display:grid; grid-template-columns:repeat(auto-fill, minmax(180px, 1fr)); gap:8px; margin:1rem 0;">
+<div style="display:flex;align-items:center;gap:8px;"><div style="width:24px;height:24px;border-radius:4px;background:#4A90D9;"></div><code>UI_COLOR_PRIMARY</code></div>
+<div style="display:flex;align-items:center;gap:8px;"><div style="width:24px;height:24px;border-radius:4px;background:#2E6BAD;"></div><code>UI_COLOR_PRIMARY_DARK</code></div>
+<div style="display:flex;align-items:center;gap:8px;"><div style="width:24px;height:24px;border-radius:4px;background:#1A1A1A;border:1px solid #444;"></div><code>UI_COLOR_BG</code></div>
+<div style="display:flex;align-items:center;gap:8px;"><div style="width:24px;height:24px;border-radius:4px;background:#2A2A2A;border:1px solid #444;"></div><code>UI_COLOR_BG_CARD</code></div>
+<div style="display:flex;align-items:center;gap:8px;"><div style="width:24px;height:24px;border-radius:4px;background:#FFFFFF;"></div><code>UI_COLOR_TEXT</code></div>
+<div style="display:flex;align-items:center;gap:8px;"><div style="width:24px;height:24px;border-radius:4px;background:#AAAAAA;"></div><code>UI_COLOR_TEXT_SEC</code></div>
+<div style="display:flex;align-items:center;gap:8px;"><div style="width:24px;height:24px;border-radius:4px;background:#4CAF50;"></div><code>UI_COLOR_SUCCESS</code></div>
+<div style="display:flex;align-items:center;gap:8px;"><div style="width:24px;height:24px;border-radius:4px;background:#FFC107;"></div><code>UI_COLOR_WARNING</code></div>
+<div style="display:flex;align-items:center;gap:8px;"><div style="width:24px;height:24px;border-radius:4px;background:#F44336;"></div><code>UI_COLOR_ERROR</code></div>
+<div style="display:flex;align-items:center;gap:8px;"><div style="width:24px;height:24px;border-radius:4px;background:#FFF37B;"></div><code>UI_COLOR_STATUSBAR_ACCENT</code></div>
+</div>
+
+<h3>间距系统</h3>
+<div class="enum-grid">
+<div class="enum-item">XS = 4px</div>
+<div class="enum-item">SM = 8px</div>
+<div class="enum-item">MD = 12px</div>
+<div class="enum-item">LG = 16px</div>
+<div class="enum-item">XL = 24px</div>
+</div>
+
+<h3>圆角系统</h3>
+<div class="enum-grid">
+<div class="enum-item" style="border-radius:4px;">SM = 4px</div>
+<div class="enum-item" style="border-radius:8px;">MD = 8px</div>
+<div class="enum-item" style="border-radius:16px;">LG = 16px</div>
+<div class="enum-item" style="border-radius:50px;">FULL = circle</div>
+</div>
+</div>
+
+<!-- ===== FULL DEVICE MOCKUP ===== -->
+<h2>综合效果图</h2>
+<div class="widget-card">
+<p>模拟 240&times;320 设备屏幕上的组件组合效果：</p>
+
+<div class="flex-row" style="justify-content:center; gap:2rem;">
+
+<div>
+<h3 style="text-align:center;">Home 页面</h3>
+<div class="device-frame">
+    <div class="statusbar-mock" style="justify-content:flex-end;">
+        <span class="right">
+            <span style="font-size:12px;">📶</span>
+            <span class="battery-mock"><span class="fill" style="width:85%"></span></span>
+        </span>
+    </div>
+    <div style="padding:30px 16px; text-align:center;">
+        <div style="font-size:36px; color:white; font-weight:300; letter-spacing:2px;">09:30</div>
+        <div style="font-size:12px; color:var(--text-sec); margin-top:4px;">5月29日 星期四</div>
+    </div>
+    <div style="padding:0 16px;">
+        <div class="mock-card">
+            <div style="font-size:12px;color:white;">25&deg;  晴</div>
+            <div style="font-size:11px;color:var(--text-sec);">最高 28&deg; / 最低 18&deg;</div>
+        </div>
+        <div class="mock-card" style="margin-top:8px;">
+            <div style="font-size:12px;color:white;">下个闹钟</div>
+            <div style="font-size:11px;color:var(--text-sec);">07:30  起床</div>
+        </div>
+    </div>
+    <div style="position:absolute;bottom:12px;left:0;right:0;text-align:center;font-size:10px;color:#555;">← 左滑进入聊天</div>
+</div>
+</div>
+
+<div>
+<h3 style="text-align:center;">Chat 页面</h3>
+<div class="device-frame">
+    <div class="statusbar-mock">
+        <span class="left">09:30</span>
+        <span class="center">
+            <span class="icon">📅</span><span class="count">2</span>
+            &nbsp;
+            <span class="icon">⏰</span><span class="count">1</span>
+        </span>
+        <span class="right">
+            <span style="font-size:12px;">📶</span>
+            <span class="battery-mock"><span class="fill" style="width:85%"></span></span>
+        </span>
+    </div>
+    <div style="height:40px;display:flex;align-items:center;justify-content:space-between;padding:0 10px;font-size:11px;">
+        <span style="color:white;">聊天-唤醒</span>
+        <span style="font-size:18px;">🤖</span>
+        <span style="color:white;">待命</span>
+    </div>
+    <div style="flex:1;padding:8px;overflow:hidden;">
+        <div style="margin:4px 0;">
+            <div style="background:var(--primary);color:white;padding:6px 10px;border-radius:12px;font-size:11px;margin-left:auto;width:fit-content;max-width:75%;">今天天气怎么样？</div>
+        </div>
+        <div style="margin:4px 0;">
+            <div style="background:var(--bg-card);color:white;padding:6px 10px;border-radius:12px;font-size:11px;width:fit-content;max-width:75%;">今天晴天，气温25度，适合外出活动。</div>
+        </div>
+        <div style="margin:4px 0;">
+            <div style="background:var(--primary);color:white;padding:6px 10px;border-radius:12px;font-size:11px;margin-left:auto;width:fit-content;max-width:75%;">帮我设个闹钟</div>
+        </div>
+        <div style="margin:4px 0;">
+            <div style="background:var(--bg-card);color:white;padding:6px 10px;border-radius:12px;font-size:11px;width:fit-content;max-width:75%;">好的，请问设几点的闹钟？</div>
+        </div>
+    </div>
+    <div style="position:absolute;bottom:12px;left:0;right:0;text-align:center;font-size:10px;color:#555;">右滑返回首页 →</div>
+</div>
+</div>
+
+<div>
+<h3 style="text-align:center;">Popup 弹窗</h3>
+<div class="device-frame">
+    <div class="statusbar-mock">
+        <span class="left">09:30</span>
+        <span class="center">
+            <span class="icon">📅</span><span class="count">2</span>
+            &nbsp;
+            <span class="icon">⏰</span><span class="count">1</span>
+        </span>
+        <span class="right">
+            <span style="font-size:12px;">📶</span>
+            <span class="battery-mock"><span class="fill" style="width:85%"></span></span>
+        </span>
+    </div>
+    <div class="mock-popup-overlay" style="top:32px;">
+        <div class="mock-popup-box">
+            <div class="mock-popup-title">网络设置</div>
+            <div class="mock-popup-msg">是否连接到 "Home_5G"？</div>
+            <div class="mock-popup-btns">
+                <div class="mock-btn mock-btn-secondary" style="font-size:11px;padding:4px 12px;">取消</div>
+                <div class="mock-btn mock-btn-primary" style="font-size:11px;padding:4px 12px;">连接</div>
+            </div>
+        </div>
+    </div>
+</div>
+</div>
+
+</div>
+</div>
+
+<div style="text-align:center; margin-top:3rem; padding:1rem; color:#555; font-size:0.85rem;">
+    Generated from <code>src/ui/widgets/</code> source code &mdash; TuyaOS Wukong AI v3.14.0
+</div>
+
+</div>
+
+<style>
+@keyframes spin { to { transform: rotate(360deg); } }
+</style>
+</body>
+</html>

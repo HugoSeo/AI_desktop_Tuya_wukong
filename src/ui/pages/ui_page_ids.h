@@ -1,0 +1,38 @@
+#ifndef __UI_PAGE_IDS_H__
+#define __UI_PAGE_IDS_H__
+
+typedef enum {
+    UI_PAGE_HOME = 1,
+    UI_PAGE_CHAT,
+    UI_PAGE_PULLDOWN,
+    UI_PAGE_APP_CENTER,
+    UI_PAGE_SETTINGS,
+    UI_PAGE_ABOUT,
+    UI_PAGE_MODE,
+    UI_PAGE_CALL,
+    UI_PAGE_CONTACTS,
+    UI_PAGE_PHOTO,
+    UI_PAGE_MUSIC,
+    UI_PAGE_MUSIC_LIST,
+    UI_PAGE_CLOCK,
+    UI_PAGE_SCHEDULE,
+    UI_PAGE_CAMERA,
+    UI_PAGE_RECORDING,
+    UI_PAGE_RECORDING_LIST,
+    UI_PAGE_RECORDING_TRANSCRIBE,
+    UI_PAGE_FILES,
+    UI_PAGE_DETECTION,
+    UI_PAGE_AUDIO_DIAG,
+    UI_PAGE_DIAG,
+    UI_PAGE_SYS_STATUS,
+    UI_PAGE_NET_STATUS,
+    UI_PAGE_SCREEN_TEST,
+    UI_PAGE_WLAN,
+    UI_PAGE_ACTIVATION,
+    UI_PAGE_OTA,
+    /* Append new IDs to preserve the numeric values of existing routes. */
+    UI_PAGE_VIDEO,
+    UI_PAGE_ID_MAX
+} ui_page_id_enum_t;
+
+#endif /* __UI_PAGE_IDS_H__ */

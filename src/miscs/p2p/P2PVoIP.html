@@ -1,0 +1,1054 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>P2P 对讲 · Wukong AI 实时音视频通信</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@500;600;700&family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@500;700&display=swap" rel="stylesheet">
+<script src="https://cdn.jsdelivr.net/npm/mermaid@10/dist/mermaid.min.js"></script>
+<style>
+/* Wukong UI visual language */
+:root {
+  --void: #060a14; --ink0: #0a1020; --ink1: #0e1728;
+  --line: rgba(120,150,190,.16); --line2: rgba(120,150,190,.28);
+  --text: #eaf1fb; --muted: #a5b6cf; --dim: #6c7f9c;
+  --voice: #34e0d0; --core: #4d8cff; --live: #34d17a;
+  --vision: #f7b24b; --ops: #a58bff; --comm: #ff6f9d; --bad: #ff6b72;
+  --font-display: 'Space Grotesk', 'PingFang SC', 'Microsoft YaHei', sans-serif;
+  --font-body: 'Inter', 'PingFang SC', 'Microsoft YaHei', system-ui, sans-serif;
+  --font-mono: 'JetBrains Mono', ui-monospace, 'SFMono-Regular', Consolas, monospace;
+  --maxw: 1200px;
+  --bg: var(--void); --fg: var(--text); --border: var(--line); --card: var(--ink1);
+  --accent: var(--core); --ok: var(--live); --warn: var(--vision); --code-bg: var(--ink0);
+}
+* { box-sizing: border-box; margin: 0; padding: 0; }
+html { scroll-behavior: smooth; }
+body {
+  min-width: 320px; max-width: none; margin: 0; padding: 0;
+  color: var(--text); font: 15px/1.75 var(--font-body);
+  background: var(--void);
+  background-image:
+    radial-gradient(900px 520px at 82% -8%, rgba(77,140,255,.16), transparent 62%),
+    radial-gradient(760px 480px at 8% 4%, rgba(52,224,208,.11), transparent 60%),
+    radial-gradient(1000px 700px at 50% 120%, rgba(165,139,255,.10), transparent 66%);
+  background-attachment: fixed; -webkit-font-smoothing: antialiased; overflow-x: hidden;
+}
+body::before {
+  content: ''; position: fixed; inset: 0; z-index: -1; pointer-events: none;
+  background-image: linear-gradient(rgba(120,150,190,.05) 1px, transparent 1px), linear-gradient(90deg, rgba(120,150,190,.05) 1px, transparent 1px);
+  background-size: 56px 56px;
+  mask-image: radial-gradient(ellipse 80% 60% at 50% 20%, #000 40%, transparent 100%);
+}
+a { color: inherit; text-decoration: none; }
+p { margin: 10px 0; }
+ul, ol { padding-left: 22px; }
+li + li { margin-top: 5px; }
+.muted { color: var(--muted); }
+
+.topbar {
+  position: sticky; top: 0; z-index: 50;
+  display: flex; align-items: center; justify-content: space-between; gap: 24px;
+  padding: 14px clamp(18px,5vw,56px); background: rgba(6,10,20,.78);
+  border-bottom: 1px solid var(--line); backdrop-filter: blur(18px);
+}
+.brand { display: flex; align-items: center; gap: 11px; font: 700 16px/1.4 var(--font-display); }
+.brand-mark {
+  width: 26px; height: 26px; border-radius: 8px; position: relative;
+  background: conic-gradient(from 210deg,var(--voice),var(--core),var(--ops),var(--comm),var(--voice));
+  box-shadow: 0 0 22px rgba(77,140,255,.5), inset 0 0 8px rgba(0,0,0,.4);
+}
+.brand-mark::after { content: ''; position: absolute; inset: 6px; border-radius: 3px; background: var(--void); }
+.nav { display: flex; gap: 2px; overflow-x: auto; }
+.nav::-webkit-scrollbar { height: 0; }
+.nav a { padding: 7px 11px; border-radius: 8px; white-space: nowrap; color: var(--muted); font-size: 12.5px; font-weight: 600; transition: color .18s,background .18s; }
+.nav a:hover, .nav a.active { color: var(--text); background: rgba(120,150,190,.10); }
+.scroll-progress { position: absolute; left: 0; bottom: -1px; width: 0; height: 2px; background: linear-gradient(90deg,var(--voice),var(--core),var(--ops)); }
+
+.hero { max-width: var(--maxw); margin: 0 auto; padding: clamp(42px,7vw,82px) clamp(18px,5vw,40px) 34px; }
+.eyebrow {
+  display: inline-flex; align-items: center; gap: 9px; padding: 7px 13px;
+  color: var(--voice); font: 700 12px/1.4 var(--font-mono); letter-spacing: .12em; text-transform: uppercase;
+  border: 1px solid var(--line2); border-radius: 999px; background: rgba(52,224,208,.06);
+}
+.eyebrow::before { content: ''; width: 7px; height: 7px; border-radius: 50%; background: var(--live); box-shadow: 0 0 12px var(--live); animation: pulse 2.4s ease-in-out infinite; }
+@keyframes pulse { 0%,100% { opacity: 1; transform: scale(1); } 50% { opacity: .45; transform: scale(.7); } }
+.hero h1 { margin: 18px 0 20px; padding: 0; border: 0; font-family: var(--font-display); font-weight: 700; letter-spacing: -.035em; }
+.hero h1 .brandline {
+  display: block; font-size: clamp(58px,10vw,124px); line-height: .9;
+  background: linear-gradient(100deg,var(--voice),var(--core) 54%,var(--ops));
+  -webkit-background-clip: text; background-clip: text; -webkit-text-fill-color: transparent;
+  filter: drop-shadow(0 10px 46px rgba(77,140,255,.32));
+}
+.hero h1 .tagline { display: block; margin-top: 18px; color: var(--text); font-size: clamp(22px,3.2vw,40px); line-height: 1.18; letter-spacing: -.02em; }
+.hero-lead { max-width: 850px; color: var(--muted); font-size: clamp(15px,1.5vw,17px); }
+.hero-lead b { color: var(--text); font-weight: 600; }
+.meta-row { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 20px; }
+.meta-chip { padding: 6px 10px; color: var(--muted); font: 500 11.5px/1.4 var(--font-mono); border: 1px solid var(--line); border-radius: 7px; background: rgba(120,150,190,.06); }
+.meta-chip b { color: var(--voice); }
+.hero-grid { display: grid; grid-template-columns: minmax(0,1.2fr) minmax(320px,.8fr); gap: 14px; margin-top: 30px; }
+.quick-facts { display: grid; grid-template-columns: repeat(3,1fr); gap: 1px; overflow: hidden; border: 1px solid var(--line); border-radius: 16px; background: var(--line); }
+.fact { padding: 18px 16px; background: rgba(10,16,32,.82); }
+.fact span { display: block; margin-bottom: 9px; color: var(--dim); font: 700 10.5px/1.4 var(--font-mono); letter-spacing: .06em; text-transform: uppercase; }
+.fact strong { display: block; color: var(--core); font: 700 clamp(20px,2.5vw,30px)/1 var(--font-display); }
+.fact:nth-child(2) strong { color: var(--comm); }
+.fact:nth-child(3) strong { color: var(--voice); }
+.fact small { display: block; margin-top: 9px; color: var(--dim); font-size: 11.5px; line-height: 1.5; }
+.scenario-head { margin: 34px 0 12px; color: var(--muted); font: 700 12px/1.4 var(--font-mono); letter-spacing: .1em; text-transform: uppercase; }
+
+.doc { max-width: var(--maxw); margin: 0 auto; padding: 10px clamp(18px,5vw,40px) 76px; }
+.doc h2 {
+  scroll-margin-top: 82px; margin-top: clamp(58px,8vw,92px); padding: 0 0 14px;
+  font: 700 clamp(24px,3.2vw,38px)/1.2 var(--font-display); letter-spacing: -.02em;
+  border-bottom: 1px solid var(--line);
+}
+.doc h2::after { content: ''; display: block; width: 76px; height: 2px; margin-top: 14px; margin-bottom: -16px; border-radius: 2px; background: linear-gradient(90deg,var(--voice),var(--core)); box-shadow: 0 0 15px rgba(77,140,255,.45); }
+.doc h2 > .num { display: inline-block; min-width: 46px; margin-right: 7px; color: var(--core); font: 700 .62em/1 var(--font-mono); vertical-align: .16em; }
+.doc h3 { scroll-margin-top: 82px; margin: 34px 0 12px; font: 600 18px/1.4 var(--font-display); color: var(--text); }
+.doc > p, .doc > ul, .doc > ol { max-width: 980px; }
+.doc > ul { margin: 12px 0 18px; }
+.doc b { color: var(--text); }
+.doc h2#toc { margin-top: 34px; }
+.toc { columns: auto; margin-top: 18px; padding: 18px 20px; font-size: 14px; border: 1px solid var(--line); border-radius: 16px; background: linear-gradient(165deg,rgba(18,27,46,.68),rgba(9,14,27,.62)); }
+.toc ol { display: grid; grid-template-columns: repeat(2,minmax(0,1fr)); gap: 7px 18px; padding-left: 26px; }
+.toc li { margin: 0; color: var(--dim); }
+.toc a { display: block; padding: 7px 10px; color: var(--muted); border-radius: 7px; transition: color .16s,background .16s,transform .16s; }
+.toc a:hover { color: var(--voice); text-decoration: none; background: rgba(52,224,208,.07); transform: translateX(3px); }
+
+code { padding: 2px 6px; color: #bcd1f4; font: 500 12.5px/1.5 var(--font-mono); overflow-wrap: anywhere; background: rgba(77,140,255,.09); border: 1px solid rgba(77,140,255,.20); border-radius: 5px; }
+pre { position: relative; margin: 12px 0; padding: 16px 18px; overflow-x: auto; background: rgba(4,8,17,.78); border: 1px solid var(--line); border-radius: 12px; box-shadow: inset 0 1px 0 rgba(255,255,255,.025); }
+pre code { padding: 0; color: #c8d8ef; font-size: 12px; white-space: pre; overflow-wrap: normal; background: none; border: 0; }
+.copy-btn { position: absolute; top: 9px; right: 9px; padding: 5px 8px; color: var(--dim); font: 600 10px/1 var(--font-mono); cursor: pointer; border: 1px solid var(--line); border-radius: 6px; background: rgba(14,23,40,.92); transition: color .15s,border-color .15s; }
+.copy-btn:hover { color: var(--voice); border-color: rgba(52,224,208,.35); }
+table { width: 100%; margin: 14px 0; border-collapse: collapse; font-size: 13px; }
+.table-wrap { width: 100%; margin: 14px 0; overflow-x: auto; border: 1px solid var(--line); border-radius: 14px; background: rgba(9,14,27,.52); }
+.table-wrap table { width: 100%; min-width: 720px; margin: 0; border-collapse: collapse; font-size: 13px; }
+th { padding: 13px 15px; color: var(--muted); font: 700 11px/1.45 var(--font-mono); letter-spacing: .045em; text-align: left; white-space: nowrap; background: rgba(77,140,255,.08); border: 0; border-bottom: 1px solid var(--line2); }
+td { padding: 13px 15px; color: var(--muted); text-align: left; vertical-align: top; border: 0; border-bottom: 1px solid var(--line); }
+tr:last-child td { border-bottom: 0; }
+tr { transition: background .15s; }
+tr:hover td { background: rgba(77,140,255,.045); }
+td:first-child { color: var(--text); }
+.tag { display: inline-block; padding: 2px 8px; font: 700 10.5px/1.5 var(--font-mono); border: 1px solid var(--line); border-radius: 999px; background: rgba(120,150,190,.06); }
+.tag.ok { color: var(--live); border-color: rgba(52,209,122,.28); background: rgba(52,209,122,.07); }
+.tag.warn { color: var(--vision); border-color: rgba(247,178,75,.28); background: rgba(247,178,75,.07); }
+.tag.bad { color: var(--bad); } .tag.info { color: var(--core); }
+.box { position: relative; margin: 14px 0; padding: 15px 18px 15px 20px; color: var(--muted); border: 1px solid var(--line); border-left: 3px solid var(--core); border-radius: 12px; background: linear-gradient(145deg,rgba(77,140,255,.07),rgba(14,23,40,.7)); }
+.box::before { content: ''; position: absolute; left: -3px; top: 14px; width: 3px; height: 28px; background: var(--core); box-shadow: 0 0 14px var(--core); }
+.box.warn { border-left-color: var(--vision); background: linear-gradient(145deg,rgba(247,178,75,.075),rgba(14,23,40,.7)); }
+.box.warn::before { background: var(--vision); box-shadow: 0 0 14px var(--vision); }
+.box b:first-child { color: var(--core); }
+.box.warn b:first-child { color: var(--vision); }
+.box ol, .box ul { margin: 7px 0 2px; }
+.hero-grid .box { height: 100%; margin: 0; }
+.check-list { display: grid; gap: 8px; margin-top: 10px; }
+.check-item { display: flex; align-items: center; gap: 10px; padding: 8px 10px; color: var(--text); font-size: 13px; border: 1px solid rgba(247,178,75,.14); border-radius: 9px; background: rgba(247,178,75,.045); }
+.check-item span { flex: 0 0 28px; width: 28px; height: 28px; display: grid; place-items: center; border-radius: 8px; background: rgba(247,178,75,.10); }
+.mermaid { margin: 16px 0; padding: clamp(14px,2vw,24px); overflow-x: auto; text-align: center; border: 1px solid var(--line); border-radius: 16px; background: linear-gradient(165deg,rgba(18,27,46,.66),rgba(7,11,22,.72)); box-shadow: inset 0 1px 0 rgba(255,255,255,.025); }
+.mermaid svg { min-width: 640px; max-width: 100%; height: auto; }
+.mermaid-source { text-align: left; white-space: pre; color: var(--muted); font: 500 12px/1.65 var(--font-mono); }
+.mermaid-fallback { margin: 16px 0 -6px; padding: 10px 13px; color: var(--vision); font: 600 12px/1.55 var(--font-mono); border: 1px solid rgba(247,178,75,.28); border-radius: 10px; background: rgba(247,178,75,.07); }
+.grid2 { display: grid; grid-template-columns: repeat(2,minmax(0,1fr)); gap: 14px; }
+.grid2 > div { min-width: 0; padding: 16px; border: 1px solid var(--line); border-radius: 14px; background: linear-gradient(165deg,rgba(18,27,46,.55),rgba(9,14,27,.5)); }
+.grid2 > div > p:first-child { margin-top: 0; color: var(--text); }
+
+/* Infographic blocks — 先看结论,再展开实现 */
+.scenario-grid, .module-grid, .service-grid, .risk-grid, .page-grid { display: grid; gap: 14px; }
+.scenario-grid { grid-template-columns: repeat(3,minmax(0,1fr)); }
+.module-grid { grid-template-columns: repeat(2,minmax(0,1fr)); margin-top: 14px; }
+.service-grid { grid-template-columns: repeat(3,minmax(0,1fr)); }
+.risk-grid, .page-grid { grid-template-columns: repeat(2,minmax(0,1fr)); }
+.visual-card {
+  --hue: var(--core); position: relative; min-width: 0; padding: 20px; overflow: hidden;
+  border: 1px solid var(--line); border-radius: 16px;
+  background: linear-gradient(155deg,color-mix(in srgb,var(--hue) 9%,transparent),rgba(9,14,27,.68));
+}
+.visual-card::before { content: ''; position: absolute; left: 20px; right: 20px; top: 0; height: 2px; border-radius: 2px; background: var(--hue); box-shadow: 0 0 15px var(--hue); }
+.visual-card.warn { --hue: var(--vision); }
+.visual-card.live { --hue: var(--live); }
+.visual-card.voice { --hue: var(--voice); }
+.visual-card.comm { --hue: var(--comm); }
+.visual-card.ops { --hue: var(--ops); }
+.v-head { display: flex; align-items: center; gap: 12px; margin-bottom: 12px; }
+.v-icon { flex: 0 0 42px; width: 42px; height: 42px; display: grid; place-items: center; font-size: 21px; border: 1px solid color-mix(in srgb,var(--hue) 30%,transparent); border-radius: 12px; background: color-mix(in srgb,var(--hue) 12%,transparent); }
+.v-title { min-width: 0; }
+.v-title small { display: block; color: var(--hue); font: 700 10px/1.4 var(--font-mono); letter-spacing: .08em; text-transform: uppercase; }
+.v-title h3, .v-title h4 { margin: 3px 0 0; color: var(--text); font: 600 16px/1.35 var(--font-display); }
+.visual-card > p { margin: 8px 0 0; color: var(--muted); font-size: 13px; line-height: 1.65; }
+.route-line { display: flex; align-items: center; gap: 8px; margin: 14px 0; color: var(--text); font: 700 12px/1.4 var(--font-mono); }
+.route-line .node { padding: 5px 8px; border: 1px solid var(--line2); border-radius: 7px; background: rgba(120,150,190,.07); }
+.route-line .arrow { flex: 1; min-width: 20px; height: 1px; position: relative; background: var(--hue); box-shadow: 0 0 8px color-mix(in srgb,var(--hue) 55%,transparent); }
+.route-line .arrow::after { content: '›'; position: absolute; right: -1px; top: -11px; color: var(--hue); font-size: 19px; }
+.chips { display: flex; flex-wrap: wrap; gap: 6px; margin-top: 12px; }
+.chip { padding: 4px 8px; color: var(--muted); font: 600 10.5px/1.4 var(--font-mono); border: 1px solid var(--line); border-radius: 6px; background: rgba(120,150,190,.06); }
+.chip.accent { color: var(--hue); border-color: color-mix(in srgb,var(--hue) 27%,transparent); background: color-mix(in srgb,var(--hue) 8%,transparent); }
+.deep-dive { margin: 16px 0; border: 1px solid var(--line); border-radius: 14px; background: rgba(9,14,27,.48); }
+.deep-dive > summary { display: flex; align-items: center; gap: 9px; padding: 13px 16px; color: var(--muted); font: 600 12.5px/1.5 var(--font-mono); cursor: pointer; list-style: none; }
+.deep-dive > summary::-webkit-details-marker { display: none; }
+.deep-dive > summary::before { content: '+'; width: 20px; height: 20px; display: grid; place-items: center; color: var(--core); border: 1px solid rgba(77,140,255,.3); border-radius: 6px; background: rgba(77,140,255,.08); }
+.deep-dive[open] > summary::before { content: '−'; }
+.deep-dive[open] > summary { color: var(--text); border-bottom: 1px solid var(--line); }
+.deep-dive-body { padding: 2px 16px 16px; }
+.module-card { padding: 15px; border: 1px solid var(--line); border-radius: 12px; background: rgba(14,23,40,.64); }
+.module-card strong { display: flex; align-items: center; gap: 8px; margin-bottom: 7px; color: var(--text); font: 600 13px/1.5 var(--font-mono); }
+.module-card p { margin: 0; color: var(--muted); font-size: 12.5px; line-height: 1.65; }
+.event-flow { display: grid; grid-template-columns: repeat(5,minmax(0,1fr)); gap: 10px; margin: 18px 0; }
+.event-step { --hue: var(--core); position: relative; min-width: 0; padding: 16px 12px; text-align: center; border: 1px solid var(--line); border-radius: 13px; background: rgba(14,23,40,.66); }
+.event-step:not(:last-child)::after { content: '→'; position: absolute; z-index: 2; right: -16px; top: 50%; transform: translateY(-52%); color: var(--dim); font: 700 18px/1 var(--font-mono); }
+.event-step .event-icon { display: block; margin-bottom: 7px; font-size: 22px; }
+.event-step code { color: var(--hue); }
+.event-step small { display: block; margin-top: 7px; color: var(--dim); font-size: 11px; line-height: 1.45; }
+.event-step.live { --hue: var(--live); } .event-step.warn { --hue: var(--vision); } .event-step.comm { --hue: var(--comm); }
+.timeout-grid { display: grid; grid-template-columns: repeat(5,minmax(0,1fr)); gap: 10px; margin-top: 14px; }
+.timeout-item { padding: 14px 12px; text-align: center; border: 1px solid var(--line); border-radius: 12px; background: rgba(14,23,40,.62); }
+.timeout-item strong { display: block; color: var(--vision); font: 700 24px/1 var(--font-display); }
+.timeout-item span { display: block; margin-top: 8px; color: var(--text); font-size: 12px; }
+.timeout-item small { display: block; margin-top: 5px; color: var(--dim); font-size: 10.5px; line-height: 1.45; }
+.doc-footer { max-width: var(--maxw); margin: 0 auto 28px; padding: 22px clamp(18px,5vw,40px) 0; color: var(--dim); font: 500 11.5px/1.7 var(--font-mono); text-align: center; border-top: 1px solid var(--line); }
+.back-top { display: inline-flex; align-items: center; gap: 7px; margin-bottom: 12px; padding: 8px 12px; color: var(--text); border: 1px solid var(--line2); border-radius: 8px; background: rgba(120,150,190,.06); }
+.back-top:hover { color: var(--voice); border-color: rgba(52,224,208,.35); }
+
+@media (max-width: 920px) {
+  .hero-grid, .grid2 { grid-template-columns: 1fr; }
+  .scenario-grid, .service-grid { grid-template-columns: repeat(2,minmax(0,1fr)); }
+  .event-flow { grid-template-columns: repeat(3,minmax(0,1fr)); }
+  .event-step::after { display: none; }
+  .timeout-grid { grid-template-columns: repeat(3,minmax(0,1fr)); }
+}
+@media (max-width: 700px) {
+  .nav { display: none; } .hero { padding-top: 34px; } .quick-facts { grid-template-columns: 1fr; }
+  .toc ol { grid-template-columns: 1fr; } .doc h2 > .num { min-width: 38px; }
+  .table-wrap table { min-width: 660px; } .mermaid { padding: 12px; }
+  .scenario-grid, .module-grid, .service-grid, .risk-grid, .page-grid, .event-flow, .timeout-grid { grid-template-columns: 1fr; }
+}
+@media (prefers-reduced-motion: reduce) { html { scroll-behavior: auto; } .eyebrow::before { animation: none; } }
+</style>
+</head>
+<body>
+<span id="top" aria-hidden="true"></span>
+
+<header class="topbar">
+  <a class="brand" href="#top"><span class="brand-mark"></span><span>Wukong P2P</span></a>
+  <nav class="nav" aria-label="章节导航">
+    <a href="#arch">架构</a>
+    <a href="#signal">信令</a>
+    <a href="#flow-a">场景</a>
+    <a href="#audio">媒体链路</a>
+    <a href="#ai">AI 共存</a>
+    <a href="#ui">UI 业务</a>
+    <a href="#config">配置</a>
+    <a href="#notes">排障</a>
+  </nav>
+  <div class="scroll-progress" aria-hidden="true"></div>
+</header>
+
+<section class="hero" aria-labelledby="page-title">
+<span class="eyebrow">TMM VoIP · Real-time audio &amp; video</span>
+<h1 id="page-title"><span class="brandline">P2P</span><span class="tagline">实时音视频对讲 · 功能与业务逻辑</span></h1>
+<p class="hero-lead">设备端 <b>P2P 实时音视频对讲</b>:通过 MQTT RTC 信令建话、涂鸦 IPC P2P 通道传输媒体;与 AI 对话采用<b>整体切模式共存</b>——接通后切入 P2P,挂断后回到 CHAT 并恢复 AI。</p>
+<div class="meta-row">
+  <span class="meta-chip"><b>MODULE</b> src/miscs/p2p/</span>
+  <span class="meta-chip"><b>APP</b> tuyaos_demo_wukong_ai</span>
+  <span class="meta-chip"><b>BOARD</b> T5 / Wukong AI</span>
+  <span class="meta-chip"><b>UPDATED</b> 2026-07-23</span>
+</div>
+
+<div class="hero-grid">
+<div class="box warn"><b>P2P 无法正常使用时,建议按以下方向排查:</b>
+<div class="check-list">
+  <div class="check-item"><span>📷</span>摄像头是否正常运行</div>
+  <div class="check-item"><span>🎚️</span>设备 P2P 开关是否已打开</div>
+  <div class="check-item"><span>🪪</span>设备 UUID 是否已配置 IPC 能力</div>
+</div>
+</div>
+
+<div class="quick-facts" aria-label="P2P 核心参数">
+  <div class="fact"><span>Signaling</span><strong>MQTT 308</strong><small>RTC 信令建话与心跳</small></div>
+  <div class="fact"><span>Scenarios</span><strong>3 类</strong><small>APP / 设备双向呼叫</small></div>
+  <div class="fact"><span>Audio</span><strong>G.711U</strong><small>双向 8 kHz 对讲</small></div>
+</div>
+</div>
+
+<div class="scenario-head">能力总览 / CAPABILITY MATRIX</div>
+<div class="scenario-grid">
+  <article class="visual-card warn">
+    <div class="v-head"><span class="v-icon">📹</span><div class="v-title"><small>VIDEO INTERCOM</small><h3>APP → 设备</h3></div></div>
+    <div class="route-line"><span class="node">设备</span><span class="arrow"></span><span class="node">APP</span></div>
+    <div class="chips"><span class="chip accent">视频单向</span><span class="chip">音频双向</span><span class="chip">H264 480×480</span></div>
+    <p>RTC 呼叫和 APP 预览直拉两条入口;设备屏不显示对端视频。</p>
+    <div class="chips"><span class="chip">SDK 25fps</span><span class="chip">相机源 10fps</span><span class="chip">1 Mbps</span></div>
+  </article>
+  <article class="visual-card comm">
+    <div class="v-head"><span class="v-icon">📱</span><div class="v-title"><small>VOICE CALL</small><h3>APP ↔ 设备</h3></div></div>
+    <div class="route-line"><span class="node">设备</span><span class="arrow"></span><span class="node">APP</span></div>
+    <div class="chips"><span class="chip accent">语音双向</span><span class="chip">G.711U / 8K</span><span class="chip">callType:3</span></div>
+    <p>设备呼 APP 使用虚拟目标 <code>key_1</code>,经 moto / 云端中转 RTC。</p>
+  </article>
+  <article class="visual-card voice">
+    <div class="v-head"><span class="v-icon">📞</span><div class="v-title"><small>DEVICE TO DEVICE</small><h3>设备 ↔ 设备</h3></div></div>
+    <div class="route-line"><span class="node">设备 A</span><span class="arrow"></span><span class="node">设备 B</span></div>
+    <div class="chips"><span class="chip accent">P2P 直连</span><span class="chip">语音双向</span><span class="chip">G.711U / 8K</span></div>
+    <p>从联系人中选择对端;被叫接听后凭 <code>local_key</code> 建立 IPC P2P 通道。</p>
+  </article>
+</div>
+</section>
+
+<main class="doc">
+
+<h2 id="toc"><span class="num">§</span>目录</h2>
+<div class="toc">
+<ol>
+<li><a href="#arch">架构分层</a></li>
+<li><a href="#signal">信令协议(MQTT 308 RTC)</a></li>
+<li><a href="#fsm">通话状态机</a></li>
+<li><a href="#flow-a">场景 A:设备呼 APP</a></li>
+<li><a href="#flow-b">场景 B:APP 呼设备 / 视频对讲</a></li>
+<li><a href="#flow-c">场景 C:设备 ↔ 设备</a></li>
+<li><a href="#audio">音频链路</a></li>
+<li><a href="#video">视频链路</a></li>
+<li><a href="#ai">与 AI 共存</a></li>
+<li><a href="#ui">UI 业务层</a></li>
+<li><a href="#init">初始化与链路就绪</a></li>
+<li><a href="#config">配置开关与事件</a></li>
+<li><a href="#notes">运行约束与排障要点</a></li>
+</ol>
+</div>
+
+<!-- ================================================================ -->
+<h2 id="arch"><span class="num">1.</span>架构分层</h2>
+
+<div class="mermaid">
+flowchart LR
+  subgraph UI["① UI 层 · LVGL"]
+    CONTACTS["👥 联系人页"]
+    CALL["📞 呼叫页"]
+    SVC["🧭 通话服务<br/><small>ui_svc_call</small>"]
+    CONTACTS & CALL --> SVC
+  end
+
+  subgraph BRIDGE["② 业务适配层"]
+    ADAPTER["🔌 VoIP Adapter<br/><small>状态 · 模式 · 编解码</small>"]
+  end
+
+  subgraph TMM["③ TMM 通话栈"]
+    MANAGER["⚙️ Manager<br/><small>会话编排</small>"]
+    CONTROL["📨 Control<br/><small>RTC 信令</small>"]
+    STREAM["📡 Stream + Link<br/><small>P2P 媒体</small>"]
+    MANAGER --> CONTROL & STREAM
+  end
+
+  CLOUD(("☁️ 涂鸦云"))
+  PEER(("📱 APP / 对端设备"))
+  SVC <-->|"业务 API / UI 状态"| ADAPTER
+  ADAPTER -->|"统一会话"| MANAGER
+  CONTROL <-->|"MQTT 308 呼叫信令"| CLOUD
+  STREAM -.->|"moto MQTT / ICE 协商"| CLOUD
+  STREAM <-->|"IPC P2P 媒体"| PEER
+
+  classDef ui fill:#191a35,stroke:#a58bff,color:#eaf1fb,stroke-width:2px;
+  classDef bridge fill:#10243a,stroke:#4d8cff,color:#eaf1fb,stroke-width:2px;
+  classDef media fill:#0d292c,stroke:#34e0d0,color:#eaf1fb,stroke-width:2px;
+  classDef cloud fill:#2b2013,stroke:#f7b24b,color:#eaf1fb,stroke-width:2px;
+  class CONTACTS,CALL,SVC ui;
+  class ADAPTER,MANAGER,CONTROL bridge;
+  class STREAM media;
+  class CLOUD cloud;
+  class PEER media;
+</div>
+
+<details class="deep-dive">
+<summary>展开模块与文件职责</summary>
+<div class="deep-dive-body module-grid">
+  <div class="module-card"><strong>🔌 <code>tuya_p2p_tmm_voip.*</code></strong><p>业务适配层:统一 call / answer / hangup API,驱动模式切换、音频编解码和 H264 上送。文件已改名,公共 API 仍保留 <code>tuya_toy_*</code> 前缀。</p></div>
+  <div class="module-card"><strong>🧭 <code>tuya_tmm_manager/</code></strong><p>编排信令与媒体、维护状态机、异步处理联系人。ATOP 使用 <code>contact.sync/list/delete/apply</code>;jitter 匀速上行是未接入的备用路径。</p></div>
+  <div class="module-card"><strong>📨 <code>tuya_tmm_control/</code></strong><p>处理 MQTT 308 RTC 信令、呼叫超时和心跳;首次上线声明 <code>rtcCapability:7</code>。</p></div>
+  <div class="module-card"><strong>📡 <code>tuya_tmm_stream/</code></strong><p>管理 IPC media、moto MQTT、P2P link 和音视频缓冲;就绪后发布 <code>EVENT_TMM_STREAM_READY</code>。</p></div>
+  <div class="module-card"><strong>🗃️ 原生 IPC P2P 路径</strong><p><code>tuya_p2p_app/sdk/call</code> 为历史路径。媒体入口当前未启用,但部分 SDK 订阅仍存在;不可与 TMM 媒体栈同时启动。</p></div>
+  <div class="module-card"><strong>🖥️ <code>ui_svc_call.c</code></strong><p>UI 唯一业务入口:封送 UI 线程、控制 30s 呼出超时、自动接听、运行时开关和联系人拉取。</p></div>
+  <div class="module-card"><strong>🤖 <code>wukong_ai_mode_p2p.c</code></strong><p>进入通话时关闭 KWS、切手动 VAD并路由麦克风;周期任务负责采集开关自愈。</p></div>
+</div>
+</details>
+
+<!-- ================================================================ -->
+<h2 id="signal"><span class="num">2.</span>信令协议(MQTT 308 RTC)</h2>
+
+<p>涂鸦 MQTT 自定义协议号 <b>308</b>,SS190 兼容 JSON。呼叫报文:</p>
+
+<details class="deep-dive">
+<summary>展开设备 / APP 呼叫 JSON 示例</summary>
+<div class="deep-dive-body">
+<div class="grid2">
+<div>
+<p><b>呼叫设备</b>:</p>
+<p class="muted"><code>channelType</code>:0=音频,1=视频,2=音视频。<code>timeout</code> 必须是数字型毫秒时间戳。</p>
+<pre><code>{"type":"rtc","data":{
+  "event":"call",
+  "curId":"&lt;本机devId&gt;",
+  "targetId":"&lt;对端devId&gt;",
+  "sessionId":"&lt;devId+6位随机字符&gt;",
+  "timeout":1893456180000,
+  "extra":{"channelType":0,"category":"dgnzk"}
+}}</code></pre>
+</div>
+<div>
+<p><b>呼叫 APP</b>(目标 <code>key_</code> 前缀 + <code>callType:3</code>):</p>
+<pre><code>{"type":"rtc","data":{
+  "event":"call","callType":3,
+  "curId":"&lt;本机devId&gt;",
+  "targetId":"key_1",
+  "sessionId":"&lt;devId+6位随机字符&gt;",
+  "timeout":1893456180000,
+  "extra":{"channelType":0,
+           "category":"dgnzk",
+           "bizType":"dgnzk"}
+}}</code></pre>
+</div>
+</div>
+<p class="muted">上述 <code>timeout</code> 仅是保持 JSON 可复制解析的数字示例;实际由代码计算为“当前 POSIX 毫秒时间戳 + 呼叫超时”,不应照抄示例值发送。</p>
+</div>
+</details>
+
+<div class="event-flow" aria-label="典型呼叫信令流程">
+  <div class="event-step"><span class="event-icon">📲</span><code>call</code><small>发起来电<br>自动回 ring</small></div>
+  <div class="event-step warn"><span class="event-icon">🔔</span><code>ring</code><small>对端已振铃</small></div>
+  <div class="event-step live"><span class="event-icon">✅</span><code>answer</code><small>接听并进入<br>心跳监测</small></div>
+  <div class="event-step live"><span class="event-icon">💓</span><code>heartbeat</code><small>收包即应答<br>30s 超时</small></div>
+  <div class="event-step comm"><span class="event-icon">📴</span><code>hang_up</code><small>结束会话<br>回到 IDLE</small></div>
+</div>
+
+<details class="deep-dive">
+<summary>展开全部信令事件与 control 映射</summary>
+<div class="deep-dive-body">
+<table>
+<tr><th>信令事件</th><th>方向</th><th>含义 → control 上抛事件</th></tr>
+<tr><td><code>call</code></td><td>收</td><td>来电 → <code>EVT_INCOMING</code>(解析 channelType/targetId/targetLocalKey/targetName,同 <code>timeout</code> 去重);自动回 <code>ring</code></td></tr>
+<tr><td><code>ring</code></td><td>收/发</td><td>对端已振铃 → <code>EVT_RINGING</code></td></tr>
+<tr><td><code>answer</code></td><td>收/发</td><td>接听 → <code>EVT_ACCEPTED</code>(主叫侧);发送侧进 ACCEPTED 并启心跳</td></tr>
+<tr><td><code>already_answered</code></td><td>收</td><td>他端已接听 → <code>EVT_ACCEPTED_BY_OTHERS</code></td></tr>
+<tr><td><code>reject</code> / <code>busy</code></td><td>收/发</td><td>拒接 / 忙线 → <code>EVT_REJECT</code> / <code>EVT_BUSY</code></td></tr>
+<tr><td><code>cancel</code></td><td>收/发</td><td>主叫接通前取消 → <code>EVT_CANCEL</code></td></tr>
+<tr><td><code>not_answered</code></td><td>收/发</td><td>超时未接 → <code>EVT_UNANSWERED</code></td></tr>
+<tr><td><code>hang_up</code></td><td>收/发</td><td>通话中挂断 → <code>EVT_HANGUP</code></td></tr>
+<tr><td><code>stop</code></td><td>收/发</td><td>异常终止 → <code>EVT_STOP</code>(<code>reason=busy</code> 转 <code>EVT_BUSY</code>)</td></tr>
+<tr><td><code>heartbeat</code></td><td>收/发</td><td>保活:收即回包并刷新计时;<b>30s</b> 无心跳 → <code>EVT_ERROR</code></td></tr>
+</table>
+</div>
+</details>
+
+<div class="box"><b>要点:</b>呼叫超时默认 <b>180s</b>(manager 传入,control 内部默认 30s);<code>sessionId</code>=devId+6 位随机;设备上线报一次 <code>{"metas":{"rtcCapability":7}}</code>(声明音视频对讲能力,APP 据此展示入口)。</div>
+
+<!-- ================================================================ -->
+<h2 id="fsm"><span class="num">3.</span>通话状态机</h2>
+
+<p>四层各自维护状态,逐层收敛,UI 只见最上层。适配层把所有终局信令统一收敛为 <code>IDLE</code>。</p>
+
+<div class="mermaid">
+stateDiagram-v2
+  direction LR
+  state "💤 空闲<br/>IDLE" as IDLE
+  state "📤 呼出中<br/>CALLING" as CALLING
+  state "🔔 来电中<br/>INCOMING" as INCOMING
+  state "📞 通话中<br/>IN_CALL" as IN_CALL
+
+  [*] --> IDLE
+  IDLE --> CALLING: 主动呼叫
+  IDLE --> INCOMING: 收到 call
+  CALLING --> IN_CALL: 对端接听
+  INCOMING --> IN_CALL: 本机接听
+  INCOMING --> IDLE: 拒接 / 未接 / 取消
+  CALLING --> IDLE: 取消 / 忙线 / 超时
+  IN_CALL --> IDLE: 挂断 / 异常 / 心跳超时
+  note right of IN_CALL
+    终局统一执行 leave_call
+    恢复 CHAT → 返回 Home
+  end note
+</div>
+
+<details class="deep-dive">
+<summary>展开四层状态集合与映射</summary>
+<div class="deep-dive-body">
+<table>
+<tr><th>层</th><th>状态集</th><th>要点</th></tr>
+<tr><td><code>tuya_tmm_control</code></td><td>IDLE → CALLING / INCOMING → ACCEPTED</td><td>纯信令视角;后台线程做超时/心跳监测</td></tr>
+<tr><td><code>tuya_tmm_manager</code></td><td>IDLE / INCOMING / CALLING / P2P_CONNECTING / P2P_CONNECTED / P2P_DISCONNECTING</td><td>叠加媒体连接进度;终局信令 → IDLE 并按需投递 DISCONNECT</td></tr>
+<tr><td><code>tuya_toy_tmm_voip</code></td><td>IDLE / CALLING / INCOMING / INCALL</td><td>终局统一收敛为 IDLE;每次变化发 <code>EVENT_TOY_VOIP_UI</code></td></tr>
+<tr><td><code>ui_svc_call</code></td><td>IDLE / CALLING / INCOMING / IN_CALL / FAILED / ENDED / ENDED_BY_OTHERS</td><td>当前实际映射:适配层 IDLE 到来时若处于活动态 → ENDED;<code>FAILED</code> 仅用于 UI 本地 30s 呼出超时;<code>ENDED_BY_OTHERS</code> 虽已定义但当前服务未投递</td></tr>
+</table>
+</div>
+</details>
+
+<!-- ================================================================ -->
+<h2 id="flow-a"><span class="num">4.</span>场景 A:设备呼 APP(语音对讲)</h2>
+
+<div class="mermaid">
+sequenceDiagram
+  autonumber
+  participant U as 用户
+  participant UI as 📱 UI 服务
+  participant V as 🔌 VoIP Adapter
+  participant T as ⚙️ TMM
+  participant A as ☁️ APP / 云
+
+  rect rgba(77,140,255,0.08)
+    Note over U,A: ① 建话
+    U->>UI: 选择「手机 APP」
+    UI->>V: call(key_1)
+    V->>T: AUDIO 呼叫
+    T->>A: MQTT 308 · call
+    A-->>T: ring → answer
+    T-->>V: ACCEPTED
+  end
+
+  rect rgba(52,209,122,0.08)
+    Note over UI,A: ② 通话
+    V->>V: 切 P2P 模式并启麦克风
+    V-->>UI: INCALL
+    A->>V: AUDIO_START
+    V-->>A: G.711U 音频
+  end
+
+  rect rgba(255,111,157,0.08)
+    Note over U,A: ③ 结束
+    alt 本机挂断
+      U->>UI: 挂断
+      UI->>V: hangup
+    else APP 挂断
+      A->>V: hang_up
+    end
+    V->>V: leave_call → CHAT
+    V-->>UI: 返回 Home
+  end
+</div>
+
+<div class="box warn"><b>超时:</b>呼出 30s 无人接 → UI 超时主动挂断并呈现 FAILED。</div>
+
+<!-- ================================================================ -->
+<h2 id="flow-b"><span class="num">5.</span>场景 B:APP 呼设备 / 视频对讲</h2>
+
+<h3>5.1 RTC 呼叫路径</h3>
+<div class="mermaid">
+sequenceDiagram
+  autonumber
+  participant A as 📱 APP
+  participant C as 📨 Control
+  participant V as 🔌 VoIP Adapter
+  participant UI as 🖥️ UI 服务
+  participant CAM as 📷 相机
+
+  rect rgba(247,178,75,0.08)
+    Note over A,UI: ① 来电
+    A->>C: call(channelType)
+    C-->>A: ring
+    C->>V: INCOMING
+    V-->>UI: 推前台并振铃
+  end
+
+  rect rgba(52,209,122,0.08)
+    Note over A,UI: ② 接听
+    UI->>V: answer
+    V->>C: manager_answer
+    C-->>A: answer
+    V->>V: 切 P2P 模式
+    Note over C,V: APP 来电不执行设备间 p2p_connect
+  end
+
+  rect rgba(52,224,208,0.08)
+    Note over A,CAM: ③ 媒体
+    A->>V: AUDIO_START
+    opt 视频对讲
+      A->>V: VIDEO_START
+      V->>CAM: 订阅 H264
+      CAM-->>V: H264 帧
+      V-->>A: 单向视频
+    end
+  end
+
+  rect rgba(255,111,157,0.08)
+    Note over A,CAM: ④ 结束
+    A->>V: hang_up / STOP
+    V->>CAM: 退订 H264
+    V->>V: leave_call → CHAT
+  end
+</div>
+
+<h3>5.2 预览式直接拉流(不走呼叫信令)</h3>
+<div class="box"><b>无 call/answer 信令:</b>manager 呼叫状态保持 IDLE,音频和视频事件职责不同。<code>AUDIO_START</code> 会执行 <code>enter_call()</code>、将适配层置为 INCALL 并发布 UI 事件;<code>AUDIO_STOP</code> 会执行 <code>leave_call()</code>、回到 IDLE 并通知 UI。<code>VIDEO_START/VIDEO_STOP</code> 只负责切换 P2P 模式和订阅/退订 H264,不改变适配层状态,也不推送呼叫页。麦克风直送仅由 AUDIO_START 建立的 INCALL 状态放行;manager 内补置的 <code>enable_send_audio</code> 不参与这条直送路径。</div>
+<div class="box warn"><b>当前时序约束:</b>音视频同时预览时,<code>VIDEO_STOP</code> 会执行 <code>leave_call()</code>,但适配层可能仍是 INCALL,直到 <code>AUDIO_STOP</code> 才收敛为 IDLE。排查“状态显示在通话中但已退出 P2P 模式”时,应优先核对 VIDEO_STOP 与 AUDIO_STOP 的到达顺序。</div>
+
+<!-- ================================================================ -->
+<h2 id="flow-c"><span class="num">6.</span>场景 C:设备 ↔ 设备(语音对讲)</h2>
+
+<div class="mermaid">
+sequenceDiagram
+  autonumber
+  participant U as 用户
+  participant A as 📞 主叫设备 A
+  participant C as ☁️ 云端
+  participant B as 📞 被叫设备 B
+
+  rect rgba(77,140,255,0.08)
+    Note over U,C: ① 选择与建话
+    U->>A: 选择设备联系人
+    A->>C: contact.sync / list
+    C-->>A: 设备列表
+    A->>C: MQTT call(targetId)
+    C->>B: INCOMING(targetId / targetLocalKey)
+    B->>C: answer
+    C-->>A: ACCEPTED
+  end
+
+  rect rgba(52,224,208,0.08)
+    Note over A,B: ② P2P 建链 · 仅被叫发起
+    B->>A: IPC P2P connect
+    A-->>B: connected
+    Note over A,B: 两端接听后立即进入 P2P 模式
+  end
+
+  rect rgba(52,209,122,0.08)
+    Note over A,B: ③ 双向语音
+    par A → B
+      A->>B: G.711U
+    and B → A
+      B->>A: G.711U
+    end
+  end
+
+  rect rgba(255,111,157,0.08)
+    Note over A,B: ④ 断开
+    A->>C: hang_up
+    C->>B: hang_up
+    B-->>A: P2P disconnect
+  end
+</div>
+
+<div class="box"><b><code>local_key</code> 来源:</b>主叫发出的 <code>call</code> JSON 只带 <code>targetId</code>,不带 <code>local_key</code>。Control 从收到的 RTC 信令中解析 <code>targetLocalKey</code>;设备来电且该字段非空时,被叫在 answer 后投递 CONNECT,使用对端 <code>devId + local_key</code> 建立 IPC P2P 链路。主叫收到 ACCEPTED 后不重复发起 <code>p2p_client_connect</code>。</div>
+<div class="box"><b>仅音频:</b>呼叫固定 <code>CALL_TYPE_AUDIO</code>,不触发 VIDEO_START。<b>呼出未接通挂断</b>=<code>cancel</code>;<b>来电未接挂断</b>=<code>reject</code>。</div>
+
+<!-- ================================================================ -->
+<h2 id="audio"><span class="num">7.</span>音频链路</h2>
+
+<h3>7.1 上行(设备麦克风 → 对端)</h3>
+<div class="mermaid">
+flowchart LR
+  MIC["🎙️ 麦克风<br/><small>16K PCM · Mono</small>"]
+  ROUTE["🚦 通话路由<br/><small>on_audio_input</small>"]
+  FRAME["✂️ 40ms 分帧<br/><small>1280 Bytes</small>"]
+  RESAMPLE["🔄 重采样<br/><small>16K → 8K</small>"]
+  ENCODE["🗜️ G.711U<br/><small>8 bit · ≈8 KB/s</small>"]
+  BUFFER["📦 发送缓冲<br/><small>拥塞丢旧帧</small>"]
+  PEER(("📱 对端"))
+
+  MIC --> ROUTE --> FRAME --> RESAMPLE --> ENCODE --> BUFFER -->|"40ms / 帧"| PEER
+
+  classDef source fill:#191a35,stroke:#a58bff,color:#eaf1fb,stroke-width:2px;
+  classDef process fill:#10243a,stroke:#4d8cff,color:#eaf1fb,stroke-width:2px;
+  classDef media fill:#0d292c,stroke:#34e0d0,color:#eaf1fb,stroke-width:2px;
+  class MIC source;
+  class ROUTE,FRAME,RESAMPLE process;
+  class ENCODE,BUFFER,PEER media;
+</div>
+
+<div class="service-grid">
+  <div class="visual-card voice"><div class="v-head"><span class="v-icon">⚡</span><div class="v-title"><small>LATENCY</small><h4>逐帧即时直送</h4></div></div><p>不经过 manager 的 240ms jitter 缓冲。</p></div>
+  <div class="visual-card live"><div class="v-head"><span class="v-icon">📉</span><div class="v-title"><small>BANDWIDTH</small><h4>约 8 KB/s</h4></div></div><p>G.711U 相比 16bit PCM 带宽减半。</p></div>
+  <div class="visual-card"><div class="v-head"><span class="v-icon">🚦</span><div class="v-title"><small>GATE</small><h4>只检查通话状态</h4></div></div><p>当前生效门控为适配层 <code>is_incall()</code>。</p></div>
+  <div class="visual-card warn"><div class="v-head"><span class="v-icon">🕒</span><div class="v-title"><small>CLOCK</small><h4>音视频时钟不同源</h4></div></div><p>NTP 校时可能导致音频时间戳跳变。</p></div>
+</div>
+
+<details class="deep-dive">
+<summary>展开上行缓冲、门控与时间戳细节</summary>
+<div class="deep-dive-body">
+<ul>
+<li><b>逐帧即时直送,不经 manager jitter 缓冲</b>:manager 另有 240ms jitter + 40ms 绝对节拍匀速发送线程(为设备↔设备平滑而设,会抬高延迟),当前适配层选择直送,与原生方案一致。匀速线程用绝对时刻锚点防长通话漂移;落后超一帧丢欠债重新对齐。</li>
+<li><b>G.711U(≈8KB/s)比 16bit PCM(16KB/s)带宽减半</b>;发送环形缓冲 <code>max_buffer_seconds=0</code>,拥塞即丢旧帧控延迟。</li>
+<li><b>当前生效门控只有适配层通话状态</b>:<code>tuya_toy_tmm_voip_audio_feed()</code> 仅检查 <code>is_incall()</code>,随后直接调用 <code>tuya_tmm_stream_audio_send()</code>。manager 的 <code>send_audio_enable + stream_conf.enable_send_audio</code> 双重门控、<code>call_mic_change</code> 静音以及连续 400ms 欠载检测只服务于 <code>tuya_tmm_manager_data_feed()</code> + 匀速发送线程;当前工程没有调用这条备用上行路径。</li>
+<li><b>时间戳基准目前不一致</b>:音频直送使用 POSIX 墙钟,视频使用 P2P SDK 单调时钟。发生 NTP 校时时可能产生跳变;需要排查 A/V 同步时应优先检查并统一时间基准。</li>
+</ul>
+</div>
+</details>
+
+<h3>7.2 下行(对端 → 设备扬声器)</h3>
+<div class="mermaid">
+flowchart LR
+  PEER(("📱 对端"))
+  RECV["📥 接收音频帧<br/><small>P2P / RTC</small>"]
+  CODEC{"🔀 Codec?"}
+  PCM["PCM<br/><small>直接透传</small>"]
+  G711["G.711U / A<br/><small>解码 + 漂移校正</small>"]
+  RESAMPLE["🔄 重采样<br/><small>8K → 16K</small>"]
+  SPEAKER["🔊 板级外放<br/><small>沿用系统全局音量</small>"]
+
+  PEER --> RECV --> CODEC
+  CODEC --> PCM --> RESAMPLE
+  CODEC --> G711 --> RESAMPLE
+  RESAMPLE --> SPEAKER
+
+  classDef source fill:#191a35,stroke:#a58bff,color:#eaf1fb,stroke-width:2px;
+  classDef process fill:#10243a,stroke:#4d8cff,color:#eaf1fb,stroke-width:2px;
+  classDef media fill:#0d292c,stroke:#34e0d0,color:#eaf1fb,stroke-width:2px;
+  class PEER source;
+  class RECV,CODEC,PCM,G711,RESAMPLE process;
+  class SPEAKER media;
+</div>
+
+<!-- ================================================================ -->
+<h2 id="video"><span class="num">8.</span>视频链路(设备 → APP 单向)</h2>
+
+<div class="mermaid">
+flowchart LR
+  CAP["✅ 视频能力<br/><small>H264 · 480×480 · 1 Mbps</small>"]
+  REQUEST["📱 APP 请求<br/><small>VIDEO_START</small>"]
+  SUB["🔔 订阅相机<br/><small>H264 / P2P</small>"]
+  CAMERA["📷 相机编码<br/><small>当前源 10fps</small>"]
+  SEND["📡 帧透传<br/><small>I / P 帧 · 无 jitter</small>"]
+  VIEW(("▶️ APP 播放"))
+  STOP["⏹️ STOP / 挂断"]
+  UNSUB["🔕 退订相机"]
+
+  CAP -.->|"SDK 声明 25fps"| REQUEST
+  REQUEST --> SUB --> CAMERA --> SEND --> VIEW
+  STOP -.-> UNSUB -.-> CAMERA
+
+  classDef config fill:#2b2013,stroke:#f7b24b,color:#eaf1fb,stroke-width:2px;
+  classDef action fill:#10243a,stroke:#4d8cff,color:#eaf1fb,stroke-width:2px;
+  classDef media fill:#0d292c,stroke:#34e0d0,color:#eaf1fb,stroke-width:2px;
+  classDef stop fill:#321722,stroke:#ff6f9d,color:#eaf1fb,stroke-width:2px;
+  class CAP config;
+  class REQUEST,SUB action;
+  class CAMERA,SEND,VIEW media;
+  class STOP,UNSUB stop;
+</div>
+
+<div class="box"><b>设备不收视频:</b><code>video_output_cb=NULL</code>,屏幕不渲染对端画面;RTC 语音/视频呼叫共用同一呼叫页,预览式直接拉视频不推送呼叫页。设备↔设备通话不触发本链路。注意 25fps 是 TMM 向 SDK 登记的固定值;当前 <code>T5AI_BOARD_DESKTOP</code> 相机采集配置为 10fps,文档中的 25fps 不代表实际稳定产出帧率。</div>
+
+<!-- ================================================================ -->
+<h2 id="ai"><span class="num">9.</span>与 AI 对话共存</h2>
+
+<p>AI 玩具场景:通话与 AI <b>共存</b>而非 VoIP-only。通过<b>整体切设备模式</b>实现打断/恢复,而非逐项 suspend/resume。</p>
+
+<div class="mermaid">
+flowchart LR
+  CHAT["🤖 CHAT 模式"]
+  RING["🔔 来电振铃"]
+  ENTER["🔀 切换 P2P 模式"]
+  CALLMODE["📞 通话中"]
+  CLEAN["🧹 结束清理"]
+  HEAL["🩺 麦克风采集自愈"]
+
+  CHAT -->|收到来电| RING
+  RING -->|接听| ENTER
+  ENTER -->|关 KWS · 手动 VAD| CALLMODE
+  RING -->|拒接或取消| CHAT
+  CALLMODE -->|挂断或异常| CLEAN
+  CLEAN -->|恢复 KWS| CHAT
+  CALLMODE -.->|采集状态被迟到回调覆盖| HEAL
+  HEAL -.->|重新开启 wakeup| CALLMODE
+
+  classDef ai fill:#2b2013,stroke:#f7b24b,color:#eaf1fb,stroke-width:2px;
+  classDef callMode fill:#0d292c,stroke:#34e0d0,color:#eaf1fb,stroke-width:2px;
+  classDef event fill:#191a35,stroke:#a58bff,color:#eaf1fb,stroke-width:2px;
+  classDef heal fill:#112b1e,stroke:#34d17a,color:#eaf1fb,stroke-width:2px;
+  class CHAT,CLEAN ai;
+  class ENTER,CALLMODE callMode;
+  class RING event;
+  class HEAL heal;
+</div>
+
+<div class="box"><b>VoIP-only 构建</b>(<code>ENABLE_TUYA_TOY_VOIP_ONLY=1</code>):挂断后保持 P2P 模式,不恢复 AI。</div>
+
+<!-- ================================================================ -->
+<h2 id="ui"><span class="num">10.</span>UI 业务层</h2>
+
+<h3>10.1 ui_svc_call —— UI 侧唯一业务出入口</h3>
+<div class="service-grid">
+  <div class="visual-card voice"><div class="v-head"><span class="v-icon">🧵</span><div class="v-title"><small>THREAD</small><h4>线程统一封送</h4></div></div><p>非 UI 回调统一经 <code>ui_app_async_call()</code> 进入 UI 线程。</p></div>
+  <div class="visual-card comm"><div class="v-head"><span class="v-icon">📲</span><div class="v-title"><small>FOREGROUND</small><h4>来电自动前台</h4></div></div><p>INCOMING / IN_CALL 到达时自动进入呼叫页。</p></div>
+  <div class="visual-card warn"><div class="v-head"><span class="v-icon">⏱️</span><div class="v-title"><small>TIMEOUT</small><h4>30s 呼出超时</h4></div></div><p>超时主动挂断,UI 状态切换为 FAILED。</p></div>
+  <div class="visual-card"><div class="v-head"><span class="v-icon">🎚️</span><div class="v-title"><small>RUNTIME GATE</small><h4>开关控制栈启动</h4></div></div><p>OFF 不创建通话栈;ON 现场启动,关闭后重启回收。</p></div>
+  <div class="visual-card live"><div class="v-head"><span class="v-icon">👥</span><div class="v-title"><small>CONTACTS</small><h4>联系人直连 ATOP</h4></div></div><p>请求不等待 stream-ready;就绪事件仅触发自愈刷新。</p></div>
+  <div class="visual-card warn"><div class="v-head"><span class="v-icon">📷</span><div class="v-title"><small>CAMERA GUARD</small><h4>无相机拒绝来电</h4></div></div><p>当前包括纯语音来电;主动呼出语音不受此限制。</p></div>
+</div>
+
+<details class="deep-dive">
+<summary>展开 UI 服务实现细节</summary>
+<div class="deep-dive-body">
+<ul>
+<li><b>线程模型</b>:<code>EVENT_TOY_VOIP_UI</code>/呼出超时/stream-ready 均在非 UI 线程;一律经 <code>ui_app_async_call()</code> 封送 UI 线程后才更新状态/回调页面(可直接操作 LVGL)。</li>
+<li><b>前台保证</b>:INCOMING/IN_CALL 到来时若不在呼叫页,自动 <code>ui_route_push(UI_PAGE_CALL)</code>。</li>
+<li><b>呼出超时</b>:dial/dial_device 后启 30s 延迟任务,超时主动 <code>hangup</code> + FAILED。</li>
+<li><b>运行时开关(兼 TMM 栈启动闸门)</b>:P2P 开关默认 OFF(KV 由 <code>ui_svc_dev_ctrl</code> 持久化)。<b>OFF→栈不存在</b>(零线程/零信令,APP 呼叫无响应);<b>ON→<code>ui_svc_call_init()</code> 订阅事件后调 <code>tuya_toy_tmm_voip_start()</code> 现场启动</b>,即时生效(单向,关闭需重启回收)。「自动接听」同样 UI 层持有+KV 持久化。</li>
+<li><b>联系人拉取契约</b>:异步工作项直接调用 ATOP <code>contact.sync</code> + <code>contact.list</code>,不等待 stream-ready;<code>count≥0</code>=成功(0=确实无设备),<code>count&lt;0</code>=失败(可重试)。<code>EVENT_TMM_STREAM_READY</code> 仅作为栈启动后的自愈刷新触发;in-flight 请求合并;回调单槽,页面 <code>on_destroy</code> 传 NULL 注销。</li>
+<li><b>摄像头限制</b>:当前 UI 服务在摄像头不可用时会拒绝<b>所有来电</b>(包括纯语音来电),并禁止手动接听;呼出语音路径没有同等检查。因此「无相机仅降级为语音」并不是当前来电侧的实际行为。</li>
+</ul>
+</div>
+</details>
+
+<h3>10.2 页面</h3>
+<div class="page-grid">
+  <article class="visual-card live">
+    <div class="v-head"><span class="v-icon">👥</span><div class="v-title"><small>ui_page_contacts.c</small><h3>联系人页</h3></div></div>
+    <div class="chips"><span class="chip accent">手机 APP</span><span class="chip">设备列表</span><span class="chip">刷新 / 删除</span><span class="chip">NFC 发现</span></div>
+    <p>区分未开启、加载、失败、空列表和列表五种状态;选择联系人后直接进入呼叫页。</p>
+  </article>
+  <article class="visual-card comm">
+    <div class="v-head"><span class="v-icon">☎️</span><div class="v-title"><small>ui_page_call.c</small><h3>呼叫页</h3></div></div>
+    <div class="chips"><span class="chip">拨号中</span><span class="chip accent">来电振铃</span><span class="chip">通话中</span><span class="chip">结束</span></div>
+    <p>语音和视频共用页面;终局返回 Home 并续显 toast,离开活动通话时隐式挂断。</p>
+  </article>
+</div>
+
+<!-- ================================================================ -->
+<h2 id="init"><span class="num">11.</span>初始化与链路就绪</h2>
+
+<div class="mermaid">
+flowchart TD
+  SWITCH{"🎚️ P2P 开关"}
+  OFF["⏸️ OFF<br/><small>不启动 · 设备不可达</small>"]
+
+  subgraph BOOT["① 启动通话栈"]
+    INIT["🧭 UI 服务初始化"]
+    START["🚀 启动 TMM"]
+    MANAGER["⚙️ Manager"]
+    CONTROL["📨 Control<br/><small>MQTT 308 + 心跳</small>"]
+    STREAM["📡 Stream<br/><small>moto MQTT</small>"]
+    INIT --> START --> MANAGER
+    MANAGER --> CONTROL & STREAM
+  end
+
+  subgraph LINK["② 等待并建立媒体链路"]
+    MQTT{"MQTT 已连接?"}
+    COMP["⚡ 状态补偿"]
+    WAIT["⏳ 等连接事件"]
+    MEDIA["🔗 Media + Link<br/><small>注册 Codec · 上传 Skills · 建缓冲</small>"]
+    MQTT -->|"是"| COMP --> MEDIA
+    MQTT -->|"否"| WAIT --> MEDIA
+  end
+
+  subgraph DONE["③ 对外就绪"]
+    READY(("✅ STREAM_READY"))
+    CONTACTS["👥 联系人自愈刷新"]
+    READY --> CONTACTS
+  end
+
+  SWITCH -->|"OFF"| OFF
+  SWITCH -->|"ON"| INIT
+  STREAM --> MQTT
+  MEDIA --> READY
+
+  classDef gate fill:#2b2013,stroke:#f7b24b,color:#eaf1fb,stroke-width:2px;
+  classDef boot fill:#10243a,stroke:#4d8cff,color:#eaf1fb,stroke-width:2px;
+  classDef media fill:#0d292c,stroke:#34e0d0,color:#eaf1fb,stroke-width:2px;
+  classDef ready fill:#112b1e,stroke:#34d17a,color:#eaf1fb,stroke-width:2px;
+  class SWITCH,OFF gate;
+  class INIT,START,MANAGER,CONTROL boot;
+  class STREAM,MQTT,COMP,WAIT,MEDIA media;
+  class READY,CONTACTS ready;
+</div>
+
+<div class="box"><b>就绪判定:</b><code>EVENT_TMM_STREAM_READY</code> 表示媒体 stream 栈已完成初始化;联系人 ATOP 请求不依赖 <code>tuya_tmm_stream_is_ready()</code>,该事件只用于触发自愈刷新。<code>tuya_tmm_link</code> 注册 PCM/G711U/G711A 解码 + G711/PCM 编码,有相机再加 H264/MJPEG 解码与 H264 编码。</div>
+
+<!-- ================================================================ -->
+<h2 id="config"><span class="num">12.</span>配置开关与事件速查</h2>
+
+<table>
+<tr><th>开关 / 事件</th><th>类型</th><th>作用</th></tr>
+<tr><td><code>ENABLE_AI_MODE_P2P</code></td><td>编译期</td><td>P2P 通话总开关;关时本目录 TMM 代码与 <code>ui_svc_call</code> 均空实现。当前 <span class="tag ok">=1</span></td></tr>
+<tr><td><code>ENABLE_TUYA_CAMERA</code></td><td>编译期</td><td>决定 <code>TUYA_TOY_TMM_VOIP_VIDEO</code>:有相机才声明视频能力/建视频缓冲</td></tr>
+<tr><td><code>ENABLE_MQTT_P2P</code></td><td>编译期</td><td>原生 IPC P2P 路径门控。当前 <span class="tag warn">未启用</span>,与 TMM 栈互斥</td></tr>
+<tr><td><code>ENABLE_TUYA_TOY_VOIP_ONLY</code></td><td>编译期(默认0)</td><td>VoIP-only 构建:挂断后保持 P2P 模式,不恢复 AI</td></tr>
+<tr><td><code>UI_FEATURE_CALL</code></td><td>编译期(UI)</td><td>呼叫/联系人页与 <code>ui_svc_call.c</code> 的 UI 侧裁剪</td></tr>
+<tr><td>P2P 启用开关 / 自动接听</td><td>运行时(KV)</td><td>UI 设置项,<code>ui_svc_dev_ctrl</code> 持久化。<b>P2P 开关=TMM 栈启动闸门</b></td></tr>
+<tr><td><code>EVENT_TOY_VOIP_UI</code> <small>"toy.voip.ui"</small></td><td>事件</td><td>适配层 → UI:通话状态 + 对端名/ID</td></tr>
+<tr><td><code>EVENT_TMM_STREAM_READY</code> <small>"tmm.stream.ready"</small></td><td>事件</td><td>stream 栈完全就绪(含 skills 上传);联系人自愈刷新触发源,不是首次拉取的前置条件</td></tr>
+<tr><td><code>TUYA_IPC_CALL</code> / <code>TUYA_P2P_MEDIA_STREAM</code></td><td>事件(原生)</td><td>原生栈通话/媒体事件,当前构建不发布</td></tr>
+</table>
+
+<!-- ================================================================ -->
+<h2 id="notes"><span class="num">13.</span>运行约束与排障要点</h2>
+<p class="muted">本章仅汇总当前源码可直接验证的行为。函数名、状态名和配置项可作为代码检索入口;实现变更时应同步更新本章。</p>
+
+<h3>13.1 启动与资源约束</h3>
+<div class="risk-grid">
+  <article class="visual-card">
+    <div class="v-head"><span class="v-icon">🧩</span><div class="v-title"><small>RESOURCE</small><h4>媒体框架是单例</h4></div></div>
+    <p>TMM 与原生 IPC P2P 路径只能启动一个。</p>
+    <div class="chips"><span class="chip accent">当前使用 TMM</span><span class="chip">禁止双初始化</span></div>
+    <details class="deep-dive"><summary>代码入口</summary><div class="deep-dive-body"><p><code>ui_svc_call_init()</code> → <code>tuya_toy_tmm_voip_start()</code>;当前不调用 <code>tuya_p2p_app_start()</code>。</p></div></details>
+  </article>
+  <article class="visual-card warn">
+    <div class="v-head"><span class="v-icon">🎚️</span><div class="v-title"><small>RUNTIME GATE</small><h4>开关决定设备是否可呼</h4></div></div>
+    <p>OFF 时没有通话栈和 MQTT 308 回调;ON 时现场启动。</p>
+    <div class="chips"><span class="chip accent">OFF = 不可达</span><span class="chip">关闭后重启回收</span></div>
+    <details class="deep-dive"><summary>时序细节</summary><div class="deep-dive-body"><p><code>rtcCapability</code> 延后到首次启动上报。若 MQTT 已连接,<code>tuya_tmm_stream_init()</code> 通过 <code>get_mqc_conn_stat()</code> 补偿连接事件。</p></div></details>
+  </article>
+</div>
+
+<h3>13.2 会话状态与结束处理</h3>
+<div class="risk-grid">
+  <article class="visual-card live">
+    <div class="v-head"><span class="v-icon">✅</span><div class="v-title"><small>ACCEPT</small><h4>接听即进入通话</h4></div></div>
+    <p>收到 ACCEPTED 或本机 answer 后立即切 P2P,不等待 AUDIO_START。</p>
+    <details class="deep-dive"><summary>原因与幂等</summary><div class="deep-dive-body"><p>避免设备间双方等待对方先拉流;重复进入事件由适配层状态检查忽略。</p></div></details>
+  </article>
+  <article class="visual-card warn">
+    <div class="v-head"><span class="v-icon">📷</span><div class="v-title"><small>KNOWN LIMIT</small><h4>无相机拒绝全部来电</h4></div></div>
+    <p>当前纯语音来电也会被拒绝;主动呼出语音不受限制。</p>
+    <details class="deep-dive"><summary>检查位置</summary><div class="deep-dive-body"><p>INCOMING 和手动接听均调用 <code>ui_svc_camera_available()</code>;返回 false 时直接拒接。</p></div></details>
+  </article>
+  <article class="visual-card comm">
+    <div class="v-head"><span class="v-icon">🏁</span><div class="v-title"><small>TERMINAL</small><h4>终局统一回到 IDLE</h4></div></div>
+    <p>拒接、忙线、取消、未接、挂断、停止和错误共用退出路径。</p>
+    <details class="deep-dive"><summary>清理顺序</summary><div class="deep-dive-body"><p><code>__voip_leave_call()</code> 先兜底退订 H264,再切回 CHAT;页面离开时也会挂断活动通话。</p></div></details>
+  </article>
+</div>
+
+<h3>13.3 媒体链路注意事项</h3>
+<div class="risk-grid">
+  <article class="visual-card voice">
+    <div class="v-head"><span class="v-icon">🎙️</span><div class="v-title"><small>UPLINK</small><h4>音频由适配层直送</h4></div></div>
+    <p><code>16K PCM</code> → <code>8K G.711U</code> 后直接送入 stream。</p>
+    <details class="deep-dive"><summary>实际门控</summary><div class="deep-dive-body"><p><code>audio_feed()</code> 只检查 <code>is_incall()</code>。manager 双重门控、jitter、<code>call_mic_change</code> 和 400ms 告警属于未接入的备用路径。</p></div></details>
+  </article>
+  <article class="visual-card">
+    <div class="v-head"><span class="v-icon">▶️</span><div class="v-title"><small>PREVIEW</small><h4>音频驱动状态,视频只管流</h4></div></div>
+    <p>预览直拉没有 call / answer;AUDIO 事件更新 INCALL/IDLE,VIDEO 事件不改状态也不推呼叫页。</p>
+    <details class="deep-dive"><summary>状态关系</summary><div class="deep-dive-body"><p>manager 保持 IDLE;<code>AUDIO_START</code> 使适配层进入 INCALL 并放行音频直送。<code>VIDEO_START/STOP</code> early return,仅切模式和启停 H264。音视频并行时需注意 VIDEO_STOP 可早于 AUDIO_STOP 执行 <code>leave_call()</code>。</p></div></details>
+  </article>
+  <article class="visual-card warn">
+    <div class="v-head"><span class="v-icon">🕒</span><div class="v-title"><small>TIMESTAMP</small><h4>音视频时钟不同源</h4></div></div>
+    <p>音频使用 POSIX 墙钟,视频使用 SDK 单调时钟。</p>
+    <details class="deep-dive"><summary>排查提示</summary><div class="deep-dive-body"><p>NTP 校时可能造成音频时间戳跳变;排查音画同步或长通话异常时应同时检查两类时间戳。</p></div></details>
+  </article>
+  <article class="visual-card live">
+    <div class="v-head"><span class="v-icon">🩺</span><div class="v-title"><small>SELF-HEAL</small><h4>麦克风采集自动恢复</h4></div></div>
+    <p>通话中发现 wakeup 被迟到回调关闭时重新开启采集。</p>
+    <details class="deep-dive"><summary>实现入口</summary><div class="deep-dive-body"><p><code>wukong_ai_mode_p2p.on_task</code> 周期检查并修复该状态,用于避免对端偶现无声。</p></div></details>
+  </article>
+</div>
+
+<h3>13.4 联系人与超时</h3>
+<article class="visual-card live">
+  <div class="v-head"><span class="v-icon">👥</span><div class="v-title"><small>CONTACTS</small><h4>联系人请求不等待媒体就绪</h4></div></div>
+  <p>页面立即执行 ATOP <code>contact.sync/list</code>;stream-ready 只用于自愈刷新。</p>
+  <div class="chips"><span class="chip accent">count ≥ 0 成功</span><span class="chip">count &lt; 0 失败</span></div>
+</article>
+
+<div class="timeout-grid" aria-label="超时参数速查">
+  <div class="timeout-item"><strong>30s</strong><span>UI 呼出等待</span><small>挂断并显示 FAILED</small></div>
+  <div class="timeout-item"><strong>180s</strong><span>RTC 信令呼叫</span><small>通常 UI 超时先触发</small></div>
+  <div class="timeout-item"><strong>30s</strong><span>通话心跳</span><small>结束会话并回 IDLE</small></div>
+  <div class="timeout-item"><strong>10s</strong><span>首次媒体控制</span><small>connect 成功后启动通道</small></div>
+  <div class="timeout-item"><strong>20s</strong><span>通话中媒体控制</span><small>类型/麦克风状态变更</small></div>
+</div>
+<p class="muted"><code>tuya_ipc_p2p_client_connect()</code> 在本层没有显式超时参数,其连接超时由底层 SDK 控制;10s 不应解读为 P2P connect 超时。</p>
+
+</main>
+
+<footer class="doc-footer">
+  <a class="back-top" href="#top">返回顶部 <span>↑</span></a>
+  <div>© Tuya · Wukong P2P — MQTT RTC 信令 / IPC P2P 媒体 / AI 模式共存 · 基于当前源码整理,实现变更时请同步更新</div>
+</footer>
+
+<script>
+if (window.mermaid) mermaid.initialize({
+  startOnLoad: true,
+  theme: 'base',
+  themeVariables: {
+    darkMode: true,
+    fontFamily: 'Inter, PingFang SC, Microsoft YaHei, sans-serif',
+    fontSize: '14px',
+    background: '#0a1020',
+    primaryColor: '#12213b',
+    primaryTextColor: '#eaf1fb',
+    primaryBorderColor: '#4d8cff',
+    secondaryColor: '#10243a',
+    tertiaryColor: '#161d34',
+    lineColor: '#7f94b2',
+    edgeLabelBackground: '#0e1728',
+    textColor: '#eaf1fb',
+    mainBkg: '#12213b',
+    nodeBorder: '#4d8cff',
+    clusterBkg: '#0e1728',
+    clusterBorder: '#334461',
+    actorBkg: '#12213b',
+    actorBorder: '#4d8cff',
+    actorTextColor: '#eaf1fb',
+    signalColor: '#a5b6cf',
+    signalTextColor: '#eaf1fb',
+    sequenceNumberColor: '#060a14',
+    activationBkgColor: '#12213b',
+    activationBorderColor: '#4d8cff',
+    noteBkgColor: '#302712',
+    noteBorderColor: '#f7b24b',
+    noteTextColor: '#f6dfb8',
+    labelBoxBkgColor: '#0e1728',
+    labelBoxBorderColor: '#334461',
+    labelTextColor: '#eaf1fb'
+  },
+  flowchart: { curve: 'basis', htmlLabels: true },
+  sequence: { showSequenceNumbers: false, actorMargin: 50, boxMargin: 8 }
+});
+
+if (!window.mermaid) {
+  document.querySelectorAll('.mermaid').forEach(function(diagram) {
+    diagram.classList.add('mermaid-source');
+    var notice = document.createElement('div');
+    notice.className = 'mermaid-fallback';
+    notice.textContent = 'Mermaid 脚本加载失败,下方保留流程图源码;联网后重新打开可渲染图形。';
+    diagram.parentNode.insertBefore(notice, diagram);
+  });
+}
+
+document.querySelectorAll('table').forEach(function(table) {
+  if (table.parentElement.classList.contains('table-wrap')) return;
+  var wrap = document.createElement('div');
+  wrap.className = 'table-wrap';
+  table.parentNode.insertBefore(wrap, table);
+  wrap.appendChild(table);
+});
+
+document.querySelectorAll('pre').forEach(function(pre) {
+  var button = document.createElement('button');
+  button.className = 'copy-btn';
+  button.type = 'button';
+  button.textContent = 'COPY';
+  button.setAttribute('aria-label', '复制代码');
+  button.addEventListener('click', function() {
+    var value = pre.querySelector('code').innerText;
+    var done = function() { button.textContent = 'COPIED'; setTimeout(function() { button.textContent = 'COPY'; }, 1200); };
+    if (navigator.clipboard && window.isSecureContext) {
+      navigator.clipboard.writeText(value).then(done);
+    } else {
+      var input = document.createElement('textarea');
+      input.value = value; input.style.position = 'fixed'; input.style.opacity = '0';
+      document.body.appendChild(input); input.select(); document.execCommand('copy'); input.remove(); done();
+    }
+  });
+  pre.appendChild(button);
+});
+
+var progress = document.querySelector('.scroll-progress');
+function updateProgress() {
+  var max = document.documentElement.scrollHeight - innerHeight;
+  progress.style.width = (max > 0 ? scrollY / max * 100 : 0) + '%';
+}
+addEventListener('scroll', updateProgress, { passive: true });
+addEventListener('resize', updateProgress);
+updateProgress();
+
+var navLinks = Array.from(document.querySelectorAll('.nav a'));
+var sections = navLinks.map(function(link) { return document.querySelector(link.getAttribute('href')); }).filter(Boolean);
+if ('IntersectionObserver' in window) {
+  var observer = new IntersectionObserver(function(entries) {
+    entries.forEach(function(entry) {
+      if (!entry.isIntersecting) return;
+      navLinks.forEach(function(link) { link.classList.toggle('active', link.getAttribute('href') === '#' + entry.target.id); });
+    });
+  }, { rootMargin: '-20% 0px -68% 0px' });
+  sections.forEach(function(section) { observer.observe(section); });
+}
+</script>
+
+</body>
+</html>

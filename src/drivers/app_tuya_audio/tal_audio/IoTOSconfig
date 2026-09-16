@@ -1,0 +1,10 @@
+# Ktuyaconf
+menu "Tal audio function Config"
+        config ENABLE_TUYA_TAL_AUDIO
+            bool "ENABLE_TUYA_TAL_AUDIO: enable tal audio"
+        default n
+
+# 机制开关 ENABLE_WUKONG_AUDIO_PIPELINE 定义在 app 已挂载的 Kconfig 树中
+# （tuyaos_demo_wukong_ai: src/miscs/audio_player/Kconfig 的 Audio Configuration 菜单下），
+# 本文件未被 app 的 APPconfig rsource，在此定义不会生效。机制说明见 README.md 第 7 节。
+endmenu

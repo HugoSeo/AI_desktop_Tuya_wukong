@@ -1,0 +1,7 @@
+# Ktuyaconf
+
+comment "TAL TP"
+
+menuconfig ENABLE_TAL_TP
+    bool "ENABLE_TAL_TP: tal tp"
+    default n

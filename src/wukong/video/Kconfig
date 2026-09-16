@@ -1,0 +1,23 @@
+# Video Configuration
+# Sourced from: src/wukong/video/
+
+menu "Video Configuration"
+    choice
+        prompt "Video input source"
+        default USING_CAMERA_VIDEO_INPUT if ENABLE_TUYA_CAMERA
+        default USING_NONE_VIDEO_INPUT
+
+        config USING_NONE_VIDEO_INPUT
+            bool "None"
+            help
+              无视频输入源。依赖视频的业务（P2P视频、预览、拍照、移动侦测等）
+              在运行时自动降级（接口返回不支持，不会崩溃）
+
+        config USING_CAMERA_VIDEO_INPUT
+            bool "Camera (tal_camera)"
+            depends on ENABLE_TUYA_CAMERA
+            help
+              以板载摄像头（tal_camera驱动）作为视频输入源，
+              硬件配置来自板级 tuya_board_get_camera_cfg()
+    endchoice
+endmenu

@@ -1,0 +1,33 @@
+#ifndef __AVI_ADP_H__
+#define __AVI_ADP_H__
+
+/* AVI profile for this project: 480x480 MJPEG + 16kHz PCM mono */
+
+#define VIDEO_FPS               20
+#define AUDIO_FPS               50
+#define VIDEO_FRAME_WIDTH       480
+#define VIDEO_FRAME_HEIGHT      480
+
+#define AUDIO_CHANEL_NUM        1
+#define AUDIO_SAMPLE_RATE       16000
+#define AUDIO_SAMPLE_BITS       16
+
+#define AVI_INDEX_USE_PSRAM     1
+
+#if AVI_INDEX_USE_PSRAM
+#define AVI_PSRAM_TOTAL_TIME    120
+#else
+#define AVI_SRAM_TOTAL_TIME     30
+#endif
+
+#if AVI_INDEX_USE_PSRAM
+#define AVI_VIDEO_FRAMES_MAX    (VIDEO_FPS * AVI_PSRAM_TOTAL_TIME)
+#define AVI_AUDIO_FRAMES_MAX    (AUDIO_FPS * AVI_PSRAM_TOTAL_TIME)
+#define AVI_INDEX_COUNT         (AVI_VIDEO_FRAMES_MAX + AVI_AUDIO_FRAMES_MAX + AVI_PSRAM_TOTAL_TIME * 5)
+#else
+#define AVI_VIDEO_FRAMES_MAX    (VIDEO_FPS * AVI_SRAM_TOTAL_TIME)
+#define AVI_AUDIO_FRAMES_MAX    (AUDIO_FPS * AVI_SRAM_TOTAL_TIME)
+#define AVI_INDEX_COUNT         (AVI_VIDEO_FRAMES_MAX + AVI_AUDIO_FRAMES_MAX + AVI_SRAM_TOTAL_TIME * 5)
+#endif
+
+#endif

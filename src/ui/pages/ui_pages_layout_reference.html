@@ -1,0 +1,1839 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>UI Pages Layout Reference — 320×480</title>
+<style>
+  :root {
+    --bg: #1a1a1a; --card: #2a2a2a; --text: #e0e0e0; --text2: #aaa;
+    --accent: #4A90D9; --accent2: #2E6BAD; --warn: #FFC107; --ok: #4CAF50;
+    --screen-w: 320px; --screen-h: 480px;
+  }
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body { background: #111; color: var(--text); font-family: 'Segoe UI', system-ui, sans-serif; padding: 24px; }
+  h1 { font-size: 1.6em; margin-bottom: 8px; color: #fff; }
+  h2 { font-size: 1.3em; margin: 32px 0 12px; color: var(--accent); border-bottom: 2px solid var(--accent); padding-bottom: 6px; }
+  h3 { font-size: 1.1em; margin: 20px 0 8px; color: var(--warn); }
+  h4 { font-size: 1em; margin: 14px 0 6px; color: #ddd; }
+  p, li { font-size: 0.92em; line-height: 1.6; color: var(--text2); }
+  .page-section { background: var(--card); border-radius: 12px; padding: 24px; margin: 20px 0; }
+  .flex-row { display: flex; gap: 24px; flex-wrap: wrap; align-items: flex-start; }
+  .screen-wrap { flex: 0 0 auto; }
+  .screen {
+    width: var(--screen-w); height: var(--screen-h);
+    background: var(--bg); border: 2px solid #555; border-radius: 12px;
+    position: relative; overflow: hidden; font-family: 'Courier New', monospace; font-size: 10px;
+  }
+  .screen .obj {
+    position: absolute; border: 1px dashed; padding: 2px 4px;
+    overflow: hidden; white-space: nowrap; text-overflow: ellipsis;
+  }
+  .lbl { font-size: 9px; color: #888; position: absolute; }
+  .dim { color: var(--warn); font-size: 9px; font-weight: bold; }
+  .info-panel { flex: 1 1 400px; min-width: 300px; }
+  table { width: 100%; border-collapse: collapse; margin: 8px 0; font-size: 0.88em; }
+  th { background: #333; color: #fff; padding: 6px 8px; text-align: left; }
+  td { padding: 5px 8px; border-bottom: 1px solid #333; color: var(--text2); }
+  tr:hover td { background: #2a2a2a; }
+  .tag { display: inline-block; padding: 1px 6px; border-radius: 4px; font-size: 0.8em; margin-right: 4px; }
+  .tag-gesture { background: #6C5CE7; color: #fff; }
+  .tag-click { background: #00B894; color: #fff; }
+  .tag-msg { background: #E17055; color: #fff; }
+  .tag-cb { background: #0984E3; color: #fff; }
+  .tag-lifecycle { background: #FDCB6E; color: #333; }
+  code { background: #333; padding: 1px 5px; border-radius: 3px; font-size: 0.88em; color: #e0e0e0; }
+  .flow-box {
+    background: #1e1e2e; border: 1px solid #444; border-radius: 8px;
+    padding: 12px 16px; margin: 8px 0; font-size: 0.88em; line-height: 1.8;
+  }
+  .flow-box .arrow { color: var(--warn); }
+  .flow-box .fn { color: #74b9ff; }
+  .flow-box .ev { color: #a29bfe; }
+  .color-swatch {
+    display: inline-block; width: 14px; height: 14px; border-radius: 3px;
+    border: 1px solid #666; vertical-align: middle; margin-right: 4px;
+  }
+  .toc { background: #222; border-radius: 8px; padding: 16px 24px; margin: 16px 0; }
+  .toc a { color: var(--accent); text-decoration: none; margin-right: 16px; font-size: 0.95em; }
+  .toc a:hover { text-decoration: underline; }
+  .note { background: #2d2d1a; border-left: 3px solid var(--warn); padding: 8px 12px; margin: 8px 0; font-size: 0.88em; }
+  .widget-tree { font-family: 'Courier New', monospace; font-size: 0.85em; line-height: 1.7; color: #b0b0b0; background: #1a1a2e; padding: 12px; border-radius: 8px; margin: 8px 0; white-space: pre; overflow-x: auto; }
+  .widget-tree .w-name { color: #74b9ff; }
+  .widget-tree .w-prop { color: #a29bfe; }
+  .widget-tree .w-size { color: #fdcb6e; }
+  .widget-tree .w-pos  { color: #55efc4; }
+</style>
+</head>
+<body>
+
+<h1>🖥️ UI Pages Layout Reference</h1>
+<p>屏幕基准尺寸：<strong>320 × 480 px</strong>（<code>UI_ADAPT_BASE_W=320, UI_ADAPT_BASE_H=480</code>）<br>
+所有 <code>ui_adapt(N)</code> 在此基准下等价于 <code>N px</code>。源文件位于 <code>src/ui/pages/</code>。</p>
+
+<div class="toc">
+  <strong>目录：</strong>
+  <a href="#overview">总览</a>
+  <a href="#theme">主题常量</a>
+  <a href="#page-home">① Home</a>
+  <a href="#page-chat">② Chat</a>
+  <a href="#page-pulldown">③ Pulldown</a>
+  <a href="#page-settings">④ Settings</a>
+  <a href="#page-about">⑤ About</a>
+  <a href="#page-mode">⑥ Mode</a>
+  <a href="#page-call">⑦ Call</a>
+  <a href="#page-contacts">⑧ Contacts</a>
+  <a href="#page-photo">⑨ Photo</a>
+</div>
+
+<!-- ============================================================ -->
+<h2 id="overview">页面总览</h2>
+<div class="page-section">
+<table>
+  <tr><th>ID</th><th>名称</th><th>文件</th><th>类型</th><th>说明</th></tr>
+  <tr><td>1</td><td>HOME</td><td><code>ui_page_home.c</code></td><td>全屏页</td><td>锁屏/主页：状态栏、时钟、日期、天气卡片、闹钟卡片、快捷按钮</td></tr>
+  <tr><td>2</td><td>CHAT</td><td><code>ui_page_chat.c</code></td><td>全屏页</td><td>AI 对话界面：标题栏 + 消息气泡流</td></tr>
+  <tr><td>3</td><td>PULLDOWN</td><td><code>ui_page_pulldown.c</code></td><td>覆盖层页</td><td>下拉快捷面板：音量/亮度滑块、9 张应用卡片网格</td></tr>
+  <tr><td>4</td><td>SETTINGS</td><td><code>ui_page_settings.c</code></td><td>全屏页</td><td>设置页：语言、模式、AI识图、来电自动接通、显示FPS、音频诊断、关于、重置</td></tr>
+  <tr><td>5</td><td>ABOUT</td><td><code>ui_page_about.c</code></td><td>全屏页</td><td>关于页：固件版本、SDK 信息、设备 ID</td></tr>
+  <tr><td>6</td><td>MODE</td><td><code>ui_page_mode.c</code></td><td>全屏页</td><td>模式选择页：4 种可见设备模式（P2P/录音隐藏）</td></tr>
+  <tr><td>7</td><td>CALL</td><td><code>ui_page_call.c</code></td><td>全屏页</td><td>P2P 通话页：拨号 / 接听 / 拒接 / 挂断 + 秒级计时；标题显示联系人名</td></tr>
+  <tr><td>8</td><td>CONTACTS</td><td><code>ui_page_contacts.c</code></td><td>全屏页</td><td>联系人页（底部 tab）：tab0=联系人（App 行/设备行→发起通话）、tab1=发现（NFC 读/写本机 devId）</td></tr>
+  <tr><td>9</td><td>PHOTO</td><td><code>ui_page_photo.c</code></td><td>全屏页</td><td>相册页：全屏看图 + 缩略图网格，双布局模式</td></tr>
+  <tr><td>10</td><td>MUSIC</td><td><code>ui_page_music.c</code></td><td>全屏页</td><td>音乐播放页：唱片动画、进度条、播放模式（经 ui_svc_music）</td></tr>
+  <tr><td>11</td><td>MUSIC_LIST</td><td><code>ui_page_music_list.c</code></td><td>全屏页</td><td>播放列表页：增量行高亮，cJSON 列表</td></tr>
+  <tr><td>12</td><td>CLOCK</td><td><code>ui_page_clock.c</code></td><td>全屏页</td><td>时钟页：闹钟 / 倒计时 / 秒表三 tab（经 ui_svc_tm）</td></tr>
+  <tr><td>13</td><td>SCHEDULE</td><td><code>ui_page_schedule.c</code></td><td>全屏页</td><td>日程提醒页：列表 + 删除（经 ui_svc_tm）</td></tr>
+  <tr><td>14</td><td>POMODORO</td><td><code>ui_page_pomodoro.c</code></td><td>全屏页</td><td>番茄钟页：环形进度 + 阶段（经 ui_svc_tm）</td></tr>
+  <tr><td>15</td><td>CAMERA</td><td><code>ui_page_camera.c</code></td><td>全屏页</td><td>相机页：实时预览 + 拍照 + 相册缩略图（经 ui_svc_camera）</td></tr>
+  <tr><td>16</td><td>RECORDING</td><td><code>ui_page_recording.c</code></td><td>全屏页</td><td>录音页：录制 / 计时（经 ui_svc_recording）</td></tr>
+  <tr><td>17</td><td>RECORDING_LIST</td><td><code>ui_page_recording_list.c</code></td><td>全屏页</td><td>录音列表页：行列表 + 内嵌播放卡 + 转写入口</td></tr>
+  <tr><td>18</td><td>RECORDING_TRANSCRIBE</td><td><code>ui_page_recording_transcribe.c</code></td><td>全屏页</td><td>录音转写页：上传转写 + 转写/总结阅读（经 ui_svc_transcribe）</td></tr>
+  <tr><td>19</td><td>FILES</td><td><code>ui_page_files.c</code></td><td>全屏页</td><td>文件浏览页：逐级遍历 UI_FS_MOUNT（经 ui_svc_fs）</td></tr>
+  <tr><td>20</td><td>DETECTION</td><td><code>ui_page_detection.c</code></td><td>全屏页</td><td>侦测记录页：云端 AI 告警只读浏览 + 分页（经 ui_svc_detection）</td></tr>
+  <tr><td>21</td><td>AUDIO_DIAG</td><td><code>ui_page_audio_diag.c</code></td><td>全屏页</td><td>音频诊断页：audio_dump 通道选择（经 ui_svc_audio_diag）</td></tr>
+</table>
+<p style="margin-top:12px;"><strong>注：</strong>下方 ①–⑨ 详细布局图仅覆盖最初 9 个页面；⑩–㉑ 页面的详细说明见 <code>src/ui/README.md</code> 与各页面 <code>.c</code> 文件。</p>
+<p style="margin-top:12px;">页面导航：<strong>Home</strong> ←左滑→ <strong>Chat</strong>；<strong>Home</strong> 相机按钮 → <strong>Camera</strong>、通话按钮 → <strong>Contacts</strong>（选联系人 App/设备）→ <strong>Call</strong>、闹钟卡片 → <strong>Clock</strong>；<strong>任意页</strong> 顶部下滑 → <strong>Pulldown</strong>（覆盖层，9 卡片：时钟/日程/番茄钟/相册/录音/音乐/侦测/文件/设置）；<strong>Pulldown</strong> 设置卡片 → <strong>Settings</strong> → <strong>Mode</strong> / <strong>About</strong> / <strong>Audio Diag</strong>；<strong>Recording</strong> → <strong>Recording List</strong> → <strong>Recording Transcribe</strong>；<strong>Music</strong> → <strong>Music List</strong>。</p>
+</div>
+
+<!-- ============================================================ -->
+<h2 id="theme">主题与布局常量</h2>
+<div class="page-section">
+<h4>颜色</h4>
+<table>
+  <tr><th>宏</th><th>色值</th><th>预览</th><th>用途</th></tr>
+  <tr><td><code>UI_COLOR_PRIMARY</code></td><td>#4A90D9</td><td><span class="color-swatch" style="background:#4A90D9"></span></td><td>主色调（用户气泡、选中高亮）</td></tr>
+  <tr><td><code>UI_COLOR_PRIMARY_DARK</code></td><td>#2E6BAD</td><td><span class="color-swatch" style="background:#2E6BAD"></span></td><td>主色调深色</td></tr>
+  <tr><td><code>UI_COLOR_BG</code></td><td>#1A1A1A</td><td><span class="color-swatch" style="background:#1A1A1A"></span></td><td>页面背景</td></tr>
+  <tr><td><code>UI_COLOR_BG_CARD</code></td><td>#2A2A2A</td><td><span class="color-swatch" style="background:#2A2A2A"></span></td><td>AI 气泡 / 设置行背景</td></tr>
+  <tr><td><code>UI_COLOR_TEXT</code></td><td>#FFFFFF</td><td><span class="color-swatch" style="background:#FFFFFF"></span></td><td>主文本</td></tr>
+  <tr><td><code>UI_COLOR_TEXT_SEC</code></td><td>#AAAAAA</td><td><span class="color-swatch" style="background:#AAAAAA"></span></td><td>次要文本</td></tr>
+  <tr><td><code>UI_COLOR_STATUSBAR_BG</code></td><td>#B8BDDE</td><td><span class="color-swatch" style="background:#B8BDDE"></span></td><td>状态栏/卡片底色 (opa=15)</td></tr>
+  <tr><td><code>UI_COLOR_STATUSBAR_ACCENT</code></td><td>#FFF37B</td><td><span class="color-swatch" style="background:#FFF37B"></span></td><td>状态栏强调色</td></tr>
+  <tr><td><code>UI_COLOR_SUCCESS</code></td><td>#4CAF50</td><td><span class="color-swatch" style="background:#4CAF50"></span></td><td>成功状态</td></tr>
+  <tr><td><code>UI_COLOR_WARNING</code></td><td>#FFC107</td><td><span class="color-swatch" style="background:#FFC107"></span></td><td>警告状态</td></tr>
+  <tr><td><code>UI_COLOR_ERROR</code></td><td>#F44336</td><td><span class="color-swatch" style="background:#F44336"></span></td><td>错误状态</td></tr>
+</table>
+<h4>间距 &amp; 圆角</h4>
+<table>
+  <tr><th>宏</th><th>值(px)</th><th>宏</th><th>值(px)</th></tr>
+  <tr><td><code>UI_SPACE_XS</code></td><td>4</td><td><code>UI_RADIUS_SM</code></td><td>4</td></tr>
+  <tr><td><code>UI_SPACE_SM</code></td><td>8</td><td><code>UI_RADIUS_MD</code></td><td>8</td></tr>
+  <tr><td><code>UI_SPACE_MD</code></td><td>12</td><td><code>UI_RADIUS_LG</code></td><td>16</td></tr>
+  <tr><td><code>UI_SPACE_LG</code></td><td>16</td><td><code>UI_RADIUS_FULL</code></td><td>圆形</td></tr>
+  <tr><td><code>UI_SPACE_XL</code></td><td>24</td><td></td><td></td></tr>
+</table>
+<h4>字体</h4>
+<table>
+  <tr><th>宏</th><th>字体</th><th>用途</th></tr>
+  <tr><td><code>UI_FONT_DEFAULT</code></td><td>AlibabaPuHuiTi3 Regular 18</td><td>默认正文</td></tr>
+  <tr><td>—</td><td>Montserrat 48</td><td>Home 页时间显示</td></tr>
+</table>
+</div>
+
+<!-- ============================================================ -->
+<!--                       PAGE: HOME                              -->
+<!-- ============================================================ -->
+<h2 id="page-home">① UI_PAGE_HOME — 锁屏 / 主页</h2>
+<div class="page-section">
+<p>源文件：<code>ui_page_home.c</code> ｜ 入口：<code>ui_page_home_entry</code> ｜ ID = 1</p>
+
+<div class="flex-row" style="margin-top:16px;">
+
+<!-- Screen mockup -->
+<div class="screen-wrap">
+<h4>屏幕布局示意（320×480）</h4>
+<div class="screen" style="font-size:9px;">
+  <!-- Statusbar area (32px) -->
+  <div class="obj" style="top:0;left:0;width:320px;height:32px;border-color:#555;background:rgba(184,189,222,0.08);">
+    <span class="dim">statusbar 32px (MINIMAL)</span>
+  </div>
+  <!-- Content area -->
+  <div class="obj" style="top:32px;left:16px;width:288px;height:448px;border-color:#4A90D9;background:transparent;">
+    <span style="color:#4A90D9;">content (pad_hor:16)</span>
+    <!-- spacer_top -->
+    <div class="obj" style="top:0;left:80px;width:1px;height:30px;border-color:#666;background:transparent;">
+      <span class="dim" style="left:6px;">30px</span>
+    </div>
+    <!-- Time -->
+    <div class="obj" style="top:30px;left:20px;width:248px;height:52px;border-color:#74b9ff;background:transparent;">
+      <span style="color:#fff;font-size:24px;font-family:Montserrat;">14:30</span>
+      <span class="dim" style="right:0;">montserrat_48</span>
+    </div>
+    <!-- Date -->
+    <div class="obj" style="top:86px;left:20px;width:200px;height:20px;border-color:#a29bfe;background:transparent;">
+      <span style="color:#aaa;">6月3日 星期二</span>
+      <span class="dim" style="right:0;">pad_top:4</span>
+    </div>
+    <!-- spacer_mid -->
+    <div class="obj" style="top:110px;left:80px;width:1px;height:24px;border-color:#666;background:transparent;">
+      <span class="dim" style="left:6px;">24px</span>
+    </div>
+    <!-- Weather card -->
+    <div class="obj" style="top:134px;left:0;width:288px;height:52px;border-color:#55efc4;background:rgba(184,189,222,0.1);border-radius:16px;">
+      <span style="color:#55efc4;">☁ weather_card</span>
+      <span class="dim" style="right:2px;">pad:12 r:16</span>
+      <div style="margin-top:12px;color:#fff;margin-left:12px;">28° 多云</div>
+      <div style="color:#aaa;margin-left:12px;">最高32° / 最低24°</div>
+    </div>
+    <!-- Alarm card -->
+    <div class="obj" style="top:194px;left:0;width:288px;height:48px;border-color:#ffeaa7;background:rgba(184,189,222,0.1);border-radius:16px;">
+      <span style="color:#ffeaa7;">⏰ alarm_card</span>
+      <span class="dim" style="right:2px;">pad:12 r:16</span>
+      <div style="margin-top:12px;color:#fff;margin-left:12px;">下一个闹钟</div>
+      <div style="color:#aaa;margin-left:12px;">07:30 工作日</div>
+    </div>
+    <!-- spacer_bottom (flex_grow) -->
+    <div class="obj" style="top:250px;left:80px;width:1px;height:140px;border-color:#666;background:transparent;">
+      <span class="dim" style="left:6px;">flex_grow</span>
+    </div>
+    <!-- Button row -->
+    <div class="obj" style="top:396px;left:0;width:288px;height:76px;border-color:#fd79a8;background:transparent;">
+      <span style="color:#fd79a8;">btn_row (space_between)</span>
+      <!-- Camera btn -->
+      <div class="obj" style="top:8px;left:0;width:56px;height:56px;border-color:#fd79a8;border-radius:50%;background:rgba(184,189,222,0.15);">
+        <span style="color:#fd79a8;font-size:16px;margin-left:16px;margin-top:12px;">📷</span>
+        <span class="dim" style="bottom:-12px;left:4px;">56×56</span>
+      </div>
+      <!-- Call btn -->
+      <div class="obj" style="top:8px;right:0;width:56px;height:56px;border-color:#fd79a8;border-radius:50%;background:rgba(184,189,222,0.15);">
+        <span style="color:#fd79a8;font-size:16px;margin-left:16px;margin-top:12px;">📞</span>
+        <span class="dim" style="bottom:-12px;right:4px;">56×56</span>
+      </div>
+    </div>
+    <div class="dim" style="bottom:-10px;left:0;">pad_bottom:16</div>
+  </div>
+</div>
+</div>
+
+<!-- Info panel -->
+<div class="info-panel">
+<h4>控件树（Widget Tree）</h4>
+<div class="widget-tree"><span class="w-name">s_screen</span> <span class="w-size">320×480</span> <span class="w-prop">bg=#1A1A1A opa=COVER (on lv_scr_act)</span>
+├─ <span class="w-name">content</span> <span class="w-size">320×480</span> <span class="w-prop">flex_col pad_top=32 pad_hor=16 row_gap=8</span>
+│  ├─ <span class="w-name">spacer_top</span> <span class="w-size">1×30</span>
+│  ├─ <span class="w-name">s_lbl_time</span> <span class="w-size">auto×~52</span> <span class="w-prop">font=Montserrat_48 color=#FFF letter_sp=2</span>
+│  ├─ <span class="w-name">s_lbl_date</span> <span class="w-size">auto×~20</span> <span class="w-prop">font=default color=#AAA pad_top=4</span>
+│  ├─ <span class="w-name">spacer_mid</span> <span class="w-size">1×24</span>
+│  ├─ <span class="w-name">s_card_weather</span> <span class="w-size">288(100%)×auto</span> <span class="w-prop">bg=#B8BDDE opa=30 r=16 pad=12 row_gap=4 flex_col</span>
+│  │  ├─ <span class="w-name">s_lbl_weather_main</span> <span class="w-size">auto</span> <span class="w-prop">"28° 多云" #FFF</span>
+│  │  └─ <span class="w-name">s_lbl_weather_range</span> <span class="w-size">auto</span> <span class="w-prop">"最高32° / 最低24°" #AAA</span>
+│  ├─ <span class="w-name">s_card_alarm</span> <span class="w-size">288(100%)×auto</span> <span class="w-prop">同 weather_card</span>
+│  │  ├─ <span class="w-name">s_lbl_alarm_title</span> <span class="w-size">auto</span> <span class="w-prop">"下一个闹钟" #FFF</span>
+│  │  └─ <span class="w-name">s_lbl_alarm_detail</span> <span class="w-size">auto</span> <span class="w-prop">"07:30 工作日" #AAA</span>
+│  ├─ <span class="w-name">spacer_bottom</span> <span class="w-size">1×auto</span> <span class="w-prop">flex_grow=1</span>
+│  └─ <span class="w-name">btn_row</span> <span class="w-size">288(100%)×auto</span> <span class="w-prop">flex_row SPACE_BETWEEN pad_bottom=16</span>
+│     ├─ <span class="w-name">btn_camera</span> <span class="w-size">56×56</span> <span class="w-prop">ui_comp_btn_circle (frosted fill + gesture_bubble, cb=NULL)</span>
+│     │  └─ <span class="w-name">img</span> <span class="w-prop">icon_camera_app centered</span>
+│     └─ <span class="w-name">btn_call</span> <span class="w-size">56×56</span> <span class="w-prop">ui_comp_btn_circle (frosted fill + gesture_bubble)</span>
+│        └─ <span class="w-name">img</span> <span class="w-prop">icon_call_app centered → call_click_cb → UI_PAGE_CONTACTS（先选联系人）</span></div>
+
+<h4>尺寸 &amp; 位置详细表</h4>
+<table>
+  <tr><th>控件</th><th>宽度</th><th>高度</th><th>位置说明</th></tr>
+  <tr><td>s_screen</td><td>320 (100%)</td><td>480 (100%)</td><td>全屏，lv_scr_act() 上</td></tr>
+  <tr><td>content</td><td>320 (100%)</td><td>480 (100%)</td><td>pad_top=32 (留出 statusbar)</td></tr>
+  <tr><td>spacer_top</td><td>1px</td><td>30px</td><td>content 顶部空白</td></tr>
+  <tr><td>s_lbl_time</td><td>auto</td><td>~52px</td><td>居中，Montserrat 48pt</td></tr>
+  <tr><td>s_lbl_date</td><td>auto</td><td>~20px</td><td>居中，pad_top=4</td></tr>
+  <tr><td>spacer_mid</td><td>1px</td><td>24px</td><td>日期与卡片区间隔</td></tr>
+  <tr><td>s_card_weather</td><td>288 (100%)</td><td>auto</td><td>flex column, pad=12, r=16, bg_opa=30</td></tr>
+  <tr><td>s_card_alarm</td><td>288 (100%)</td><td>auto</td><td>同上</td></tr>
+  <tr><td>spacer_bottom</td><td>1px</td><td>auto (flex_grow)</td><td>弹性填充剩余空间</td></tr>
+  <tr><td>btn_row</td><td>288 (100%)</td><td>auto</td><td>flex_row, SPACE_BETWEEN, pad_bottom=16</td></tr>
+  <tr><td>btn_camera</td><td>56px</td><td>56px</td><td>行首，圆形，frosted fill，cb=NULL（预留，暂无功能）</td></tr>
+  <tr><td>btn_call</td><td>56px</td><td>56px</td><td>行尾，圆形，frosted fill → call_click_cb → UI_PAGE_CONTACTS（先选联系人，再进呼叫页；feature 不可用时 disabled）</td></tr>
+</table>
+</div>
+</div> <!-- flex-row -->
+
+<h3>事件处理流程</h3>
+
+<h4>🔀 手势：左滑 → 进入 Chat 页</h4>
+<div class="flow-box">
+  用户在屏幕上 <span class="ev">左滑 (LV_DIR_LEFT)</span><br>
+  <span class="arrow">→</span> <span class="fn">gesture_cb()</span> 捕获 <code>LV_EVENT_GESTURE</code>（子控件含 <code>LV_OBJ_FLAG_GESTURE_BUBBLE</code> 使手势冒泡到 screen）<br>
+  <span class="arrow">→</span> 判断方向 == <code>LV_DIR_LEFT</code><br>
+  <span class="arrow">→</span> 调用 <span class="fn">ui_route_push(UI_PAGE_CHAT)</span><br>
+  <span class="arrow">→</span> 路由栈压入 Chat 页，触发 Home <span class="fn">on_leave()</span> + Chat <span class="fn">on_create()</span>
+</div>
+
+<h4>🌤️ 天气服务回调</h4>
+<div class="flow-box">
+  <span class="fn">ui_svc_weather</span> 数据更新（每 30 分钟拉取一次）<br>
+  <span class="arrow">→</span> 回调 <span class="fn">on_weather_updated()</span><br>
+  <span class="arrow">→</span> 调用 <span class="fn">refresh_weather()</span><br>
+  <span class="arrow">→</span> 若天气不可用 → 隐藏 s_card_weather<br>
+  <span class="arrow">→</span> 若可用 → 更新 s_lbl_weather_main / s_lbl_weather_range 文本
+</div>
+
+<h4>📞 通话快捷按钮 → 联系人页</h4>
+<div class="flow-box">
+  <span class="ev">CLICK</span> on btn_call<br>
+  <span class="arrow">→</span> <span class="fn">call_click_cb()</span><br>
+  <span class="arrow">→</span> 检查 <span class="fn">ui_feature_available(UI_FEATURE_ID_CALL)</span><br>
+  <span class="arrow">→</span> 可用 → <span class="fn">ui_route_push(UI_PAGE_CONTACTS)</span>（先在联系人页选 App / 设备，再进呼叫页）<br>
+  <span class="arrow">→</span> 不可用 → toast <code>UI_TEXT_FEATURE_UNAVAILABLE</code><br>
+  <span class="note">按钮创建时若 <code>ui_feature_available(UI_FEATURE_ID_CALL)</code> 返回 false，则按钮置灰（disabled）。</span>
+</div>
+
+<h4>⏱️ 定时刷新（dirty flag 驱动）</h4>
+<div class="flow-box">
+  框架每 30ms 调用 <span class="fn">ui_tick</span> → 检查 dirty 位图<br>
+  <span class="arrow">→</span> 若 <code>UI_STATE_GROUP_SYSTEM</code> 脏 → <span class="fn">refresh_datetime()</span>：读取本地时间，去重比较后更新 s_lbl_time / s_lbl_date<br>
+  <span class="arrow">→</span> 若 <code>UI_STATE_GROUP_SETTINGS</code> 脏 → 失效日期去重守卫（<code>s_last_mon/mday = 0xFF</code>），重新刷新（语言切换后重新格式化日期）<br>
+  <span class="arrow">→</span> <span class="fn">refresh_weather()</span>：刷新天气卡片<br>
+  <span class="arrow">→</span> 若 dirty == 0xFFFFFFFF（首次进入）→ <span class="fn">refresh_alarm()</span>
+</div>
+
+<h4>生命周期</h4>
+<table>
+  <tr><th>回调</th><th>行为</th></tr>
+  <tr><td><span class="tag tag-lifecycle">on_create</span></td><td>构建完整控件树，注册手势回调，注册 <code>ui_svc_weather_set_cb</code>，初始刷新时间/天气/闹钟，禁用 lv_scr_act 滚动</td></tr>
+  <tr><td><span class="tag tag-lifecycle">on_enter</span></td><td>设置 statusbar 为 <code>MINIMAL</code> 模式并显示；按 dirty 位刷新时间/天气/闹钟；SETTINGS 脏时重刷日期</td></tr>
+  <tr><td><span class="tag tag-lifecycle">on_leave</span></td><td>恢复 statusbar 为 <code>FULL</code> 模式</td></tr>
+  <tr><td><span class="tag tag-lifecycle">on_destroy</span></td><td>注销天气回调（<code>set_cb(NULL)</code>），HIDDEN + <code>lv_obj_del_async</code> 安全销毁，清空所有指针和去重守卫</td></tr>
+</table>
+</div> <!-- page-section -->
+
+
+<!-- ============================================================ -->
+<!--                       PAGE: CHAT                              -->
+<!-- ============================================================ -->
+<h2 id="page-chat">② UI_PAGE_CHAT — AI 对话页</h2>
+<div class="page-section">
+<p>源文件：<code>ui_page_chat.c</code> ｜ 入口：<code>ui_page_chat_entry</code> ｜ ID = 2</p>
+
+<div class="flex-row" style="margin-top:16px;">
+
+<!-- Screen mockup -->
+<div class="screen-wrap">
+<h4>屏幕布局示意（320×480）</h4>
+<div class="screen">
+  <!-- Statusbar 32px -->
+  <div class="obj" style="top:0;left:0;width:320px;height:32px;border-color:#555;background:rgba(184,189,222,0.08);">
+    <span class="dim">statusbar 32px</span>
+  </div>
+  <!-- s_screen flex col -->
+  <div class="obj" style="top:32px;left:0;width:320px;height:448px;border-color:#4A90D9;background:transparent;">
+    <!-- Title bar -->
+    <div class="obj" style="top:0;left:0;width:320px;height:50px;border-color:#74b9ff;background:transparent;">
+      <span style="color:#74b9ff;">s_title_bar (50px)</span>
+      <span class="dim" style="left:10px;top:16px;">mode</span>
+      <span style="position:absolute;left:140px;top:14px;color:#fff;">🤖</span>
+      <span class="dim" style="right:10px;top:16px;">idle</span>
+    </div>
+    <!-- Chat list -->
+    <div class="obj" style="top:50px;left:8px;width:304px;height:390px;border-color:#55efc4;background:transparent;">
+      <span style="color:#55efc4;">s_chat_list (flex_grow, scroll)</span>
+      <!-- User bubble -->
+      <div class="obj" style="top:8px;right:0;width:228px;height:36px;border-color:#4A90D9;background:rgba(74,144,217,0.3);border-radius:16px;">
+        <span style="color:#fff;margin-left:8px;">你好，今天天气怎么样？</span>
+        <span class="dim" style="right:2px;top:-10px;">75% RIGHT</span>
+      </div>
+      <!-- AI bubble -->
+      <div class="obj" style="top:52px;left:0;width:228px;height:50px;border-color:#2A2A2A;background:rgba(42,42,42,0.8);border-radius:16px;">
+        <span style="color:#fff;margin-left:8px;">今天天气晴朗，气温28°C，</span>
+        <span style="color:#fff;margin-left:8px;">适合户外活动...</span>
+        <span class="dim" style="left:2px;top:-10px;">75% LEFT</span>
+      </div>
+      <!-- User bubble 2 -->
+      <div class="obj" style="top:112px;right:0;width:228px;height:30px;border-color:#4A90D9;background:rgba(74,144,217,0.3);border-radius:16px;">
+        <span style="color:#fff;margin-left:8px;">播放音乐</span>
+      </div>
+      <!-- AI streaming -->
+      <div class="obj" style="top:150px;left:0;width:228px;height:40px;border-color:#ffeaa7;background:rgba(42,42,42,0.8);border-radius:16px;">
+        <span style="color:#ffeaa7;margin-left:8px;">好的，正在为您播放...▌</span>
+        <span class="dim" style="left:2px;top:-10px;">streaming</span>
+      </div>
+    </div>
+  </div>
+</div>
+</div>
+
+<!-- Info panel -->
+<div class="info-panel">
+<h4>控件树（Widget Tree）</h4>
+<div class="widget-tree"><span class="w-name">s_screen</span> <span class="w-size">320×480</span> <span class="w-prop">flex_col bg=#1A1A1A pad_top=32</span>
+├─ <span class="w-name">s_title_bar</span> <span class="w-size">320×50</span> <span class="w-prop">bg=transparent</span>
+│  ├─ <span class="w-name">ai_icon</span> <span class="w-prop">icon_ai_icon, CENTER</span>
+│  ├─ <span class="w-name">s_mode_label</span> <span class="w-pos">LEFT_MID x=10</span> <span class="w-prop">"对话·自由"</span>
+│  └─ <span class="w-name">s_stat_label</span> <span class="w-pos">RIGHT_MID x=-10</span> <span class="w-prop">"空闲"</span>
+└─ <span class="w-name">s_chat_list</span> <span class="w-size">320×auto(flex_grow=1)</span> <span class="w-prop">flex_col scroll=VER pad=8 row_gap=8</span>
+   ├─ <span class="w-name">bubble[0]</span> <span class="w-size">320×auto</span> <span class="w-prop">pad_ver=2</span>
+   │  └─ <span class="w-name">box</span> <span class="w-size">240(75%)×auto</span> <span class="w-prop">r=16 pad=8 RIGHT_MID bg=#4A90D9</span>
+   │     └─ <span class="w-name">label</span> <span class="w-size">100% wrap</span> <span class="w-prop">text=#FFF</span>
+   ├─ <span class="w-name">bubble[1]</span> <span class="w-size">320×auto</span>
+   │  └─ <span class="w-name">box</span> <span class="w-size">240(75%)×auto</span> <span class="w-prop">LEFT_MID bg=#2A2A2A</span>
+   │     └─ <span class="w-name">label</span> <span class="w-size">100% wrap</span> <span class="w-prop">text=#FFF</span>
+   └─ ... (最多 <span class="w-prop">CHAT_MAX_MESSAGES=6</span> 条)
+├─ <span class="w-name">s_attach_bar</span> <span class="w-size">320×60</span> <span class="w-prop">bg=#2A2A2A pad_hor=10 HIDDEN (有附件时显示)</span>
+│  ├─ <span class="w-name">thumb_box</span> <span class="w-size">44×44</span> <span class="w-pos">LEFT_MID</span> <span class="w-prop">r=6 clip_corner</span>
+│  │  └─ <span class="w-name">s_attach_thumb</span> <span class="w-prop">ui_comp_picture (RGB565, owned buffer)</span>
+│  └─ <span class="w-name">attach_close</span> <span class="w-pos">RIGHT_MID</span> <span class="w-prop">ui_comp_btn_icon (icon_delete)</span>
+└─ <span class="w-name">s_img_overlay</span> <span class="w-size">320×480</span> <span class="w-prop">IGNORE_LAYOUT bg=#000 HIDDEN (点击查看图片时显示)</span>
+   └─ <span class="w-name">s_img_view</span> <span class="w-prop">ui_comp_picture (RGB565, centered, native size)</span></div>
+
+<h4>配置常量</h4>
+<table>
+  <tr><th>宏</th><th>值</th><th>说明</th></tr>
+  <tr><td><code>CHAT_MAX_MESSAGES</code></td><td>6</td><td>滑动窗口：最多保留 6 条气泡</td></tr>
+  <tr><td><code>CHAT_MAX_TEXT_LEN</code></td><td>256</td><td>单条消息最大长度</td></tr>
+  <tr><td><code>TITLE_BAR_H</code></td><td>50</td><td>标题栏高度(px)</td></tr>
+  <tr><td><code>TITLE_PAD_H</code></td><td>10</td><td>标题栏水平内边距(px)</td></tr>
+  <tr><td><code>CHAT_ATTACH_BAR_H</code></td><td>60</td><td>附件预览栏高度(px)</td></tr>
+  <tr><td><code>STREAM_LAYOUT_THRESHOLD</code></td><td>32</td><td>流式文本布局刷新阈值(字节)</td></tr>
+</table>
+
+<h4>尺寸 &amp; 位置详细表</h4>
+<table>
+  <tr><th>控件</th><th>宽度</th><th>高度</th><th>位置说明</th></tr>
+  <tr><td>s_screen</td><td>320 (100%)</td><td>480 (100%)</td><td>全屏, flex_col, pad_top=32</td></tr>
+  <tr><td>s_title_bar</td><td>320 (100%)</td><td>50px</td><td>紧贴 statusbar 下方</td></tr>
+  <tr><td>ai_icon</td><td>auto</td><td>auto</td><td>title_bar 内, CENTER 居中</td></tr>
+  <tr><td>s_mode_label</td><td>auto</td><td>auto</td><td>title_bar 内, LEFT_MID, x=10</td></tr>
+  <tr><td>s_stat_label</td><td>auto</td><td>auto</td><td>title_bar 内, RIGHT_MID, x=-10</td></tr>
+  <tr><td>s_chat_list</td><td>320 (100%)</td><td>flex_grow(≈390)</td><td>title_bar 下方, 可垂直滚动</td></tr>
+  <tr><td>bubble</td><td>320 (100%)</td><td>auto</td><td>pad_ver=2</td></tr>
+  <tr><td>box (用户)</td><td>240 (75%)</td><td>auto</td><td>RIGHT_MID, bg=#4A90D9, r=16, pad=8</td></tr>
+  <tr><td>box (AI)</td><td>240 (75%)</td><td>auto</td><td>LEFT_MID, bg=#2A2A2A, r=16, pad=8</td></tr>
+  <tr><td>label</td><td>100%</td><td>auto (wrap)</td><td>用户白字, AI 白字</td></tr>
+  <tr><td>s_attach_bar</td><td>320 (100%)</td><td>60px</td><td>HIDDEN by default, bg=#2A2A2A, pad_hor=10</td></tr>
+  <tr><td>thumb_box</td><td>44px</td><td>44px</td><td>LEFT_MID, r=6, clip_corner</td></tr>
+  <tr><td>s_attach_thumb</td><td>auto</td><td>auto</td><td>ui_comp_picture, centered in thumb_box</td></tr>
+  <tr><td>attach_close</td><td>auto</td><td>auto</td><td>RIGHT_MID, icon_delete</td></tr>
+  <tr><td>s_img_overlay</td><td>320 (100%)</td><td>480 (100%)</td><td>IGNORE_LAYOUT, bg=#000, HIDDEN, clickable</td></tr>
+  <tr><td>s_img_view</td><td>auto</td><td>auto</td><td>ui_comp_picture, centered, native size</td></tr>
+</table>
+</div>
+</div> <!-- flex-row -->
+
+<h3>事件处理流程</h3>
+
+<h4>🔀 手势：右滑 → 返回 Home</h4>
+<div class="flow-box">
+  用户在屏幕上 <span class="ev">右滑 (LV_DIR_RIGHT)</span><br>
+  <span class="arrow">→</span> <span class="fn">gesture_cb()</span> 捕获 <code>LV_EVENT_GESTURE</code><br>
+  <span class="arrow">→</span> 判断方向 == <code>LV_DIR_RIGHT</code><br>
+  <span class="arrow">→</span> 调用 <span class="fn">ui_route_pop()</span><br>
+  <span class="arrow">→</span> 路由栈弹出 Chat 页，触发 Chat <span class="fn">on_destroy()</span> + Home <span class="fn">on_enter()</span>
+</div>
+
+<h4>💬 消息接收流程</h4>
+<div class="flow-box">
+  业务层 <span class="fn">tuya_ai_toy</span> 发送显示消息<br>
+  <span class="arrow">→</span> <span class="fn">tuya_ai_display_msg()</span> → <span class="fn">tuya_ai_display_stub.c</span> 路由<br>
+  <span class="arrow">→</span> 调用 <span class="fn">ui_page_chat_on_msg(msg, len, display_tp)</span><br>
+  <span class="arrow">→</span> 按 <code>display_tp</code> 类型分发：<br>
+  &nbsp;&nbsp;├─ <code>TY_DISPLAY_TP_HUMAN_CHAT</code> → <span class="fn">chat_append_user()</span>：创建用户气泡(蓝色, 右对齐)<br>
+  &nbsp;&nbsp;├─ <code>TY_DISPLAY_TP_AI_CHAT_START</code> → <span class="fn">chat_append_ai_start()</span>：创建 AI 气泡(灰色, 左对齐)，初始化流式状态<br>
+  &nbsp;&nbsp;├─ <code>TY_DISPLAY_TP_AI_CHAT_DATA</code> → <span class="fn">chat_append_ai_data()</span>：追加文本到当前 AI 气泡<br>
+  &nbsp;&nbsp;├─ <code>TY_DISPLAY_TP_AI_CHAT_STOP</code> → <span class="fn">chat_append_ai_stop()</span>：结束流式，最终布局刷新<br>
+  &nbsp;&nbsp;├─ <code>TY_DISPLAY_TP_CHAT_MODE</code> / <code>TY_DISPLAY_TP_MODE_NOTIFY</code> → <span class="fn">refresh_mode_label()</span>：更新模式文本<br>
+  &nbsp;&nbsp;├─ <code>TY_DISPLAY_TP_AI_IMAGE</code> → <span class="fn">chat_append_image_link(pic_name)</span>：创建"查看图片"超链接气泡<br>
+  &nbsp;&nbsp;├─ <code>TY_DISPLAY_TP_CLEAR_ATTACHMENT</code> → <span class="fn">clear_attachment()</span>：隐藏附件预览栏<br>
+  &nbsp;&nbsp;└─ <code>STAT_*</code> / <code>CHAT_STAT</code> → <span class="fn">refresh_stat_label()</span>：更新状态文本
+</div>
+
+<h4>📝 流式文本处理细节</h4>
+<div class="flow-box">
+  <span class="fn">chat_append_ai_data(text, len)</span>：<br>
+  <span class="arrow">→</span> UTF-8 安全截断：检查多字节边界（0xC0/0x80 判断）<br>
+  <span class="arrow">→</span> <code>lv_label_ins_text()</code> 追加到流式 label 末尾<br>
+  <span class="arrow">→</span> 累加 <code>s_stream_pending_layout += len</code><br>
+  <span class="arrow">→</span> 若累计 ≥ 32 字节（<code>STREAM_LAYOUT_THRESHOLD</code>）：<br>
+  &nbsp;&nbsp;&nbsp;&nbsp;重置计数 → <code>lv_obj_update_layout()</code> → <code>scroll_to_bottom()</code><br>
+  <span class="arrow">→</span> 气泡滑动窗口：超过 6 条时 <span class="fn">evict_oldest_bubble()</span> 删除最旧气泡
+</div>
+
+<h4>🖼️ AI 生图：查看图片链接</h4>
+<div class="flow-box">
+  <code>TY_DISPLAY_TP_AI_IMAGE</code> 携带图片文件名<br>
+  <span class="arrow">→</span> <span class="fn">chat_append_image_link(pic_name)</span>：创建超链接气泡（"查看图片"）<br>
+  <span class="arrow">→</span> 用户点击链接 → <span class="fn">view_image_link_cb()</span><br>
+  <span class="arrow">→</span> <span class="fn">ui_svc_picture_view_request(pic_name)</span>（异步解码）<br>
+  <span class="arrow">→</span> 解码完成 → <span class="fn">on_picture_view()</span> → 显示 s_img_overlay（全屏黑底）<br>
+  <span class="arrow">→</span> 用户点击 overlay → <span class="fn">img_overlay_click_cb()</span> → 隐藏 overlay + 释放 buffer
+</div>
+
+<h4>📎 附件预览栏（AI 识图 hand-off，ADR-0003）</h4>
+<div class="flow-box">
+  <span class="fn">on_enter()</span> 调用 <span class="fn">try_show_attachment()</span><br>
+  <span class="arrow">→</span> <span class="fn">ui_svc_picture_take_pending_attachment()</span> 获取待发送图片<br>
+  <span class="arrow">→</span> 有数据 → 显示 s_attach_bar，缩略图写入 s_attach_thumb<br>
+  <span class="arrow">→</span> 用户点击 ✕ → <span class="fn">attach_close_cb()</span> → <span class="fn">clear_attachment()</span>（仅 UI 隐藏，不取消发送）<br>
+  <span class="arrow">→</span> 业务层发送完成后发 <code>TY_DISPLAY_TP_CLEAR_ATTACHMENT</code> → 再次清除
+</div>
+
+<h4>生命周期</h4>
+<table>
+  <tr><th>回调</th><th>行为</th></tr>
+  <tr><td><span class="tag tag-lifecycle">on_create</span></td><td>清空气泡数组；构建 screen → title_bar → chat_list → attach_bar(HIDDEN) → img_overlay(HIDDEN)；注册右滑手势；设置 ui_svc_picture view_cb</td></tr>
+  <tr><td><span class="tag tag-lifecycle">on_enter</span></td><td>刷新 mode_label 和 stat_label；<span class="fn">try_show_attachment()</span> 检查是否有待显示的附件</td></tr>
+  <tr><td><span class="tag tag-lifecycle">on_leave</span></td><td>（空）</td></tr>
+  <tr><td><span class="tag tag-lifecycle">on_destroy</span></td><td>注销 picture view_cb，HIDDEN + <code>lv_obj_del_async</code>，清空所有指针和气泡数组</td></tr>
+</table>
+</div> <!-- page-section -->
+
+
+<!-- ============================================================ -->
+<!--                     PAGE: PULLDOWN                            -->
+<!-- ============================================================ -->
+<h2 id="page-pulldown">③ UI_PAGE_PULLDOWN — 下拉快捷面板</h2>
+<div class="page-section">
+<p>源文件：<code>ui_page_pulldown.c</code> ｜ 入口：<code>ui_page_pulldown_entry</code> ｜ ID = 3<br>
+<strong>覆盖层页面</strong>：创建在 <code>lv_layer_top()</code> 上，叠加在当前页面之上。</p>
+
+<div class="flex-row" style="margin-top:16px;">
+
+<!-- Screen mockup -->
+<div class="screen-wrap">
+<h4>屏幕布局示意（320×480）</h4>
+<div class="screen">
+  <!-- Semi-transparent overlay -->
+  <div class="obj" style="top:0;left:0;width:320px;height:480px;border-color:#555;background:rgba(0,0,0,0.5);">
+    <span class="dim" style="right:4px;top:4px;">overlay opa=50%</span>
+  </div>
+  <!-- Panel -->
+  <div class="obj" style="top:0;left:0;width:320px;height:380px;border-color:#ffeaa7;background:#1A1A2E;border-radius:0;">
+    <span style="color:#ffeaa7;">panel (pad:16/12)</span>
+    <!-- Title -->
+    <div class="obj" style="top:12px;left:16px;width:288px;height:20px;border-color:transparent;text-align:center;">
+      <span style="color:#fff;font-size:11px;">—— 快捷菜单 ——</span>
+    </div>
+    <!-- Volume slider -->
+    <div class="obj" style="top:40px;left:16px;width:288px;height:45px;border-color:#fdcb6e;background:rgba(184,189,222,0.1);border-radius:22px;">
+      <span style="color:#fdcb6e;margin-left:12px;margin-top:10px;">🔊</span>
+      <div style="position:absolute;left:40px;top:14px;width:180px;height:17px;background:rgba(184,189,222,0.28);border-radius:8px;">
+        <div style="width:90px;height:100%;background:#FFF37B;border-radius:8px;"></div>
+      </div>
+      <span class="dim" style="right:4px;top:2px;">288×45 r=22</span>
+    </div>
+    <!-- Brightness slider -->
+    <div class="obj" style="top:97px;left:16px;width:288px;height:45px;border-color:#fdcb6e;background:rgba(184,189,222,0.1);border-radius:22px;">
+      <span style="color:#fdcb6e;margin-left:12px;margin-top:10px;">☀️</span>
+      <div style="position:absolute;left:40px;top:14px;width:180px;height:17px;background:rgba(184,189,222,0.28);border-radius:8px;">
+        <div style="width:90px;height:100%;background:#FFF37B;border-radius:8px;"></div>
+      </div>
+      <span class="dim" style="right:4px;top:2px;">288×45 r=22</span>
+    </div>
+    <!-- Card grid (9 cards, 3 cols × 3 rows) -->
+    <div class="obj" style="top:154px;left:16px;width:288px;height:261px;border-color:#55efc4;background:transparent;">
+      <span style="color:#55efc4;">grid (row_wrap, 3col, gap=12)</span>
+      <!-- Row 1 -->
+      <div class="obj" style="top:0;left:0;width:88px;height:75px;border-color:#55efc4;background:rgba(184,189,222,0.1);border-radius:16px;">
+        <span style="margin-left:12px;margin-top:10px;">⏰</span>
+        <span style="color:#fff;font-size:9px;margin-left:12px;position:absolute;bottom:10px;">时钟</span>
+        <span class="dim" style="right:2px;top:0;">88×75</span>
+      </div>
+      <div class="obj" style="top:0;left:100px;width:88px;height:75px;border-color:#55efc4;background:rgba(184,189,222,0.1);border-radius:16px;">
+        <span style="margin-left:12px;margin-top:10px;">📅</span>
+        <span style="color:#fff;font-size:9px;margin-left:12px;position:absolute;bottom:10px;">日程</span>
+      </div>
+      <div class="obj" style="top:0;left:200px;width:88px;height:75px;border-color:#55efc4;background:rgba(184,189,222,0.1);border-radius:16px;">
+        <span style="margin-left:12px;margin-top:10px;">🍅</span>
+        <span style="color:#fff;font-size:9px;margin-left:12px;position:absolute;bottom:10px;">番茄钟</span>
+      </div>
+      <!-- Row 2 -->
+      <div class="obj" style="top:87px;left:0;width:88px;height:75px;border-color:#55efc4;background:rgba(184,189,222,0.1);border-radius:16px;">
+        <span style="margin-left:12px;margin-top:10px;">🖼️</span>
+        <span style="color:#fff;font-size:9px;margin-left:12px;position:absolute;bottom:10px;">相册</span>
+      </div>
+      <div class="obj" style="top:87px;left:100px;width:88px;height:75px;border-color:#55efc4;background:rgba(184,189,222,0.1);border-radius:16px;">
+        <span style="margin-left:12px;margin-top:10px;">🎙️</span>
+        <span style="color:#fff;font-size:9px;margin-left:12px;position:absolute;bottom:10px;">录音</span>
+      </div>
+      <div class="obj" style="top:87px;left:200px;width:88px;height:75px;border-color:#55efc4;background:rgba(184,189,222,0.1);border-radius:16px;">
+        <span style="margin-left:12px;margin-top:10px;">🎵</span>
+        <span style="color:#fff;font-size:9px;margin-left:12px;position:absolute;bottom:10px;">音乐</span>
+      </div>
+      <!-- Row 3 -->
+      <div class="obj" style="top:174px;left:0;width:88px;height:75px;border-color:#55efc4;background:rgba(184,189,222,0.1);border-radius:16px;">
+        <span style="margin-left:12px;margin-top:10px;">🔍</span>
+        <span style="color:#fff;font-size:9px;margin-left:12px;position:absolute;bottom:10px;">侦测</span>
+      </div>
+      <div class="obj" style="top:174px;left:100px;width:88px;height:75px;border-color:#55efc4;background:rgba(184,189,222,0.1);border-radius:16px;">
+        <span style="margin-left:12px;margin-top:10px;">📁</span>
+        <span style="color:#fff;font-size:9px;margin-left:12px;position:absolute;bottom:10px;">文件</span>
+      </div>
+      <div class="obj" style="top:174px;left:200px;width:88px;height:75px;border-color:#55efc4;background:rgba(184,189,222,0.1);border-radius:16px;">
+        <span style="margin-left:12px;margin-top:10px;">⚙️</span>
+        <span style="color:#fff;font-size:9px;margin-left:12px;position:absolute;bottom:10px;">设置</span>
+      </div>
+    </div>
+    <!-- Dismiss hints (pinned to bottom, outside flex flow) -->
+    <div class="obj" style="top:340px;left:140px;width:40px;height:20px;border-color:transparent;text-align:center;">
+      <span style="color:#666;font-size:14px;">⬆</span>
+    </div>
+    <div class="obj" style="top:358px;left:100px;width:120px;height:16px;border-color:transparent;text-align:center;">
+      <span style="color:#666;font-size:9px;">向上滑动退出</span>
+    </div>
+  </div>
+  <!-- Gesture zone (when closed) -->
+  <div class="obj" style="top:0;left:0;width:320px;height:40px;border-color:#e17055;background:transparent;">
+    <span style="color:#e17055;">gesture_zone (仅关闭时存在)</span>
+    <span class="dim" style="right:4px;">320×40</span>
+  </div>
+</div>
+</div>
+
+<!-- Info panel -->
+<div class="info-panel">
+<h4>控件树（Widget Tree）</h4>
+<div class="widget-tree"><span class="w-name">s_pd.gesture_zone</span> <span class="w-size">320×40</span> <span class="w-pos">pos(0,0) on lv_layer_top</span> <span class="w-prop">bg=transparent (页面关闭时可见)</span>
+
+<span class="w-name">s_pd.overlay</span> <span class="w-size">320×480</span> <span class="w-pos">on lv_layer_top</span> <span class="w-prop">bg=#000 opa=50%</span>
+└─ <span class="w-name">s_pd.panel</span> <span class="w-size">320×480</span> <span class="w-pos">pos(0,0) 全屏覆盖</span> <span class="w-prop">bg=#1A1A2E opa=COVER pad=16/12 flex_col row_gap=12</span>
+   ├─ <span class="w-name">title</span> <span class="w-size">288×auto</span> <span class="w-prop">i18n(UI_TEXT_PULLDOWN_TITLE) center #FFF</span>
+   ├─ <span class="w-name">volume_sli</span> <span class="w-size">288×45</span> <span class="w-prop">slider r=22 bg=#B8BDDE/28% fill=#FFF37B</span>
+   │  └─ <span class="w-name">icon</span> <span class="w-pos">pos(12, ~10.5)</span> <span class="w-prop">icon_volume</span>
+   ├─ <span class="w-name">brightness_sli</span> <span class="w-size">288×45</span> <span class="w-prop">同 volume_sli</span>
+   │  └─ <span class="w-name">icon</span> <span class="w-pos">pos(12, ~10.5)</span> <span class="w-prop">icon_brightness</span>
+   └─ <span class="w-name">grid</span> <span class="w-size">288×auto</span> <span class="w-prop">flex_row_wrap START gap=12</span>
+      ├─ <span class="w-name">card[0] 时钟</span>   <span class="w-size">88×75</span> <span class="w-prop">ui_comp_btn (ICON_TOP) bg=#B8BDDE/28% r=16 → target=UI_PAGE_CLOCK</span>
+      ├─ <span class="w-name">card[1] 日程</span>   <span class="w-size">88×75</span> <span class="w-prop">→ target=UI_PAGE_SCHEDULE</span>
+      ├─ <span class="w-name">card[2] 番茄钟</span> <span class="w-size">88×75</span> <span class="w-prop">→ target=UI_PAGE_POMODORO</span>
+      ├─ <span class="w-name">card[3] 相册</span>   <span class="w-size">88×75</span> <span class="w-prop">→ target=UI_PAGE_PHOTO</span>
+      ├─ <span class="w-name">card[4] 录音</span>   <span class="w-size">88×75</span> <span class="w-prop">→ target=UI_PAGE_RECORDING</span>
+      ├─ <span class="w-name">card[5] 音乐</span>   <span class="w-size">88×75</span> <span class="w-prop">→ target=UI_PAGE_MUSIC</span>
+      ├─ <span class="w-name">card[6] 侦测</span>   <span class="w-size">88×75</span> <span class="w-prop">→ target=UI_PAGE_DETECTION</span>
+      ├─ <span class="w-name">card[7] 文件</span>   <span class="w-size">88×75</span> <span class="w-prop">→ target=UI_PAGE_FILES</span>
+      └─ <span class="w-name">card[8] 设置</span>   <span class="w-size">88×75</span> <span class="w-prop">→ target=UI_PAGE_SETTINGS</span>
+├─ <span class="w-name">up_icon</span> <span class="w-pos">absolute bottom</span> <span class="w-prop">LV_SYMBOL_UP montserrat_14 #666 centered</span>
+└─ <span class="w-name">hint</span> <span class="w-pos">absolute bottom+18</span> <span class="w-prop">i18n(UI_TEXT_SWIPE_UP_TO_EXIT) #666 centered</span></div>
+
+<h4>样式常量</h4>
+<table>
+  <tr><th>宏</th><th>值</th><th>说明</th></tr>
+  <tr><td><code>PULLDOWN_BG_COLOR</code></td><td><span class="color-swatch" style="background:#1A1A2E"></span> #1A1A2E</td><td>面板背景</td></tr>
+  <tr><td><code>PULLDOWN_SLIDER_BG</code></td><td><span class="color-swatch" style="background:#B8BDDE"></span> #B8BDDE</td><td>滑轨底色 (opa=28)</td></tr>
+  <tr><td><code>PULLDOWN_SLIDER_FILL</code></td><td><span class="color-swatch" style="background:#FFF37B"></span> #FFF37B</td><td>滑轨填充色</td></tr>
+  <tr><td><code>PULLDOWN_CARD_BG</code></td><td><span class="color-swatch" style="background:#B8BDDE"></span> #B8BDDE</td><td>卡片底色 (opa=28)</td></tr>
+  <tr><td><code>PULLDOWN_CARD_COLS</code></td><td>3</td><td>每行卡片数</td></tr>
+  <tr><td><code>PULLDOWN_GESTURE_ZONE_H</code></td><td>40px</td><td>顶部手势检测区高度</td></tr>
+  <tr><td><code>PULLDOWN_MAX_CARDS</code></td><td>12</td><td>最大卡片数（当前实际 9 张）</td></tr>
+</table>
+
+<h4>尺寸 &amp; 位置详细表</h4>
+<table>
+  <tr><th>控件</th><th>宽度</th><th>高度</th><th>位置说明</th></tr>
+  <tr><td>gesture_zone</td><td>320px</td><td>40px</td><td>pos(0,0) on lv_layer_top，页面关闭时可见</td></tr>
+  <tr><td>overlay</td><td>320px</td><td>480px</td><td>on lv_layer_top，bg=#000 opa=50%</td></tr>
+  <tr><td>panel</td><td>320px</td><td>480px</td><td>pos(0,0)，全屏覆盖 home，pad_hor=16, pad_ver=12</td></tr>
+  <tr><td>title</td><td>288 (100%)</td><td>auto</td><td>居中文字</td></tr>
+  <tr><td>volume_sli</td><td>288 (100%)</td><td>45px</td><td>圆角 22px，icon at (12, 10.5)</td></tr>
+  <tr><td>brightness_sli</td><td>288 (100%)</td><td>45px</td><td>同上</td></tr>
+  <tr><td>grid</td><td>288 (100%)</td><td>auto</td><td>flex row_wrap, gap=12, START aligned</td></tr>
+  <tr><td>card[N]</td><td>88px *</td><td>75px</td><td>3列布局, ui_comp_btn_create_with_icon (ICON_TOP)</td></tr>
+</table>
+<p class="note">* 卡片宽度计算：<code>card_w = (total_w - 12 × 2) / 3</code>，其中 <code>total_w = 320 - 16×2 = 288</code>，<br>
+故 <code>card_w = (288 - 24) / 3 = 88px</code></p>
+
+<h4>应用卡片一览</h4>
+<table>
+  <tr><th>#</th><th>图标</th><th>标签 (i18n)</th><th>导航目标</th><th>说明</th></tr>
+  <tr><td>0</td><td>icon_clock</td><td>UI_TEXT_CLOCK_TITLE</td><td><code>UI_PAGE_CLOCK</code></td><td>时钟（闹钟/倒计时/秒表）</td></tr>
+  <tr><td>1</td><td>icon_calendar</td><td>UI_TEXT_SCHEDULE_TITLE</td><td><code>UI_PAGE_SCHEDULE</code></td><td>日程提醒</td></tr>
+  <tr><td>2</td><td>icon_clock *</td><td>UI_TEXT_POMODORO_TITLE</td><td><code>UI_PAGE_POMODORO</code></td><td>番茄钟（* 暂复用 clock 图标）</td></tr>
+  <tr><td>3</td><td>icon_photo_app</td><td>UI_TEXT_APP_PICTURE</td><td><code>UI_PAGE_PHOTO</code></td><td>相册</td></tr>
+  <tr><td>4</td><td>icon_record_app</td><td>UI_TEXT_APP_RECORD</td><td><code>UI_PAGE_RECORDING</code></td><td>录音</td></tr>
+  <tr><td>5</td><td>icon_music_app</td><td>UI_TEXT_APP_MUSIC</td><td><code>UI_PAGE_MUSIC</code></td><td>音乐</td></tr>
+  <tr><td>6</td><td>icon_detection_app</td><td>UI_TEXT_APP_DETECTION</td><td><code>UI_PAGE_DETECTION</code></td><td>侦测记录</td></tr>
+  <tr><td>7</td><td>icon_record_list</td><td>UI_TEXT_APP_FILES</td><td><code>UI_PAGE_FILES</code></td><td>文件浏览</td></tr>
+  <tr><td>8</td><td>icon_settings_app</td><td>UI_TEXT_APP_SETTINGS</td><td><code>UI_PAGE_SETTINGS</code></td><td>设置</td></tr>
+</table>
+</div>
+</div> <!-- flex-row -->
+
+<h3>事件处理流程</h3>
+
+<h4>🔽 打开：顶部下滑</h4>
+<div class="flow-box">
+  用户在屏幕顶部 40px 区域 <span class="ev">下滑 (LV_DIR_BOTTOM)</span><br>
+  <span class="arrow">→</span> <span class="fn">open_gesture_cb()</span> 捕获 <code>LV_EVENT_GESTURE</code>（gesture_zone 上）<br>
+  <span class="arrow">→</span> 判断方向 == <code>LV_DIR_BOTTOM</code> 且 <code>!s_pd.visible</code><br>
+  <span class="arrow">→</span> 调用 <span class="fn">ui_route_push(UI_PAGE_PULLDOWN)</span><br>
+  <span class="arrow">→</span> <span class="fn">on_create()</span>：隐藏 gesture_zone → 创建 overlay(HIDDEN) → 构建 panel 内容 → 刷新 i18n 标签 → <code>lv_obj_update_layout</code> → 显示 overlay
+</div>
+
+<h4>🔼 关闭（仅上滑手势，deferred dismiss）</h4>
+<div class="flow-box">
+  <strong>上滑手势</strong><br>
+  <span class="ev">上滑 (LV_DIR_TOP)</span> on panel<br>
+  <span class="arrow">→</span> <span class="fn">gesture_dismiss_cb()</span> → <span class="fn">lv_async_call(dismiss_async_cb)</span>（延迟到事件链结束后执行，避免在事件回调中销毁自身）<br>
+  <span class="arrow">→</span> <span class="fn">dismiss_async_cb()</span> → <span class="fn">dismiss()</span><br><br>
+  <span class="note">overlay 半透明背景仅作为模态遮罩拦截点击，无关闭动作。</span><br><br>
+  <span class="fn">dismiss()</span> 内部：<br>
+  <span class="arrow">→</span> 判断 <span class="fn">ui_route_current()</span> == <code>UI_PAGE_PULLDOWN</code><br>
+  <span class="arrow">→</span> 调用 <span class="fn">ui_route_pop()</span><br>
+  <span class="arrow">→</span> 触发 <span class="fn">on_leave()</span> → <span class="fn">ui_svc_dev_ctrl_save()</span> 持久化设置<br>
+  <span class="arrow">→</span> 触发 <span class="fn">on_destroy()</span>：HIDDEN + <code>lv_obj_del_async</code>(overlay) → 恢复 gesture_zone 可见
+</div>
+
+<h4>🃏 应用卡片点击</h4>
+<div class="flow-box">
+  <span class="ev">CLICK</span> on card[N]<br>
+  <span class="arrow">→</span> <span class="fn">card_click_cb()</span> 从 user_data 取得 <code>pulldown_card_t *cfg</code><br>
+  <span class="arrow">→</span> 仅当 <code>cfg->target != UI_PAGE_NONE</code> 时响应<br>
+  <span class="arrow">→</span> <span class="fn">dismiss()</span> 关闭面板<br>
+  <span class="arrow">→</span> <span class="fn">ui_route_reset(cfg->target)</span> 导航到目标页面（card[0] → Clock … card[8] → Settings）。<br>
+  <span class="note">用 reset 而非 push：应用是顶层切换，回到根页再打开目标——避免上一个应用（如持有 RECORD 模式的录音页）滞留栈底，也确保目标页的 on_create（如音乐页 autoplay）会执行。</span>
+</div>
+
+<h4>🎚️ 滑块调节</h4>
+<div class="flow-box">
+  用户拖动 volume_sli / brightness_sli<br>
+  <span class="arrow">→</span> <span class="ev">VALUE_CHANGED</span> 事件<br>
+  <span class="arrow">→</span> <span class="fn">volume_cb()</span> → <span class="fn">ui_svc_dev_ctrl_volume_set()</span>（立即应用音量到音频播放器）<br>
+  <span class="arrow">→</span> <span class="fn">brightness_cb()</span> → <span class="fn">ui_svc_dev_ctrl_brightness_set()</span>（立即应用到硬件背光）<br>
+  <span class="arrow">→</span> <span class="fn">on_leave()</span> 时调用 <span class="fn">ui_svc_dev_ctrl_save()</span> 持久化到 KV 存储
+</div>
+
+<h4>生命周期</h4>
+<table>
+  <tr><th>回调</th><th>行为</th></tr>
+  <tr><td><span class="tag tag-lifecycle">init</span></td><td>系统启动时调用 <code>ui_page_pulldown_init()</code>：创建 gesture_zone on lv_layer_top</td></tr>
+  <tr><td><span class="tag tag-lifecycle">on_create</span></td><td>隐藏 gesture_zone → 创建 overlay(HIDDEN) → 构建 panel（title + 滑块 + 卡片网格 + dismiss）→ 每次打开刷新 i18n 标签 → update_layout → 显示 overlay</td></tr>
+  <tr><td><span class="tag tag-lifecycle">on_enter</span></td><td>（空）</td></tr>
+  <tr><td><span class="tag tag-lifecycle">on_leave</span></td><td>调用 <span class="fn">ui_svc_dev_ctrl_save()</span> 持久化音量/亮度/模式设置</td></tr>
+  <tr><td><span class="tag tag-lifecycle">on_destroy</span></td><td>HIDDEN + <code>lv_obj_del_async</code>(overlay) → 恢复 gesture_zone 可见 → visible=false</td></tr>
+</table>
+</div> <!-- page-section -->
+
+
+<!-- ============================================================ -->
+<!--                     PAGE: SETTINGS                            -->
+<!-- ============================================================ -->
+<h2 id="page-settings">④ UI_PAGE_SETTINGS — 设置页</h2>
+<div class="page-section">
+<p>源文件：<code>ui_page_settings.c</code> ｜ 入口：<code>ui_page_settings_entry</code> ｜ ID = 4</p>
+
+<div class="flex-row" style="margin-top:16px;">
+
+<!-- Screen mockup -->
+<div class="screen-wrap">
+<h4>屏幕布局示意（320×480）</h4>
+<div class="screen">
+  <!-- Statusbar 32px -->
+  <div class="obj" style="top:0;left:0;width:320px;height:32px;border-color:#555;background:rgba(184,189,222,0.08);">
+    <span class="dim">statusbar 32px (FULL)</span>
+  </div>
+  <!-- s_screen -->
+  <div class="obj" style="top:32px;left:0;width:320px;height:448px;border-color:#4A90D9;background:transparent;">
+    <!-- Titlebar -->
+    <div class="obj" style="top:0;left:0;width:320px;height:48px;border-color:#74b9ff;background:transparent;">
+      <span style="color:#74b9ff;">titlebar (48px)</span>
+      <span style="position:absolute;left:8px;top:12px;color:#fff;">←</span>
+      <span class="dim" style="left:12px;top:34px;">back LEFT_MID x=8</span>
+      <span style="position:absolute;left:130px;top:14px;color:#fff;">设置</span>
+    </div>
+    <!-- Content -->
+    <div class="obj" style="top:48px;left:12px;width:296px;height:392px;border-color:#55efc4;background:transparent;">
+      <span style="color:#55efc4;">content (pad=12 gap=8)</span>
+      <!-- Language row -->
+      <div class="obj" style="top:4px;left:0;width:296px;height:56px;border-color:#ffeaa7;background:#2A2A2A;border-radius:8px;">
+        <span style="color:#ffeaa7;margin-left:12px;margin-top:18px;">语言</span>
+        <div style="position:absolute;right:12px;top:14px;display:flex;gap:4px;">
+          <div style="width:48px;height:28px;background:#4A90D9;border-radius:4px;text-align:center;line-height:28px;color:#fff;font-size:9px;">中文</div>
+          <div style="width:58px;height:28px;background:transparent;border-radius:4px;text-align:center;line-height:28px;color:#aaa;font-size:9px;">English</div>
+        </div>
+        <span class="dim" style="right:4px;top:0;">56px</span>
+      </div>
+      <!-- Mode row -->
+      <div class="obj" style="top:68px;left:0;width:296px;height:56px;border-color:#ffeaa7;background:#2A2A2A;border-radius:8px;">
+        <span style="color:#fff;margin-left:12px;margin-top:18px;">模式</span>
+        <span style="color:#aaa;position:absolute;right:24px;top:18px;">对话</span>
+        <span style="color:#aaa;position:absolute;right:8px;top:18px;">></span>
+      </div>
+      <!-- About row -->
+      <div class="obj" style="top:132px;left:0;width:296px;height:56px;border-color:#ffeaa7;background:#2A2A2A;border-radius:8px;">
+        <span style="color:#fff;margin-left:12px;margin-top:18px;">关于</span>
+        <span style="color:#aaa;position:absolute;right:8px;top:18px;">></span>
+      </div>
+      <!-- Reset row -->
+      <div class="obj" style="top:196px;left:0;width:296px;height:56px;border-color:#E17055;background:#2A2A2A;border-radius:8px;">
+        <span style="color:#fff;margin-left:12px;margin-top:18px;">重置</span>
+        <span style="color:#aaa;position:absolute;right:8px;top:18px;">></span>
+      </div>
+    </div>
+  </div>
+</div>
+<p class="note">模式选择已移至聊天页底部，AI 相机开关已移除。语言行与关于行之间还有<strong>条件行</strong>：来电自动接通开关（仅 call 特性编译）、显示FPS开关、音频诊断行（仅 <code>ui_svc_audio_diag_available()</code> 时），均为 56px。</p>
+</div>
+
+<!-- Info panel -->
+<div class="info-panel">
+<h4>控件树（Widget Tree）</h4>
+<div class="widget-tree"><span class="w-name">s_screen</span> <span class="w-size">320×480</span> <span class="w-prop">flex_col bg=#1A1A1A pad_top=32 (statusbar)</span>
+├─ <span class="w-name">titlebar</span> <span class="w-size">320×48</span> <span class="w-prop">bg=transparent</span>
+│  ├─ <span class="w-name">back</span> <span class="w-pos">LEFT_MID x=8</span> <span class="w-prop">ui_comp_btn_icon (icon_back_24_24)</span>
+│  └─ <span class="w-name">s_title</span> <span class="w-pos">CENTER</span> <span class="w-prop">"设置" i18n #FFF</span>
+└─ <span class="w-name">s_content</span> <span class="w-size">320×auto(flex_grow)</span> <span class="w-prop">flex_col pad=12 gap=8</span>
+   ├─ <span class="w-name">language_row</span> <span class="w-size">296(100%)×56</span> <span class="w-prop">flex_row SPACE_BETWEEN bg=#2A2A2A r=8 pad_hor=12</span>
+   │  ├─ <span class="w-name">s_lang_label</span> <span class="w-prop">"语言" #FFF</span>
+   │  └─ <span class="w-name">seg_track</span> <span class="w-size">auto×auto</span> <span class="w-prop">flex_row gap=4</span>
+   │     ├─ <span class="w-name">s_seg_zh</span> <span class="w-prop">BTN_TEXT r=4 pad=12/4 (selected: bg=PRIMARY #FFF)</span>
+   │     └─ <span class="w-name">s_seg_en</span> <span class="w-prop">BTN_TEXT r=4 pad=12/4 (unselected: transparent #AAA)</span>
+   ├─ <span class="w-name">auto_answer_row</span> <span class="w-size">296×56</span> <span class="w-prop">switch_row（仅 call 特性编译）"来电自动接通" + lv_switch</span>
+   ├─ <span class="w-name">show_fps_row</span> <span class="w-size">296×56</span> <span class="w-prop">switch_row "显示FPS" + lv_switch</span>
+   ├─ <span class="w-name">audio_diag_row</span> <span class="w-size">296×56</span> <span class="w-prop">nav_row（仅 ui_svc_audio_diag_available()）"音频诊断" → UI_PAGE_AUDIO_DIAG</span>
+   ├─ <span class="w-name">about_row</span> <span class="w-size">296(100%)×56</span> <span class="w-prop">nav_row</span>
+   │  ├─ <span class="w-name">s_about_label</span> <span class="w-prop">"关于" flex_grow #FFF</span>
+   │  └─ <span class="w-name">chevron</span> <span class="w-prop">">" #AAA</span>
+   └─ <span class="w-name">reset_row</span> <span class="w-size">296(100%)×56</span> <span class="w-prop">nav_row</span>
+      ├─ <span class="w-name">s_reset_label</span> <span class="w-prop">"重置" flex_grow #FFF</span>
+      └─ <span class="w-name">chevron</span> <span class="w-prop">">" #AAA</span></div>
+
+<h4>样式常量</h4>
+<table>
+  <tr><th>宏</th><th>值</th><th>说明</th></tr>
+  <tr><td><code>SETTINGS_STATUSBAR_H</code></td><td>32px</td><td>全局状态栏高度</td></tr>
+  <tr><td><code>SETTINGS_TITLEBAR_H</code></td><td>48px</td><td>标题栏高度</td></tr>
+  <tr><td><code>SETTINGS_ROW_H</code></td><td>56px</td><td>设置行高度</td></tr>
+</table>
+
+<h4>尺寸 &amp; 位置详细表</h4>
+<table>
+  <tr><th>控件</th><th>宽度</th><th>高度</th><th>位置说明</th></tr>
+  <tr><td>s_screen</td><td>320 (100%)</td><td>480 (100%)</td><td>全屏, flex_col, pad_top=32</td></tr>
+  <tr><td>titlebar</td><td>320 (100%)</td><td>48px</td><td>statusbar 下方</td></tr>
+  <tr><td>back</td><td>auto</td><td>auto</td><td>LEFT_MID, x=8, icon_back_24_24</td></tr>
+  <tr><td>s_title</td><td>auto</td><td>auto</td><td>CENTER 居中</td></tr>
+  <tr><td>s_content</td><td>320 (100%)</td><td>flex_grow</td><td>pad=12, gap=8</td></tr>
+  <tr><td>language_row</td><td>296 (100%)</td><td>56px</td><td>bg=#2A2A2A, r=8, flex_row</td></tr>
+  <tr><td>s_seg_zh / s_seg_en</td><td>auto</td><td>auto</td><td>BTN_TEXT 样式, r=4, pad=12/4</td></tr>
+  <tr><td>auto_answer_row / show_fps_row</td><td>296 (100%)</td><td>56px</td><td>switch_row（条件），含 lv_switch</td></tr>
+  <tr><td>audio_diag_row</td><td>296 (100%)</td><td>56px</td><td>nav_row（条件，可用时显示）→ Audio Diag</td></tr>
+  <tr><td>about_row</td><td>296 (100%)</td><td>56px</td><td>nav_row, 含 chevron</td></tr>
+  <tr><td>reset_row</td><td>296 (100%)</td><td>56px</td><td>nav_row, 含 chevron</td></tr>
+</table>
+</div>
+</div> <!-- flex-row -->
+
+<h3>事件处理流程</h3>
+
+<h4>⬅️ 返回按钮</h4>
+<div class="flow-box">
+  <span class="ev">CLICK</span> on back button<br>
+  <span class="arrow">→</span> <span class="fn">back_click_cb()</span><br>
+  <span class="arrow">→</span> <span class="fn">ui_route_pop()</span> → 返回上一页（通常是 Pulldown）
+</div>
+
+<h4>🌐 语言切换（分段控件）</h4>
+<div class="flow-box">
+  <span class="ev">CLICK</span> on s_seg_zh 或 s_seg_en<br>
+  <span class="arrow">→</span> <span class="fn">lang_seg_cb()</span> 从 user_data 取得 lang 枚举<br>
+  <span class="arrow">→</span> <span class="fn">ui_svc_dev_ctrl_language_set(lang)</span><br>
+  <span class="arrow">→</span> 内部更新 <code>ui_i18n</code> 当前语言 → 标记 <code>UI_STATE_GROUP_SETTINGS</code> 脏<br>
+  <span class="arrow">→</span> 框架调用 <span class="fn">on_enter(dirty)</span><br>
+  <span class="arrow">→</span> <span class="fn">refresh_lang()</span>：更新所有行标签文本 + 分段高亮状态
+</div>
+
+<h4>ℹ️ 关于行点击 → About 页</h4>
+<div class="flow-box">
+  <span class="ev">CLICK</span> on about_row<br>
+  <span class="arrow">→</span> <span class="fn">about_click_cb()</span><br>
+  <span class="arrow">→</span> <span class="fn">ui_route_push(UI_PAGE_ABOUT)</span><br>
+  <span class="arrow">→</span> 进入关于页
+</div>
+
+<h4>🔄 重置（确认对话框 + 异步操作）</h4>
+<div class="flow-box">
+  <span class="ev">CLICK</span> on reset_row<br>
+  <span class="arrow">→</span> <span class="fn">reset_click_cb()</span><br>
+  <span class="arrow">→</span> <span class="fn">ui_comp_popup_show(CONFIRM, ...)</span> 弹出确认对话框<br>
+  <span class="arrow">→</span> 用户确认 → <span class="fn">reset_confirm_cb(true)</span><br>
+  <span class="arrow">→</span> <span class="fn">lv_async_call(reset_async_cb)</span>（在 popup dismiss 完成后执行）<br>
+  <span class="arrow">→</span> <span class="fn">reset_async_cb()</span>：显示 LOADING popup → <span class="fn">ui_svc_dev_ctrl_reset()</span>（解绑设备，完成后重启）
+</div>
+
+<h4>生命周期</h4>
+<table>
+  <tr><th>回调</th><th>行为</th></tr>
+  <tr><td><span class="tag tag-lifecycle">on_create</span></td><td>构建 screen → titlebar(back + title) → content(language_row + [auto_answer] + show_fps + [audio_diag] + about_row + reset_row，[]为条件行)；初始刷新语言</td></tr>
+  <tr><td><span class="tag tag-lifecycle">on_enter</span></td><td>SETTINGS 脏 → refresh_lang()（更新所有 i18n 文本 + 分段高亮）</td></tr>
+  <tr><td><span class="tag tag-lifecycle">on_leave</span></td><td>调用 <span class="fn">ui_svc_dev_ctrl_save()</span> 持久化设置到 KV</td></tr>
+  <tr><td><span class="tag tag-lifecycle">on_destroy</span></td><td>HIDDEN + <code>lv_obj_del_async</code>，清空所有指针</td></tr>
+</table>
+</div> <!-- page-section -->
+
+
+<!-- ============================================================ -->
+<!--                       PAGE: ABOUT                             -->
+<!-- ============================================================ -->
+<h2 id="page-about">⑤ UI_PAGE_ABOUT — 关于页</h2>
+<div class="page-section">
+<p>源文件：<code>ui_page_about.c</code> ｜ 入口：<code>ui_page_about_entry</code> ｜ ID = 5</p>
+
+<div class="flex-row" style="margin-top:16px;">
+
+<!-- Screen mockup -->
+<div class="screen-wrap">
+<h4>屏幕布局示意（320×480）</h4>
+<div class="screen">
+  <!-- Statusbar 32px -->
+  <div class="obj" style="top:0;left:0;width:320px;height:32px;border-color:#555;background:rgba(184,189,222,0.08);">
+    <span class="dim">statusbar 32px</span>
+  </div>
+  <!-- s_screen -->
+  <div class="obj" style="top:32px;left:0;width:320px;height:448px;border-color:#4A90D9;background:transparent;">
+    <!-- Titlebar -->
+    <div class="obj" style="top:0;left:0;width:320px;height:48px;border-color:#74b9ff;background:transparent;">
+      <span style="color:#74b9ff;">titlebar (48px)</span>
+      <span style="position:absolute;left:8px;top:12px;color:#fff;">←</span>
+      <span style="position:absolute;left:130px;top:14px;color:#fff;">关于</span>
+    </div>
+    <!-- Content -->
+    <div class="obj" style="top:48px;left:12px;width:296px;height:392px;border-color:#55efc4;background:transparent;">
+      <span style="color:#55efc4;">content (pad=12 gap=8)</span>
+      <!-- FW version -->
+      <div class="obj" style="top:4px;left:0;width:296px;height:48px;border-color:#ffeaa7;background:#2A2A2A;border-radius:8px;">
+        <span style="color:#fff;margin-left:12px;margin-top:14px;">固件版本</span>
+        <span style="color:#aaa;position:absolute;right:12px;top:14px;">1.2.3</span>
+      </div>
+      <!-- SDK -->
+      <div class="obj" style="top:60px;left:0;width:296px;height:48px;border-color:#ffeaa7;background:#2A2A2A;border-radius:8px;">
+        <span style="color:#fff;margin-left:12px;margin-top:14px;">SDK</span>
+        <span style="color:#aaa;position:absolute;right:12px;top:14px;">TuyaOS 3.8</span>
+      </div>
+      <!-- Device ID -->
+      <div class="obj" style="top:116px;left:0;width:296px;height:52px;border-color:#ffeaa7;background:#2A2A2A;border-radius:8px;">
+        <span style="color:#fff;margin-left:12px;margin-top:14px;">设备 ID</span>
+        <span style="color:#aaa;position:absolute;right:12px;top:14px;font-size:8px;">bf1234567890ab</span>
+      </div>
+    </div>
+  </div>
+</div>
+</div>
+
+<!-- Info panel -->
+<div class="info-panel">
+<h4>控件树（Widget Tree）</h4>
+<div class="widget-tree"><span class="w-name">s_screen</span> <span class="w-size">320×480</span> <span class="w-prop">flex_col bg=#1A1A1A pad_top=32</span>
+├─ <span class="w-name">titlebar</span> <span class="w-size">320×48</span> <span class="w-prop">bg=transparent</span>
+│  ├─ <span class="w-name">back</span> <span class="w-pos">LEFT_MID x=8</span> <span class="w-prop">ui_comp_btn_icon (icon_back_24_24)</span>
+│  └─ <span class="w-name">title</span> <span class="w-pos">CENTER</span> <span class="w-prop">"关于" i18n #FFF</span>
+└─ <span class="w-name">s_content</span> <span class="w-size">320×auto(flex_grow)</span> <span class="w-prop">flex_col pad=12 gap=8</span>
+   ├─ <span class="w-name">info_row[0]</span> <span class="w-size">296(100%)×auto(min_h=48)</span> <span class="w-prop">bg=#2A2A2A r=8 pad=12/8</span>
+   │  ├─ <span class="w-name">label</span> <span class="w-prop">"固件版本" #FFF</span>
+   │  └─ <span class="w-name">val</span> <span class="w-prop">ui_svc_devinfo_fw_version() #AAA RIGHT wrap flex_grow</span>
+   ├─ <span class="w-name">info_row[1]</span> <span class="w-size">296(100%)×auto(min_h=48)</span> <span class="w-prop">同上</span>
+   │  ├─ <span class="w-name">label</span> <span class="w-prop">"SDK" #FFF</span>
+   │  └─ <span class="w-name">val</span> <span class="w-prop">ui_svc_devinfo_sdk_info() #AAA RIGHT wrap flex_grow</span>
+   └─ <span class="w-name">info_row[2]</span> <span class="w-size">296(100%)×auto(min_h=48)</span> <span class="w-prop">同上</span>
+      ├─ <span class="w-name">label</span> <span class="w-prop">"设备 ID" #FFF</span>
+      └─ <span class="w-name">val</span> <span class="w-prop">ui_svc_devinfo_device_id() #AAA RIGHT wrap flex_grow</span></div>
+
+<h4>样式常量</h4>
+<table>
+  <tr><th>宏</th><th>值</th><th>说明</th></tr>
+  <tr><td><code>ABOUT_STATUSBAR_H</code></td><td>32px</td><td>全局状态栏高度</td></tr>
+  <tr><td><code>ABOUT_TITLEBAR_H</code></td><td>48px</td><td>标题栏高度</td></tr>
+  <tr><td><code>ABOUT_ROW_MIN_H</code></td><td>48px</td><td>信息行最小高度</td></tr>
+</table>
+
+<h4>尺寸 &amp; 位置详细表</h4>
+<table>
+  <tr><th>控件</th><th>宽度</th><th>高度</th><th>位置说明</th></tr>
+  <tr><td>s_screen</td><td>320 (100%)</td><td>480 (100%)</td><td>全屏, flex_col, pad_top=32</td></tr>
+  <tr><td>titlebar</td><td>320 (100%)</td><td>48px</td><td>statusbar 下方</td></tr>
+  <tr><td>back</td><td>auto</td><td>auto</td><td>LEFT_MID, x=8</td></tr>
+  <tr><td>title</td><td>auto</td><td>auto</td><td>CENTER 居中</td></tr>
+  <tr><td>s_content</td><td>320 (100%)</td><td>flex_grow</td><td>pad=12, gap=8</td></tr>
+  <tr><td>info_row</td><td>296 (100%)</td><td>auto (min 48px)</td><td>flex_row SPACE_BETWEEN, bg=#2A2A2A, r=8, pad=12/8</td></tr>
+  <tr><td>label</td><td>auto</td><td>auto</td><td>左侧, #FFF</td></tr>
+  <tr><td>val</td><td>flex_grow</td><td>auto (wrap)</td><td>右侧, #AAA, 长文本自动换行</td></tr>
+</table>
+
+<h4>信息行一览</h4>
+<table>
+  <tr><th>#</th><th>标签 (i18n)</th><th>数据来源</th><th>说明</th></tr>
+  <tr><td>0</td><td>UI_TEXT_ABOUT_FW_VERSION</td><td><code>ui_svc_devinfo_fw_version()</code></td><td>固件版本号</td></tr>
+  <tr><td>1</td><td>UI_TEXT_ABOUT_SDK</td><td><code>ui_svc_devinfo_sdk_info()</code></td><td>TuyaOS SDK 版本</td></tr>
+  <tr><td>2</td><td>UI_TEXT_ABOUT_DEVICE_ID</td><td><code>ui_svc_devinfo_device_id()</code></td><td>设备/网关 ID</td></tr>
+</table>
+</div>
+</div> <!-- flex-row -->
+
+<h3>事件处理流程</h3>
+
+<h4>⬅️ 返回按钮</h4>
+<div class="flow-box">
+  <span class="ev">CLICK</span> on back button<br>
+  <span class="arrow">→</span> <span class="fn">back_click_cb()</span><br>
+  <span class="arrow">→</span> <span class="fn">ui_route_pop()</span> → 返回 Settings 页
+</div>
+
+<div class="note">
+<strong>ℹ️ 只读页面：</strong>About 页没有任何交互操作（不可点击行、不可滚动），仅展示设备信息。
+</div>
+
+<h4>生命周期</h4>
+<table>
+  <tr><th>回调</th><th>行为</th></tr>
+  <tr><td><span class="tag tag-lifecycle">on_create</span></td><td>构建 screen → titlebar(back + title) → content(3 条 info_row)；数据在创建时一次性读取</td></tr>
+  <tr><td><span class="tag tag-lifecycle">on_enter</span></td><td>（空）</td></tr>
+  <tr><td><span class="tag tag-lifecycle">on_leave</span></td><td>（空）</td></tr>
+  <tr><td><span class="tag tag-lifecycle">on_destroy</span></td><td>HIDDEN + <code>lv_obj_del_async</code>，清空指针</td></tr>
+</table>
+</div> <!-- page-section -->
+
+
+<!-- ============================================================ -->
+<!--                       PAGE: MODE                              -->
+<!-- ============================================================ -->
+<h2 id="page-mode">⑥ UI_PAGE_MODE — 模式选择页</h2>
+<div class="page-section">
+<p>源文件：<code>ui_page_mode.c</code> ｜ 入口：<code>ui_page_mode_entry</code> ｜ ID = 6</p>
+
+<div class="flex-row" style="margin-top:16px;">
+
+<!-- Screen mockup -->
+<div class="screen-wrap">
+<h4>屏幕布局示意（320×480）</h4>
+<div class="screen">
+  <!-- Statusbar 32px -->
+  <div class="obj" style="top:0;left:0;width:320px;height:32px;border-color:#555;background:rgba(184,189,222,0.08);">
+    <span class="dim">statusbar 32px</span>
+  </div>
+  <!-- s_screen -->
+  <div class="obj" style="top:32px;left:0;width:320px;height:448px;border-color:#4A90D9;background:transparent;">
+    <!-- Titlebar -->
+    <div class="obj" style="top:0;left:0;width:320px;height:48px;border-color:#74b9ff;background:transparent;">
+      <span style="color:#74b9ff;">titlebar (48px)</span>
+      <span style="position:absolute;left:8px;top:12px;color:#fff;">←</span>
+      <span style="position:absolute;left:125px;top:14px;color:#fff;">模式选择</span>
+    </div>
+    <!-- Content -->
+    <div class="obj" style="top:48px;left:12px;width:296px;height:392px;border-color:#55efc4;background:transparent;">
+      <span style="color:#55efc4;">content (pad=12 gap=8, P2P/录音 hidden)</span>
+      <!-- Mode 0: CHAT (selected) -->
+      <div class="obj" style="top:4px;left:0;width:296px;height:56px;border-color:#4A90D9;background:#4A90D9;border-radius:8px;">
+        <span style="color:#fff;margin-left:110px;margin-top:18px;">对话</span>
+        <span class="dim" style="right:4px;top:0;">selected</span>
+      </div>
+      <!-- Mode 1: TRANSLATE -->
+      <div class="obj" style="top:68px;left:0;width:296px;height:56px;border-color:#ffeaa7;background:#2A2A2A;border-radius:8px;">
+        <span style="color:#aaa;margin-left:110px;margin-top:18px;">翻译</span>
+      </div>
+      <!-- Mode 2: P2P (HIDDEN) -->
+      <div class="obj" style="top:132px;left:0;width:296px;height:20px;border-color:transparent;">
+        <span style="color:#666;font-size:8px;">(P2P hidden, 保留索引)</span>
+      </div>
+      <!-- Mode 3: RECORD (HIDDEN) -->
+      <div class="obj" style="top:156px;left:0;width:296px;height:20px;border-color:transparent;">
+        <span style="color:#666;font-size:8px;">(录音 hidden, 保留索引)</span>
+      </div>
+      <!-- Mode 4: PICTURE -->
+      <div class="obj" style="top:180px;left:0;width:296px;height:56px;border-color:#ffeaa7;background:#2A2A2A;border-radius:8px;">
+        <span style="color:#aaa;margin-left:110px;margin-top:18px;">生图</span>
+      </div>
+      <!-- Mode 5: DETECTION -->
+      <div class="obj" style="top:244px;left:0;width:296px;height:56px;border-color:#ffeaa7;background:#2A2A2A;border-radius:8px;">
+        <span style="color:#aaa;margin-left:110px;margin-top:18px;">侦测</span>
+      </div>
+    </div>
+  </div>
+</div>
+</div>
+
+<!-- Info panel -->
+<div class="info-panel">
+<h4>控件树（Widget Tree）</h4>
+<div class="widget-tree"><span class="w-name">s_screen</span> <span class="w-size">320×480</span> <span class="w-prop">flex_col bg=#1A1A1A pad_top=32</span>
+├─ <span class="w-name">titlebar</span> <span class="w-size">320×48</span> <span class="w-prop">bg=transparent</span>
+│  ├─ <span class="w-name">back</span> <span class="w-pos">LEFT_MID x=8</span> <span class="w-prop">ui_comp_btn_icon (icon_back_24_24)</span>
+│  └─ <span class="w-name">s_title</span> <span class="w-pos">CENTER</span> <span class="w-prop">i18n(UI_TEXT_SETTINGS_MODE) #FFF</span>
+└─ <span class="w-name">content</span> <span class="w-size">320×auto(flex_grow)</span> <span class="w-prop">flex_col pad=12 gap=8</span>
+   ├─ <span class="w-name">s_rows[0] CHAT</span>      <span class="w-size">296(100%)×56</span> <span class="w-prop">r=8 (selected: bg=PRIMARY #FFF) ✓ visible</span>
+   ├─ <span class="w-name">s_rows[1] TRANSLATE</span>  <span class="w-size">296(100%)×56</span> <span class="w-prop">r=8 (unselected: bg=BG_CARD #AAA) ✓ visible</span>
+   ├─ <span class="w-name">s_rows[2] P2P</span>        <span class="w-prop">HIDDEN (visible=false, 保留索引映射)</span>
+   ├─ <span class="w-name">s_rows[3] RECORD</span>     <span class="w-prop">HIDDEN (visible=false, 保留索引映射)</span>
+   ├─ <span class="w-name">s_rows[4] PICTURE</span>    <span class="w-size">296(100%)×56</span> <span class="w-prop">r=8 ✓ visible</span>
+   └─ <span class="w-name">s_rows[5] DETECTION</span>  <span class="w-size">296(100%)×56</span> <span class="w-prop">r=8 ✓ visible</span></div>
+
+<h4>样式常量</h4>
+<table>
+  <tr><th>宏</th><th>值</th><th>说明</th></tr>
+  <tr><td><code>MODE_STATUSBAR_H</code></td><td>32px</td><td>全局状态栏高度</td></tr>
+  <tr><td><code>MODE_TITLEBAR_H</code></td><td>48px</td><td>标题栏高度</td></tr>
+  <tr><td><code>MODE_ROW_H</code></td><td>56px</td><td>模式行高度</td></tr>
+</table>
+
+<h4>尺寸 &amp; 位置详细表</h4>
+<table>
+  <tr><th>控件</th><th>宽度</th><th>高度</th><th>位置说明</th></tr>
+  <tr><td>s_screen</td><td>320 (100%)</td><td>480 (100%)</td><td>全屏, flex_col, pad_top=32</td></tr>
+  <tr><td>titlebar</td><td>320 (100%)</td><td>48px</td><td>statusbar 下方</td></tr>
+  <tr><td>back</td><td>auto</td><td>auto</td><td>LEFT_MID, x=8</td></tr>
+  <tr><td>s_title</td><td>auto</td><td>auto</td><td>CENTER 居中</td></tr>
+  <tr><td>content</td><td>320 (100%)</td><td>flex_grow</td><td>pad=12, gap=8</td></tr>
+  <tr><td>s_rows[N]</td><td>296 (100%)</td><td>56px</td><td>bg=BG_CARD(unselected) / PRIMARY(selected), r=8, pressed_opa=80%</td></tr>
+  <tr><td>s_row_labels[N]</td><td>100%</td><td>auto</td><td>CENTER 居中, #AAA(unselected) / #FFF(selected)</td></tr>
+</table>
+
+<h4>模式列表</h4>
+<table>
+  <tr><th>索引</th><th>设备模式</th><th>标签 (i18n)</th><th>可见</th><th>说明</th></tr>
+  <tr><td>0</td><td>AI_DEVICE_MODE_CHAT</td><td>UI_TEXT_MODE_CHAT</td><td>✅</td><td>对话模式（默认）</td></tr>
+  <tr><td>1</td><td>AI_DEVICE_MODE_TRANSLATE</td><td>UI_TEXT_MODE_TRANSLATE</td><td>✅</td><td>翻译模式</td></tr>
+  <tr><td>2</td><td>AI_DEVICE_MODE_P2P</td><td>UI_TEXT_MODE_P2P</td><td>❌</td><td>P2P 模式（隐藏，保留索引映射）</td></tr>
+  <tr><td>3</td><td>AI_DEVICE_MODE_RECORD</td><td>UI_TEXT_MODE_RECORD</td><td>❌</td><td>录音模式（隐藏，保留索引映射）</td></tr>
+  <tr><td>4</td><td>AI_DEVICE_MODE_PICTURE</td><td>UI_TEXT_MODE_PICTURE</td><td>✅</td><td>生图模式</td></tr>
+  <tr><td>5</td><td>AI_DEVICE_MODE_DETECTION</td><td>UI_TEXT_MODE_DETECTION</td><td>✅</td><td>侦测模式</td></tr>
+</table>
+</div>
+</div> <!-- flex-row -->
+
+<h3>事件处理流程</h3>
+
+<h4>⬅️ 返回按钮</h4>
+<div class="flow-box">
+  <span class="ev">CLICK</span> on back button<br>
+  <span class="arrow">→</span> <span class="fn">back_click_cb()</span><br>
+  <span class="arrow">→</span> <span class="fn">ui_route_pop()</span> → 返回 Settings 页
+</div>
+
+<h4>🔀 模式选择</h4>
+<div class="flow-box">
+  <span class="ev">CLICK</span> on s_rows[N]<br>
+  <span class="arrow">→</span> <span class="fn">mode_row_cb()</span> 从 user_data 取得索引 idx<br>
+  <span class="arrow">→</span> 若 idx == 当前模式 → 忽略（无操作）<br>
+  <span class="arrow">→</span> 否则 <span class="fn">ui_svc_dev_ctrl_mode_set(idx)</span><br>
+  <span class="arrow">→</span> <span class="fn">ui_route_reset(UI_PAGE_CHAT)</span>：清空路由栈，回到 Chat 页<br>
+  <span class="note">模式切换后直接重置到 Chat 页（而非 pop 回 Settings），确保新模式的对话界面立即可见。</span>
+</div>
+
+<h4>生命周期</h4>
+<table>
+  <tr><th>回调</th><th>行为</th></tr>
+  <tr><td><span class="tag tag-lifecycle">on_create</span></td><td>构建 screen → titlebar(back + title) → content(6 行模式按钮)；初始刷新选中状态</td></tr>
+  <tr><td><span class="tag tag-lifecycle">on_enter</span></td><td>CHAT 脏 → <span class="fn">refresh_selection()</span>：根据 <code>ui_svc_dev_ctrl_mode_get()</code> 更新行高亮</td></tr>
+  <tr><td><span class="tag tag-lifecycle">on_leave</span></td><td>调用 <span class="fn">ui_svc_dev_ctrl_save()</span> 持久化模式设置到 KV</td></tr>
+  <tr><td><span class="tag tag-lifecycle">on_destroy</span></td><td>HIDDEN + <code>lv_obj_del_async</code>，清空所有指针</td></tr>
+</table>
+</div> <!-- page-section -->
+
+
+<!-- ============================================================ -->
+<!--                       PAGE: CALL                              -->
+<!-- ============================================================ -->
+<h2 id="page-call">⑦ UI_PAGE_CALL — P2P 语音通话页</h2>
+<div class="page-section">
+<p>源文件：<code>ui_page_call.c</code> ｜ 入口：<code>ui_page_call_entry</code> ｜ ID = 7</p>
+
+<div class="flex-row" style="margin-top:16px;">
+
+<!-- Screen mockup -->
+<div class="screen-wrap">
+<h4>屏幕布局示意（320×480）</h4>
+<div class="screen">
+  <!-- Statusbar 32px -->
+  <div class="obj" style="top:0;left:0;width:320px;height:32px;border-color:#555;background:rgba(184,189,222,0.08);">
+    <span class="dim">statusbar 32px</span>
+  </div>
+  <!-- s_screen -->
+  <div class="obj" style="top:32px;left:0;width:320px;height:448px;border-color:#4A90D9;background:transparent;">
+    <!-- Titlebar -->
+    <div class="obj" style="top:0;left:0;width:320px;height:48px;border-color:#74b9ff;background:transparent;">
+      <span style="color:#74b9ff;">titlebar (48px)</span>
+      <span style="position:absolute;left:8px;top:12px;color:#fff;">←</span>
+      <span style="position:absolute;left:120px;top:14px;color:#fff;">语音通话</span>
+    </div>
+    <!-- Content area (flex_grow, absolute positioning) -->
+    <div class="obj" style="top:48px;left:0;width:320px;height:400px;border-color:#55efc4;background:transparent;">
+      <!-- Status label (centered, y=-72) -->
+      <div class="obj" style="top:128px;left:60px;width:200px;height:20px;border-color:transparent;text-align:center;">
+        <span style="color:#fff;font-size:12px;">02:35</span>
+        <span class="dim" style="right:-20px;">pos y=-72</span>
+      </div>
+      <!-- Button row -->
+      <div class="obj" style="top:180px;left:40px;width:240px;height:72px;border-color:#fd79a8;background:transparent;">
+        <!-- Hangup btn -->
+        <div class="obj" style="top:0;left:0;width:72px;height:72px;border-color:#FF675C;background:rgba(255,103,92,0.8);border-radius:50%;">
+          <span style="color:#fff;font-size:10px;margin-left:18px;margin-top:28px;">挂断</span>
+          <span class="dim" style="bottom:-12px;left:8px;">72×72 coral</span>
+        </div>
+        <!-- Dial btn -->
+        <div class="obj" style="top:0;right:0;width:72px;height:72px;border-color:#008060;background:rgba(0,128,96,0.8);border-radius:50%;">
+          <span style="color:#fff;font-size:10px;margin-left:18px;margin-top:28px;">拨号</span>
+          <span class="dim" style="bottom:-12px;right:8px;">72×72 teal</span>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+</div>
+
+<!-- Info panel -->
+<div class="info-panel">
+<h4>控件树（Widget Tree）</h4>
+<div class="widget-tree"><span class="w-name">s_screen</span> <span class="w-size">320×480</span> <span class="w-prop">flex_col bg=#1A1A1A pad_top=32</span>
+├─ <span class="w-name">titlebar</span> <span class="w-size">320×48</span> <span class="w-prop">bg=transparent</span>
+│  ├─ <span class="w-name">back</span> <span class="w-pos">LEFT_MID x=8</span> <span class="w-prop">ui_comp_btn_icon (icon_back_24_24)</span>
+│  └─ <span class="w-name">s_title</span> <span class="w-pos">CENTER w=200</span> <span class="w-prop">peer_name 优先(fallback UI_TEXT_CALL_TITLE) LONG_DOT #FFF</span>
+└─ <span class="w-name">content</span> <span class="w-size">320×auto(flex_grow)</span> <span class="w-prop">absolute positioning (not flex)</span>
+   ├─ <span class="w-name">s_status_lbl</span> <span class="w-pos">CENTER y=-72</span> <span class="w-prop">"呼叫中…"/"来电…"/MM:SS/"" #FFF center</span>
+   └─ <span class="w-name">btn_row</span> <span class="w-size">320×72</span> <span class="w-pos">CENTER</span> <span class="w-prop">flex_row SPACE_EVENLY</span>
+      ├─ <span class="w-name">s_hangup_btn</span> <span class="w-size">72×72</span> <span class="w-prop">circle bg=#FF675C 文字随态: 挂断(UI_TEXT_CALL_HANGUP)/拒接(UI_TEXT_CALL_REJECT)</span>
+      └─ <span class="w-name">s_dial_btn</span> <span class="w-size">72×72</span> <span class="w-prop">circle bg=#008060 文字随态: 呼叫(UI_TEXT_CALL_DIAL)/接听(UI_TEXT_CALL_ANSWER)</span></div>
+
+<h4>样式常量</h4>
+<table>
+  <tr><th>宏</th><th>值</th><th>说明</th></tr>
+  <tr><td><code>CALL_STATUSBAR_H</code></td><td>32px</td><td>全局状态栏高度</td></tr>
+  <tr><td><code>CALL_TITLEBAR_H</code></td><td>48px</td><td>标题栏高度</td></tr>
+  <tr><td><code>CALL_BTN_SIZE</code></td><td>72px</td><td>操作按钮直径</td></tr>
+  <tr><td><code>CALL_HANGUP_COLOR</code></td><td><span class="color-swatch" style="background:#FF675C"></span> #FF675C</td><td>挂断按钮（coral-red）</td></tr>
+  <tr><td><code>CALL_DIAL_COLOR</code></td><td><span class="color-swatch" style="background:#008060"></span> #008060</td><td>拨号按钮（teal，对比度 ≥5:1）</td></tr>
+</table>
+
+<h4>通话状态机（7 态；绿键＝呼叫/接听，红键＝挂断/拒接，颜色固定、文字与 enabled 随态切换）</h4>
+<table>
+  <tr><th>状态</th><th>status_lbl</th><th>绿键(s_dial_btn)</th><th>红键(s_hangup_btn)</th><th>去向</th></tr>
+  <tr><td>IDLE</td><td>""（空）</td><td>呼叫 (enabled)</td><td>disabled</td><td>拨号 → CALLING</td></tr>
+  <tr><td>CALLING</td><td>"呼叫中…" (UI_TEXT_CALL_DIALING)</td><td>disabled</td><td>挂断 (enabled)</td><td>对端接听 → IN_CALL；超时 → FAILED</td></tr>
+  <tr><td>INCOMING</td><td>"来电…" (UI_TEXT_CALL_INCOMING)</td><td>接听 (enabled)</td><td>拒接 (enabled)</td><td>接听 → IN_CALL；拒接 → 回 Home</td></tr>
+  <tr><td>IN_CALL</td><td>MM:SS 计时</td><td>disabled</td><td>挂断 (enabled)</td><td>挂断/对端挂 → 终态</td></tr>
+  <tr><td>FAILED</td><td colspan="3">—（拒接/忙/超时/失败）toast UI_TEXT_CALL_FAILED</td><td>reset Home</td></tr>
+  <tr><td>ENDED</td><td colspan="3">—（对端挂断 / 通话中断）toast UI_TEXT_CALL_ENDED</td><td>reset Home</td></tr>
+  <tr><td>ENDED_BY_OTHERS</td><td colspan="3">—（他端已接听）toast UI_TEXT_CALL_ENDED_BY_OTHERS</td><td>reset Home</td></tr>
+</table>
+
+<h4>尺寸 &amp; 位置详细表</h4>
+<table>
+  <tr><th>控件</th><th>宽度</th><th>高度</th><th>位置说明</th></tr>
+  <tr><td>s_screen</td><td>320 (100%)</td><td>480 (100%)</td><td>全屏, flex_col, pad_top=32</td></tr>
+  <tr><td>titlebar</td><td>320 (100%)</td><td>48px</td><td>statusbar 下方</td></tr>
+  <tr><td>back</td><td>auto</td><td>auto</td><td>LEFT_MID, x=8</td></tr>
+  <tr><td>s_title</td><td>200</td><td>auto</td><td>CENTER 居中，peer_name 优先(fallback UI_TEXT_CALL_TITLE)，LONG_DOT 省略</td></tr>
+  <tr><td>content</td><td>320 (100%)</td><td>flex_grow</td><td>内部 absolute 定位</td></tr>
+  <tr><td>s_status_lbl</td><td>auto</td><td>auto</td><td>CENTER, y=-72（按钮上方）</td></tr>
+  <tr><td>btn_row</td><td>320 (100%)</td><td>72px</td><td>CENTER, SPACE_EVENLY</td></tr>
+  <tr><td>s_hangup_btn</td><td>72px</td><td>72px</td><td>circle, bg=#FF675C</td></tr>
+  <tr><td>s_dial_btn</td><td>72px</td><td>72px</td><td>circle, bg=#008060</td></tr>
+</table>
+</div>
+</div> <!-- flex-row -->
+
+<h3>事件处理流程</h3>
+
+<h4>⬅️ 返回按钮 / 右滑</h4>
+<div class="flow-box">
+  <span class="ev">CLICK</span> on back button 或 <span class="ev">右滑 (LV_DIR_RIGHT)</span><br>
+  <span class="arrow">→</span> <span class="fn">back_click_cb()</span> / <span class="fn">gesture_cb()</span><br>
+  <span class="arrow">→</span> <span class="fn">ui_route_pop()</span> → 触发 <span class="fn">on_leave()</span><br>
+  <span class="arrow">→</span> <span class="fn">on_leave()</span>：INCOMING → <span class="fn">ui_svc_call_reject()</span>；非 IDLE → <span class="fn">ui_svc_call_hangup()</span>（离开页面结束通话）
+</div>
+
+<h4>📞 拨号（设备 → App）</h4>
+<div class="flow-box">
+  <span class="note">主拨号入口已移至联系人页：选行后先 <span class="fn">ui_svc_call_set_peer_name()</span> 再 <span class="fn">ui_svc_call_dial()</span>/<span class="fn">dial_device()</span>，再 push 进本页（进入即 CALLING）。下方为本页绿键直接拨 App 的路径。</span><br>
+  <span class="ev">CLICK</span> on s_dial_btn（IDLE 时 enabled）<br>
+  <span class="arrow">→</span> <span class="fn">dial_cb()</span>：若 <code>!ui_svc_call_enabled_get()</code> → toast UI_TEXT_CALL_P2P_DISABLED<br>
+  <span class="arrow">→</span> <span class="fn">ui_svc_call_dial()</span>（设备 → App）<br>
+  <span class="arrow">→</span> s_status = CALLING → <span class="fn">refresh_ui()</span>
+</div>
+
+<h4>📴 挂断（红键：拒接 / 挂断）</h4>
+<div class="flow-box">
+  <span class="ev">CLICK</span> on s_hangup_btn（活动 / INCOMING 时 enabled）<br>
+  <span class="arrow">→</span> <span class="fn">hangup_cb()</span><br>
+  <span class="arrow">→</span> INCOMING → <span class="fn">ui_svc_call_reject()</span>；活动/呼叫中 → <span class="fn">ui_svc_call_hangup()</span><br>
+  <span class="arrow">→</span> <span class="fn">end_call_go_home()</span>：s_status = IDLE → <span class="fn">ui_route_reset(UI_PAGE_HOME)</span>（本端主动结束 → 回 Home）
+</div>
+
+<h4>📲 来电接听 / 拒接（INCOMING）</h4>
+<div class="flow-box">
+  service 收到入呼、且自动接通开关 OFF → <span class="fn">on_call_state(INCOMING)</span><br>
+  <span class="arrow">→</span> 绿键文字 → 接听(UI_TEXT_CALL_ANSWER)，红键 → 拒接(UI_TEXT_CALL_REJECT)，均 enabled<br>
+  <span class="arrow">→</span> 点绿键 → <span class="fn">dial_cb()</span> → <span class="fn">ui_svc_call_answer()</span>，停留等待 media-start 升级为 IN_CALL<br>
+  <span class="arrow">→</span> 点红键 → <span class="fn">hangup_cb()</span> → <span class="fn">ui_svc_call_reject()</span> → <span class="fn">end_call_go_home()</span><br>
+  <span class="note">自动接通开关 ON 时，service 直接应答，UI 不会停在 INCOMING。</span>
+</div>
+
+<h4>🏁 通话终局 → 回 Home</h4>
+<div class="flow-box">
+  <span class="fn">on_call_state()</span> 收到终态 → <span class="fn">end_call_go_home(toast_key)</span><br>
+  <span class="arrow">→</span> <code>FAILED</code> → toast UI_TEXT_CALL_FAILED（拒接 / 忙 / 超时 / 失败）<br>
+  <span class="arrow">→</span> <code>ENDED</code> → toast UI_TEXT_CALL_ENDED（对端挂断 / 通话中断）<br>
+  <span class="arrow">→</span> <code>ENDED_BY_OTHERS</code> → toast UI_TEXT_CALL_ENDED_BY_OTHERS（他端已接听）<br>
+  <span class="arrow">→</span> 统一：s_status = IDLE → <span class="fn">ui_route_reset(UI_PAGE_HOME)</span>（toast 挂在 layer_top，清栈后仍续显）<br>
+  <span class="note">本端返回键/右滑(on_leave 路径)不走 reset Home，维持全局"回下层页"语义；仅服务终态回调走 reset Home。</span>
+</div>
+
+<h4>⏱️ 通话计时</h4>
+<div class="flow-box">
+  <code>on_call_state(IN_CALL)</code> 回调<br>
+  <span class="arrow">→</span> 锚定 <code>s_call_start_sec = tal_time_get_posix()</code><br>
+  <span class="arrow">→</span> 框架 SYSTEM dirty(<span class="fn">ui_tick</span>) → <span class="fn">on_enter(SYSTEM)</span><br>
+  <span class="arrow">→</span> <span class="fn">render_status_label()</span>：elapsed = now - start_sec → 格式化为 MM:SS
+</div>
+
+<h4>生命周期</h4>
+<table>
+  <tr><th>回调</th><th>行为</th></tr>
+  <tr><td><span class="tag tag-lifecycle">on_create</span></td><td>同步服务状态（可能已在通话中，IN_CALL 则锚定计时起点）；标题取 peer_name(fallback UI_TEXT_CALL_TITLE)；构建 screen → titlebar → content(status_lbl + btn_row)；注册 ui_svc_call_set_cb</td></tr>
+  <tr><td><span class="tag tag-lifecycle">on_enter</span></td><td>SETTINGS 脏 → 重解 i18n（标题/按钮文字/状态）+ refresh_ui；SYSTEM 脏且 IN_CALL → 刷新计时</td></tr>
+  <tr><td><span class="tag tag-lifecycle">on_leave</span></td><td>INCOMING → <span class="fn">ui_svc_call_reject()</span>；非 IDLE → <span class="fn">ui_svc_call_hangup()</span>（离开页面结束通话）</td></tr>
+  <tr><td><span class="tag tag-lifecycle">on_destroy</span></td><td>注销回调，HIDDEN + <code>lv_obj_del_async</code>，清空指针</td></tr>
+</table>
+</div> <!-- page-section -->
+
+
+<!-- ============================================================ -->
+<!--                       PAGE: CONTACTS                          -->
+<!-- ============================================================ -->
+<h2 id="page-contacts">⑧ UI_PAGE_CONTACTS — 联系人页</h2>
+<div class="page-section">
+<p>源文件：<code>ui_page_contacts.c</code> ｜ 入口：<code>ui_page_contacts_entry</code> ｜ ID = 8<br>
+<strong>底部 tabview 布局</strong>：tab0「联系人」（P2P 通话：App 行 + 设备行）、tab1「发现」（NFC 读 / 写本机 devId）。
+P2P 开关关闭时，联系人列表仅显示开关提示（连 App 行一并隐藏）。业务仅经 <code>ui_svc_call.h</code>；NFC 经 PN532 驱动（<code>tuya_pn532_hsu.h</code>）。</p>
+
+<div class="flex-row" style="margin-top:16px;">
+
+<!-- Screen mockup: Tab0 联系人 -->
+<div class="screen-wrap">
+<h4>Tab0 联系人（P2P 通话）</h4>
+<div class="screen" style="font-size:9px;">
+  <!-- Statusbar 32 -->
+  <div class="obj" style="top:0;left:0;width:320px;height:32px;border-color:#555;background:rgba(184,189,222,0.08);">
+    <span class="dim">statusbar 32px</span>
+  </div>
+  <!-- Titlebar 48 -->
+  <div class="obj" style="top:32px;left:0;width:320px;height:48px;border-color:#74b9ff;background:transparent;">
+    <span style="position:absolute;left:8px;top:12px;color:#fff;">←</span>
+    <span style="position:absolute;left:128px;top:14px;color:#fff;">联系人</span>
+    <span style="position:absolute;right:8px;top:14px;color:#4A90D9;font-size:10px;">刷新</span>
+  </div>
+  <!-- List area -->
+  <div class="obj" style="top:80px;left:20px;width:280px;height:352px;border-color:#55efc4;background:transparent;">
+    <span style="color:#55efc4;">s_list (pad_hor:20 pad_ver:12 gap:10, scroll)</span>
+    <!-- App row (blue) -->
+    <div class="obj" style="top:18px;left:0;width:280px;height:64px;border-color:#2E4A6E;background:#2E4A6E;border-radius:16px;">
+      <span style="color:#F3E55D;margin-left:16px;margin-top:22px;">呼叫手机 App</span>
+      <span class="dim" style="right:4px;top:0;">App行 #2E4A6E</span>
+    </div>
+    <!-- Device row 1 -->
+    <div class="obj" style="top:92px;left:0;width:280px;height:64px;border-color:#353740;background:#353740;border-radius:16px;">
+      <span style="color:#fff;margin-left:16px;margin-top:22px;">客厅摄像头</span>
+      <div style="position:absolute;right:12px;top:14px;width:56px;height:36px;border:1px solid #F44336;border-radius:4px;text-align:center;line-height:36px;color:#F44336;font-size:9px;">删除</div>
+    </div>
+    <!-- Device row 2 -->
+    <div class="obj" style="top:166px;left:0;width:280px;height:64px;border-color:#353740;background:#353740;border-radius:16px;">
+      <span style="color:#fff;margin-left:16px;margin-top:22px;">卧室门铃</span>
+      <div style="position:absolute;right:12px;top:14px;width:56px;height:36px;border:1px solid #F44336;border-radius:4px;text-align:center;line-height:36px;color:#F44336;font-size:9px;">删除</div>
+    </div>
+    <div class="dim" style="top:240px;left:0;">hint: 拉取中 / 失败 / 无设备 / P2P关</div>
+  </div>
+  <!-- Bottom tab bar 48 -->
+  <div class="obj" style="top:432px;left:0;width:320px;height:48px;border-color:#888;background:#2A2A2A;">
+    <div style="position:absolute;left:0;top:0;width:160px;height:48px;text-align:center;line-height:48px;color:#fff;border-bottom:2px solid #4A90D9;">联系人</div>
+    <div style="position:absolute;left:160px;top:0;width:160px;height:48px;text-align:center;line-height:48px;color:#AAA;">发现</div>
+  </div>
+</div>
+</div>
+
+<!-- Screen mockup: Tab1 发现 -->
+<div class="screen-wrap">
+<h4>Tab1 发现（NFC 读 / 写）</h4>
+<div class="screen" style="font-size:9px;">
+  <div class="obj" style="top:0;left:0;width:320px;height:32px;border-color:#555;background:rgba(184,189,222,0.08);">
+    <span class="dim">statusbar 32px</span>
+  </div>
+  <div class="obj" style="top:32px;left:0;width:320px;height:48px;border-color:#74b9ff;background:transparent;">
+    <span style="position:absolute;left:8px;top:12px;color:#fff;">←</span>
+    <span style="position:absolute;left:138px;top:14px;color:#fff;">发现</span>
+  </div>
+  <div class="obj" style="top:80px;left:0;width:320px;height:352px;border-color:#55efc4;background:transparent;">
+    <span style="color:#55efc4;">tab_discover (CENTER, pad:24)</span>
+    <!-- NFC read -->
+    <div class="obj" style="top:120px;left:60px;width:200px;height:56px;border-color:#4A90D9;background:#4A90D9;border-radius:8px;">
+      <span style="color:#fff;margin-left:64px;margin-top:20px;">NFC 读取</span>
+    </div>
+    <!-- NFC write -->
+    <div class="obj" style="top:196px;left:60px;width:200px;height:56px;border-color:#4A90D9;background:#4A90D9;border-radius:8px;">
+      <span style="color:#fff;margin-left:64px;margin-top:20px;">NFC 写入</span>
+    </div>
+  </div>
+  <div class="obj" style="top:432px;left:0;width:320px;height:48px;border-color:#888;background:#2A2A2A;">
+    <div style="position:absolute;left:0;top:0;width:160px;height:48px;text-align:center;line-height:48px;color:#AAA;">联系人</div>
+    <div style="position:absolute;left:160px;top:0;width:160px;height:48px;text-align:center;line-height:48px;color:#fff;border-bottom:2px solid #4A90D9;">发现</div>
+  </div>
+</div>
+</div>
+</div> <!-- flex-row -->
+
+<!-- Info panel -->
+<div class="info-panel">
+<h4>控件树（Widget Tree）</h4>
+<div class="widget-tree"><span class="w-name">s_screen</span> <span class="w-size">320×480</span> <span class="w-prop">flex_col bg=#1A1A1A pad_top=32</span>
+├─ <span class="w-name">titlebar</span> <span class="w-size">320×48</span> <span class="w-prop">bg=transparent</span>
+│  ├─ <span class="w-name">back</span> <span class="w-pos">LEFT_MID x=8</span> <span class="w-prop">ui_comp_btn_icon(icon_back_24_24) → back_cb</span>
+│  ├─ <span class="w-name">s_title</span> <span class="w-pos">CENTER</span> <span class="w-prop">随活动tab: 联系人(UI_TEXT_CALL_CONTACTS_TITLE)/发现(UI_TEXT_CONTACTS_TAB_DISCOVER) #FFF</span>
+│  └─ <span class="w-name">s_refresh_btn</span> <span class="w-pos">RIGHT_MID -8</span> <span class="w-prop">ui_comp_btn_text "刷新" 仅联系人tab显示 → refresh_cb</span>
+└─ <span class="w-name">s_tv (tabview)</span> <span class="w-size">320×flex_grow</span> <span class="w-prop">LV_DIR_BOTTOM tab_h=48 → tab_change_cb(VALUE_CHANGED)</span>
+   ├─ <span class="w-name">tab_btns(底)</span> <span class="w-prop">bg=#2A2A2A #AAA pad=4</span>
+   │  ├─ <span class="w-name">[0] 联系人</span>
+   │  └─ <span class="w-name">[1] 发现</span>
+   ├─ <span class="w-name">tab_contacts</span> <span class="w-prop">tab0 flex_col pad=0</span>
+   │  └─ <span class="w-name">s_list</span> <span class="w-size">100%×flex_grow</span> <span class="w-prop">flex_col scroll=VER pad_hor=20 pad_ver=12 pad_row=10 bg=transparent</span>
+   │     ├─ <span class="w-name">row[0] App</span> <span class="w-size">100%×64</span> <span class="w-prop">r=16 bg=#2E4A6E flex_row SPACE_BETWEEN pad_hor=16 pad_ver=10 → row_cb(0)</span>
+   │     │  └─ <span class="w-name">nm</span> <span class="w-prop">w=248 LONG_DOT "呼叫手机App"(UI_TEXT_CALL_CONTACT_APP) #F3E55D</span>
+   │     ├─ <span class="w-name">row[1..cnt] 设备</span> <span class="w-size">100%×64</span> <span class="w-prop">r=16 bg=#353740 → row_cb(idx)</span>
+   │     │  ├─ <span class="w-name">nm</span> <span class="w-prop">w=176 LONG_DOT name #FFF</span>
+   │     │  └─ <span class="w-name">del</span> <span class="w-size">56×36</span> <span class="w-prop">ui_comp_btn_text "删除" #F44336 → delete_cb(idx)</span>
+   │     └─ <span class="w-name">hint</span> <span class="w-prop">#B8BDDE (LOADING/FAILED/NO_DEVICES/P2P_OFF)</span>
+   └─ <span class="w-name">tab_discover</span> <span class="w-prop">tab1 flex_col CENTER pad=24 pad_row=20</span>
+      ├─ <span class="w-name">btn_read</span> <span class="w-size">200×56</span> <span class="w-prop">UI_COMP_BTN_PRIMARY "NFC读取"(UI_TEXT_NFC_READ) → nfc_read_cb</span>
+      └─ <span class="w-name">btn_write</span> <span class="w-size">200×56</span> <span class="w-prop">UI_COMP_BTN_PRIMARY "NFC写入"(UI_TEXT_NFC_WRITE) → nfc_write_cb</span>
+
+<span class="w-name">s_nfc_popup</span> <span class="w-pos">on lv_layer_top</span> <span class="w-size">100%×100%</span> <span class="w-prop">bg=#000 opa=70 CLICKABLE(点空白关) HIDDEN until 读成功</span>
+└─ <span class="w-name">card</span> <span class="w-size">280×260</span> <span class="w-pos">CENTER</span> <span class="w-prop">r=16 bg=#2A2A2A pad=16</span>
+   ├─ <span class="w-name">title</span> <span class="w-pos">TOP_MID</span> <span class="w-prop">"NFC Read Result" #4A90D9</span>
+   ├─ <span class="w-name">text</span> <span class="w-size">w=248 WRAP</span> <span class="w-prop">devId(block1+2拼接,≤32) #FFF</span>
+   └─ <span class="w-name">hint</span> <span class="w-pos">BOTTOM_MID</span> <span class="w-prop">"tap anywhere to close" #AAA</span></div>
+
+<h4>样式常量</h4>
+<table>
+  <tr><th>宏</th><th>值</th><th>说明</th></tr>
+  <tr><td><code>CONTACTS_STATUSBAR_H</code></td><td>32px</td><td>全局状态栏高度</td></tr>
+  <tr><td><code>CONTACTS_TITLEBAR_H</code></td><td>48px</td><td>标题栏高度</td></tr>
+  <tr><td><code>CONTACTS_TAB_H</code></td><td>48px</td><td>底部 tab 栏高度</td></tr>
+  <tr><td><code>CONTACTS_ITEM_H</code></td><td>64px</td><td>联系人行高度</td></tr>
+  <tr><td><code>CONTACTS_NAME_W</code> / <code>CONTACTS_NAME_FULL_W</code></td><td>176 / 248</td><td>设备行名宽（留删除键）/ App 行名宽（占满）</td></tr>
+  <tr><td><code>CONTACTS_DELETE_W</code> / <code>CONTACTS_DELETE_H</code></td><td>56 / 36</td><td>删除按钮尺寸</td></tr>
+  <tr><td><code>CONTACTS_BG_NORMAL</code></td><td><span class="color-swatch" style="background:#353740"></span> #353740</td><td>设备行底色</td></tr>
+  <tr><td><code>CONTACTS_BG_APP</code></td><td><span class="color-swatch" style="background:#2E4A6E"></span> #2E4A6E</td><td>App 行底色（蓝色强调）</td></tr>
+  <tr><td><code>CONTACTS_ACCENT</code></td><td><span class="color-swatch" style="background:#F3E55D"></span> #F3E55D</td><td>App 行名称色</td></tr>
+  <tr><td><code>CONTACTS_HINT</code></td><td><span class="color-swatch" style="background:#B8BDDE"></span> #B8BDDE</td><td>提示文字色</td></tr>
+  <tr><td><code>NFC_RETRY_MAX</code></td><td>3</td><td>NFC 读 / 写失败重试次数</td></tr>
+</table>
+
+<h4>列表 UI 状态（4 态，决定 s_list 终态）</h4>
+<table>
+  <tr><th>状态</th><th>App 行</th><th>设备行</th><th>hint</th><th>进入条件</th></tr>
+  <tr><td>LOADING</td><td>✅</td><td>—</td><td>UI_TEXT_LOADING</td><td>拉取中 / 等链路就绪（就绪后 service 自动重拉）</td></tr>
+  <tr><td>READY</td><td>✅</td><td>✅（0 台则无）</td><td>UI_TEXT_CALL_NO_DEVICES（仅 0 台时）</td><td>拉取成功（含 0 台设备）</td></tr>
+  <tr><td>FAILED</td><td>✅</td><td>—</td><td>UI_TEXT_CALL_CONTACTS_LOAD_FAILED</td><td>拉取失败（可点刷新重试）</td></tr>
+  <tr><td>P2P_OFF</td><td>❌ 隐藏</td><td>❌ 隐藏</td><td>UI_TEXT_CALL_P2P_DISABLED</td><td>P2P 开关关：整页只剩提示</td></tr>
+</table>
+
+<h4>尺寸 &amp; 位置详细表</h4>
+<table>
+  <tr><th>控件</th><th>宽度</th><th>高度</th><th>位置说明</th></tr>
+  <tr><td>s_screen</td><td>320 (100%)</td><td>480 (100%)</td><td>全屏, flex_col, pad_top=32</td></tr>
+  <tr><td>titlebar</td><td>320 (100%)</td><td>48px</td><td>statusbar 下方；back / s_title / s_refresh_btn</td></tr>
+  <tr><td>s_tv (tabview)</td><td>320 (100%)</td><td>flex_grow</td><td>底部 tab 栏 (tab_h=48)</td></tr>
+  <tr><td>s_list</td><td>100%</td><td>flex_grow</td><td>tab0, scroll=VER, pad_hor=20, pad_ver=12, pad_row=10</td></tr>
+  <tr><td>row (App / 设备)</td><td>100%</td><td>64px</td><td>r=16, flex_row SPACE_BETWEEN, pad_hor=16, pad_ver=10</td></tr>
+  <tr><td>nm (App / 设备)</td><td>248 / 176</td><td>auto</td><td>LONG_DOT 省略</td></tr>
+  <tr><td>del</td><td>56px</td><td>36px</td><td>设备行右侧（App 行无）</td></tr>
+  <tr><td>btn_read / btn_write</td><td>200px</td><td>56px</td><td>tab1 居中，UI_COMP_BTN_PRIMARY</td></tr>
+  <tr><td>s_nfc_popup</td><td>100%</td><td>100%</td><td>lv_layer_top, bg=#000 opa=70, 读成功时显示</td></tr>
+  <tr><td>card</td><td>280px</td><td>260px</td><td>CENTER, r=16, bg=#2A2A2A, pad=16</td></tr>
+</table>
+</div>
+
+<h3>事件处理流程</h3>
+
+<h4>⬅️ 返回 / 右滑</h4>
+<div class="flow-box">
+  <span class="ev">CLICK</span> on back 或 <span class="ev">右滑 (LV_DIR_RIGHT)</span><br>
+  <span class="arrow">→</span> <span class="fn">back_cb()</span> / <span class="fn">gesture_cb()</span>（右滑先 wait_release 再 pop，避免释放误触下层）<br>
+  <span class="arrow">→</span> <span class="fn">ui_route_pop()</span> → 回 Home
+</div>
+
+<h4>🔀 Tab 切换</h4>
+<div class="flow-box">
+  <span class="ev">VALUE_CHANGED</span> on s_tv<br>
+  <span class="arrow">→</span> <span class="fn">tab_change_cb()</span><br>
+  <span class="arrow">→</span> 同步 s_title 文字（联系人 / 发现）；联系人 tab 显示 s_refresh_btn，发现 tab 隐藏
+</div>
+
+<h4>🔄 刷新联系人</h4>
+<div class="flow-box">
+  <span class="ev">CLICK</span> on s_refresh_btn<br>
+  <span class="arrow">→</span> <span class="fn">refresh_cb()</span> → <span class="fn">request_fetch()</span><br>
+  <span class="arrow">→</span> 内部判定 P2P 开关态 → 渲染对应终态 → <span class="fn">ui_svc_call_contacts_async(on_contacts_ready)</span><br>
+  <span class="note">service 对在途拉取做防抖，连点不会堆积请求；链路就绪时也会自动重拉。</span>
+</div>
+
+<h4>📞 点击联系人 → 发起通话</h4>
+<div class="flow-box">
+  <span class="ev">CLICK</span> on row[idx]<br>
+  <span class="arrow">→</span> <span class="fn">row_cb(idx)</span>：若 <code>!ui_svc_call_enabled_get()</code> → toast P2P_DISABLED<br>
+  <span class="arrow">→</span> idx=0（App）：<span class="fn">ui_svc_call_set_peer_name("呼叫手机App")</span> → <span class="fn">ui_svc_call_dial()</span>（设备→App）<br>
+  <span class="arrow">→</span> idx≥1（设备）：<span class="fn">set_peer_name(name)</span> → <span class="fn">ui_svc_call_dial_device(id)</span>（设备→设备）<br>
+  <span class="arrow">→</span> <span class="fn">ui_route_push(UI_PAGE_CALL)</span>（进入即 CALLING，标题显示 peer name）
+</div>
+
+<h4>🗑 删除设备联系人</h4>
+<div class="flow-box">
+  <span class="ev">CLICK</span> on del（stop_bubbling，不触发行点击）<br>
+  <span class="arrow">→</span> <span class="fn">delete_cb(idx)</span>：LOADING popup "删除中…" + <span class="fn">ui_svc_call_contact_delete_async(id, on_contact_delete_done)</span><br>
+  <span class="arrow">→</span> 成功 → toast "删除成功" + <span class="fn">request_fetch()</span> 重拉；失败 → toast "删除失败"
+</div>
+
+<h4>📡 NFC 读取（tab1）</h4>
+<div class="flow-box">
+  <span class="ev">CLICK</span> on btn_read → <span class="fn">nfc_read_cb()</span><br>
+  <span class="arrow">→</span> <span class="fn">tuya_pn532_manual_begin()</span> → <span class="fn">tuya_pn532_poll_card()</span>（无卡 → toast UI_TEXT_NFC_NO_CARD）<br>
+  <span class="arrow">→</span> 仅 MIFARE Classic 1K/4K；sleep(20) 稳定后 <span class="fn">read_block(1, KEY_A)</span> + <span class="fn">read_block(2, KEY_A)</span>，失败重试 ≤ <code>NFC_RETRY_MAX</code>（含 re-poll）<br>
+  <span class="arrow">→</span> 成功 → <span class="fn">show_nfc_data_popup(b1, b2)</span>：全屏 70% 黑 + 居中卡片，拼接两块 16B 为 devId（≤32，空卡显示 "(empty)"）；点任意处关闭 → <span class="fn">tuya_pn532_manual_end()</span>
+</div>
+
+<h4>✍️ NFC 写入（tab1）</h4>
+<div class="flow-box">
+  <span class="ev">CLICK</span> on btn_write → <span class="fn">nfc_write_cb()</span><br>
+  <span class="arrow">→</span> poll_card（同上口径）→ 取本机 <span class="fn">ui_svc_devinfo_device_id()</span>，NUL 补齐 32B 拆入 block1(16)+block2(16)<br>
+  <span class="arrow">→</span> <span class="fn">write_block(1)</span> + <span class="fn">write_block(2)</span> 重试 ≤ <code>NFC_RETRY_MAX</code><br>
+  <span class="arrow">→</span> 成功 → toast UI_TEXT_NFC_WRITE_SUCCESS；失败 → toast UI_TEXT_NFC_WRITE_FAILED → <span class="fn">manual_end()</span>
+</div>
+
+<h4>生命周期</h4>
+<table>
+  <tr><th>回调</th><th>行为</th></tr>
+  <tr><td><span class="tag tag-lifecycle">on_create</span></td><td>构建 screen → titlebar(back + s_title + s_refresh_btn) → tabview(底部) → tab0(s_list) + tab1(btn_read/btn_write)；<span class="fn">request_fetch()</span> 首拉</td></tr>
+  <tr><td><span class="tag tag-lifecycle">on_enter</span></td><td>SETTINGS 脏 → rename 两个 tab + 同步 s_title / refresh 显隐 + <span class="fn">build_rows()</span>（语言切换后重渲）</td></tr>
+  <tr><td><span class="tag tag-lifecycle">on_leave</span></td><td>（空）</td></tr>
+  <tr><td><span class="tag tag-lifecycle">on_destroy</span></td><td><span class="fn">ui_svc_call_contacts_async(NULL)</span> 注销回调（迟到结果在 service 侧丢弃）；关闭 NFC popup / LOADING popup；HIDDEN + <code>lv_obj_del_async</code>；清空指针与计数</td></tr>
+</table>
+</div> <!-- page-section -->
+
+
+<!-- ============================================================ -->
+<!--                       PAGE: PHOTO                             -->
+<!-- ============================================================ -->
+<h2 id="page-photo">⑨ UI_PAGE_PHOTO — 相册页</h2>
+<div class="page-section">
+<p>源文件：<code>ui_page_photo.c</code> ｜ 入口：<code>ui_page_photo_entry</code> ｜ ID = 8<br>
+<strong>双布局页面</strong>：一个路由页面内包含两种内部布局（ADR-0001）—— 全屏看图 (Viewer) 和缩略图网格 (Grid)，通过文件作用域 <code>s_mode</code> 切换。</p>
+
+<div class="flex-row" style="margin-top:16px;">
+
+<!-- Screen mockup: Viewer -->
+<div class="screen-wrap">
+<h4>看图模式（Viewer，默认）</h4>
+<div class="screen" style="font-size:9px;">
+  <!-- Statusbar band -->
+  <div class="obj" style="top:0;left:0;width:320px;height:32px;border-color:#555;background:rgba(255,255,255,0.05);">
+    <span class="dim">statusbar band 32px (black)</span>
+  </div>
+  <!-- Black background viewer -->
+  <div class="obj" style="top:32px;left:0;width:320px;height:448px;border-color:#333;background:#000;">
+    <!-- Picture (centered) -->
+    <div class="obj" style="top:100px;left:40px;width:240px;height:180px;border-color:#55efc4;background:rgba(85,239,196,0.1);">
+      <span style="color:#55efc4;">s_picture (native size)</span>
+    </div>
+    <!-- Overlay buttons (visible on tap) -->
+    <div class="obj" style="top:12px;left:12px;width:36px;height:36px;border-color:#fff;border-radius:50%;background:rgba(255,255,255,0.2);">
+      <span style="color:#fff;font-size:10px;margin-left:10px;margin-top:10px;">←</span>
+    </div>
+    <div class="obj" style="top:12px;right:12px;width:36px;height:36px;border-color:#fff;border-radius:50%;background:rgba(255,255,255,0.2);">
+      <span style="color:#fff;font-size:10px;margin-left:8px;margin-top:10px;">🤖</span>
+    </div>
+    <div class="obj" style="bottom:12px;left:12px;width:36px;height:36px;border-color:#fff;border-radius:50%;background:rgba(255,255,255,0.2);">
+      <span style="color:#fff;font-size:10px;margin-left:10px;margin-top:10px;">🗑</span>
+    </div>
+    <div class="obj" style="bottom:12px;right:12px;width:auto;height:36px;border-color:#fff;border-radius:18px;background:rgba(255,255,255,0.2);padding:0 12px;">
+      <span style="color:#fff;font-size:10px;margin-top:10px;">查看全部 →</span>
+    </div>
+    <!-- Empty hint (shown when count=0) -->
+    <div class="obj" style="top:200px;left:100px;width:120px;height:20px;border-color:transparent;">
+      <span style="color:#aaa;">暂无照片</span>
+    </div>
+  </div>
+</div>
+</div>
+
+<!-- Screen mockup: Grid -->
+<div class="screen-wrap">
+<h4>网格模式（Grid，选择模式）</h4>
+<div class="screen" style="font-size:9px;">
+  <!-- Statusbar band -->
+  <div class="obj" style="top:0;left:0;width:320px;height:32px;border-color:#555;background:rgba(255,255,255,0.05);">
+    <span class="dim">statusbar band 32px</span>
+  </div>
+  <div class="obj" style="top:32px;left:0;width:320px;height:448px;border-color:#4A90D9;background:#1A1A1A;">
+    <!-- Topbar 48px -->
+    <div class="obj" style="top:0;left:0;width:320px;height:48px;border-color:#74b9ff;background:transparent;">
+      <span style="position:absolute;left:12px;top:14px;color:#fff;">←</span>
+      <span style="position:absolute;left:130px;top:14px;color:#fff;">相册</span>
+      <span style="position:absolute;right:12px;top:14px;color:#aaa;font-size:9px;">取消</span>
+    </div>
+    <!-- Grid scroll area -->
+    <div class="obj" style="top:48px;left:8px;width:304px;height:352px;border-color:#55efc4;background:transparent;">
+      <span style="color:#55efc4;">grid (3col, gap=8)</span>
+      <!-- Row 1 -->
+      <div class="obj" style="top:0;left:0;width:96px;height:96px;border-color:#55efc4;background:#2A2A2A;border-radius:8px;">
+        <span style="color:#aaa;margin-left:20px;margin-top:36px;">🖼️</span>
+        <div style="position:absolute;top:6px;left:6px;width:22px;height:22px;border-radius:50%;background:#FFC107;border:2px solid #FFC107;"></div>
+      </div>
+      <div class="obj" style="top:0;left:104px;width:96px;height:96px;border-color:#55efc4;background:#2A2A2A;border-radius:8px;">
+        <span style="color:#aaa;margin-left:20px;margin-top:36px;">🖼️</span>
+        <div style="position:absolute;top:6px;left:6px;width:22px;height:22px;border-radius:50%;background:rgba(128,128,128,0.3);border:2px solid #fff;"></div>
+      </div>
+      <div class="obj" style="top:0;left:208px;width:96px;height:96px;border-color:#55efc4;background:#2A2A2A;border-radius:8px;">
+        <span style="color:#aaa;margin-left:20px;margin-top:36px;">🖼️</span>
+        <div style="position:absolute;top:6px;left:6px;width:22px;height:22px;border-radius:50%;background:#FFC107;border:2px solid #FFC107;"></div>
+      </div>
+      <!-- Row 2 -->
+      <div class="obj" style="top:104px;left:0;width:96px;height:96px;border-color:#55efc4;background:#2A2A2A;border-radius:8px;">
+        <span style="color:#aaa;margin-left:20px;margin-top:36px;">🖼️</span>
+      </div>
+      <div class="obj" style="top:104px;left:104px;width:96px;height:96px;border-color:#55efc4;background:#2A2A2A;border-radius:8px;">
+        <span style="color:#aaa;margin-left:20px;margin-top:36px;">🖼️</span>
+      </div>
+    </div>
+    <!-- Bottom bar (selection mode) -->
+    <div class="obj" style="top:400px;left:0;width:320px;height:48px;border-color:#ffeaa7;background:#2A2A2A;">
+      <span style="color:#fff;margin-left:12px;margin-top:14px;">已选择: 2张</span>
+      <span style="position:absolute;right:12px;top:12px;color:#fff;font-size:12px;">🗑</span>
+    </div>
+  </div>
+</div>
+</div>
+</div> <!-- flex-row -->
+
+<!-- Info panel -->
+<div class="info-panel">
+<h4>控件树（Widget Tree）</h4>
+<div class="widget-tree"><span class="w-name">s_screen</span> <span class="w-size">320×480</span> <span class="w-prop">bg=#000 pad_top=32</span>
+
+<strong style="color:#74b9ff;">── Viewer 模式 ──</strong>
+├─ <span class="w-name">s_view_cont</span> <span class="w-size">320×480</span> <span class="w-prop">bg=#000 CLICKABLE (tap toggles overlay)</span>
+│  ├─ <span class="w-name">s_picture</span> <span class="w-prop">ui_comp_picture centered (native size)</span>
+│  ├─ <span class="w-name">s_empty_hint</span> <span class="w-prop">i18n(UI_TEXT_PICTURE_EMPTY) HIDDEN when count > 0</span>
+│  └─ <span class="w-name">s_overlay</span> <span class="w-size">320×480</span> <span class="w-prop">transparent, not-clickable (buttons are)</span>
+│     ├─ <span class="w-name">back</span> <span class="w-pos">TOP_LEFT (12,12)</span> <span class="w-prop">ui_comp_btn_circle icon_back</span>
+│     ├─ <span class="w-name">ai_btn</span> <span class="w-pos">TOP_RIGHT (-12,12)</span> <span class="w-prop">ui_comp_btn_circle icon_ai → ai_cb</span>
+│     ├─ <span class="w-name">delete_btn</span> <span class="w-pos">BOTTOM_LEFT (12,-12)</span> <span class="w-prop">ui_comp_btn_circle icon_delete → delete_cb</span>
+│     └─ <span class="w-name">s_all_btn</span> <span class="w-pos">BOTTOM_RIGHT (-12,-12)</span> <span class="w-prop">icon+text "查看全部" → all_pictures_cb</span>
+
+<strong style="color:#74b9ff;">── Grid 模式 ──</strong>
+└─ <span class="w-name">s_grid_cont</span> <span class="w-size">320×480</span> <span class="w-prop">flex_col bg=#1A1A1A HIDDEN by default</span>
+   ├─ <span class="w-name">topbar</span> <span class="w-size">320×48</span>
+   │  ├─ <span class="w-name">back</span> <span class="w-pos">LEFT_MID x=12</span> <span class="w-prop">grid_back_cb (退出 select 或返回 viewer)</span>
+   │  ├─ <span class="w-name">s_grid_title</span> <span class="w-pos">CENTER</span> <span class="w-prop">i18n(UI_TEXT_APP_PICTURE)</span>
+   │  ├─ <span class="w-name">s_choose_btn</span> <span class="w-pos">RIGHT_MID</span> <span class="w-prop">icon_choose → enter_select_mode</span>
+   │  └─ <span class="w-name">s_cancel_btn</span> <span class="w-pos">RIGHT_MID</span> <span class="w-prop">"取消" HIDDEN (select mode 时显示)</span>
+   ├─ <span class="w-name">s_grid_scroll</span> <span class="w-size">320×auto(flex_grow)</span> <span class="w-prop">flex_row_wrap pad=8 gap=8</span>
+   │  └─ <span class="w-name">grid_item[0..N]</span> <span class="w-size">96×96</span> <span class="w-prop">r=8 clip_corner bg=#2A2A2A</span>
+   │     ├─ <span class="w-name">thumbnail</span> <span class="w-prop">ui_comp_picture (borrowed buffer)</span>
+   │     └─ <span class="w-name">chk</span> <span class="w-size">22×22</span> <span class="w-pos">pos(6,6) circle (select mode 时创建)</span>
+   └─ <span class="w-name">s_bottom_bar</span> <span class="w-size">320×48</span> <span class="w-prop">BOTTOM_MID bg=#2A2A2A HIDDEN (select mode 时显示)</span>
+      ├─ <span class="w-name">s_select_lbl</span> <span class="w-prop">"已选择" / "已选择: N张"</span>
+      └─ <span class="w-name">delete_btn</span> <span class="w-pos">RIGHT_MID</span> <span class="w-prop">icon_delete → grid_delete_cb</span></div>
+
+<h4>布局常量</h4>
+<table>
+  <tr><th>宏</th><th>值</th><th>说明</th></tr>
+  <tr><td><code>PIC_TOP_PAD</code></td><td>32px</td><td>状态栏留黑</td></tr>
+  <tr><td><code>PIC_BTN_MARGIN</code></td><td>12px</td><td>覆盖层按钮边距</td></tr>
+  <tr><td><code>GRID_COLS</code></td><td>3</td><td>缩略图列数</td></tr>
+  <tr><td><code>GRID_CELL</code></td><td>96px</td><td>缩略图单元格尺寸</td></tr>
+  <tr><td><code>GRID_GAP</code></td><td>8px</td><td>网格间距</td></tr>
+  <tr><td><code>GRID_PAD</code></td><td>8px</td><td>网格内边距</td></tr>
+  <tr><td><code>GRID_RADIUS</code></td><td>8px</td><td>单元格圆角</td></tr>
+  <tr><td><code>GRID_TOPBAR_H</code></td><td>48px</td><td>网格顶栏高度</td></tr>
+  <tr><td><code>GRID_BOTBAR_H</code></td><td>48px</td><td>网格底栏高度（选择模式）</td></tr>
+  <tr><td><code>GRID_CHK_SIZE</code></td><td>22px</td><td>选择框直径</td></tr>
+  <tr><td><code>GRID_CHK_OFFSET</code></td><td>6px</td><td>选择框偏移</td></tr>
+</table>
+
+<h4>尺寸 &amp; 位置详细表</h4>
+<table>
+  <tr><th>控件</th><th>宽度</th><th>高度</th><th>位置说明</th></tr>
+  <tr><td>s_screen</td><td>320 (100%)</td><td>480 (100%)</td><td>全屏, bg=#000, pad_top=32</td></tr>
+  <tr><td>s_view_cont</td><td>320 (100%)</td><td>480 (100%)</td><td>bg=#000, CLICKABLE, tap toggles overlay</td></tr>
+  <tr><td>s_picture</td><td>auto</td><td>auto</td><td>centered, native size</td></tr>
+  <tr><td>s_empty_hint</td><td>auto</td><td>auto</td><td>centered, HIDDEN when count > 0</td></tr>
+  <tr><td>s_overlay</td><td>320 (100%)</td><td>480 (100%)</td><td>transparent, 按钮可点击</td></tr>
+  <tr><td>overlay buttons</td><td>auto</td><td>auto</td><td>四角对齐 (TOP_LEFT, TOP_RIGHT, BOTTOM_LEFT, BOTTOM_RIGHT)</td></tr>
+  <tr><td>s_grid_cont</td><td>320 (100%)</td><td>480 (100%)</td><td>flex_col, bg=#1A1A1A, HIDDEN by default</td></tr>
+  <tr><td>topbar</td><td>320 (100%)</td><td>48px</td><td>back + title + choose/cancel</td></tr>
+  <tr><td>s_grid_scroll</td><td>320 (100%)</td><td>flex_grow</td><td>flex_row_wrap, pad=8, gap=8</td></tr>
+  <tr><td>grid_item</td><td>96px</td><td>96px</td><td>r=8, clip_corner, bg=#2A2A2A</td></tr>
+  <tr><td>chk</td><td>22px</td><td>22px</td><td>pos(6,6), circle, select mode 时创建</td></tr>
+  <tr><td>s_bottom_bar</td><td>320 (100%)</td><td>48px</td><td>BOTTOM_MID, HIDDEN (select mode 时显示)</td></tr>
+</table>
+</div> <!-- info-panel -->
+
+<h3>事件处理流程</h3>
+
+<h4>👆 看图模式：点击切换覆盖层</h4>
+<div class="flow-box">
+  <span class="ev">CLICK</span> on s_view_cont（仅点击图片区域，按钮点击不冒泡）<br>
+  <span class="arrow">→</span> <span class="fn">view_click_cb()</span> → <span class="fn">toggle_overlay()</span><br>
+  <span class="arrow">→</span> 切换 s_overlay 的 HIDDEN 状态
+</div>
+
+<h4>👈👉 看图模式：左右滑动切图</h4>
+<div class="flow-box">
+  <span class="ev">LEFT/RIGHT gesture</span> on screen<br>
+  <span class="arrow">→</span> <span class="fn">gesture_cb()</span>（PICTURE_MODE_VIEW 分支）<br>
+  <span class="arrow">→</span> LEFT → <span class="fn">view_nav(+1)</span>（下一张）<br>
+  <span class="arrow">→</span> RIGHT → <span class="fn">view_nav(-1)</span>（上一张）<br>
+  <span class="arrow">→</span> <span class="fn">ui_svc_picture_request(idx, ++s_seq)</span>（异步解码，seq latest-wins 防抖）
+</div>
+
+<h4>🤖 AI 操作弹窗</h4>
+<div class="flow-box">
+  <span class="ev">CLICK</span> on ai_btn<br>
+  <span class="arrow">→</span> <span class="fn">ai_cb()</span> 显示“AI识图 / 图生图”双按钮弹窗<br>
+  <span class="arrow">→</span> AI识图：<span class="fn">ui_svc_picture_recognize_current()</span> → 必要时切闲聊 → 上传图片和固定文本 → 进入 CHAT 等待结果<br>
+  <span class="arrow">→</span> 图生图：<span class="fn">ui_svc_picture_generate_from_current()</span> → 暂存附件并必要时切生图 → 进入 CHAT<br>
+  <span class="arrow">→</span> 图生图时 Chat 页 on_enter 通过 <span class="fn">ui_svc_picture_take_pending_attachment()</span> 取出附件预览
+</div>
+
+<h4>🗑 删除当前图片</h4>
+<div class="flow-box">
+  <span class="ev">CLICK</span> on delete_btn<br>
+  <span class="arrow">→</span> <span class="fn">delete_cb()</span> → 确认弹窗<br>
+  <span class="arrow">→</span> 确认 → <span class="fn">ui_svc_picture_delete_current()</span><br>
+  <span class="arrow">→</span> <span class="fn">on_picture_count()</span> 回调刷新 viewer（自动切到相邻图片）
+</div>
+
+<h4>📂 查看全部 → 切换到 Grid 模式</h4>
+<div class="flow-box">
+  <span class="ev">CLICK</span> on s_all_btn<br>
+  <span class="arrow">→</span> <span class="fn">all_pictures_cb()</span> → <span class="fn">set_mode(PICTURE_MODE_GRID)</span><br>
+  <span class="arrow">→</span> 隐藏 s_view_cont，显示 s_grid_cont<br>
+  <span class="arrow">→</span> <span class="fn">ui_svc_picture_thumbs_request()</span>（异步获取缩略图列表）
+</div>
+
+<h4>✅ Grid 选择模式：批量选择 + 删除</h4>
+<div class="flow-box">
+  <span class="ev">CLICK</span> on s_choose_btn → <span class="fn">enter_select_mode()</span><br>
+  <span class="arrow">→</span> 隐藏 choose_btn，显示 cancel_btn + bottom_bar<br>
+  <span class="arrow">→</span> 为每个 grid_item 创建 chk（圆形选择框）<br><br>
+  <span class="ev">CLICK</span> on grid_item cell（选择模式下）<br>
+  <span class="arrow">→</span> <span class="fn">cell_click_cb()</span> → 切换 selected → <span class="fn">update_checkbox()</span> + <span class="fn">update_select_label()</span><br><br>
+  <span class="ev">CLICK</span> on bottom_bar delete_btn<br>
+  <span class="arrow">→</span> <span class="fn">grid_delete_cb()</span> → 确认弹窗<br>
+  <span class="arrow">→</span> 确认 → <span class="fn">batch_delete_confirm_cb()</span> → <span class="fn">ui_svc_picture_delete_batch(names[], n)</span><br>
+  <span class="arrow">→</span> 退出选择模式 → 清空 cells → 重新请求缩略图
+</div>
+
+<h4>生命周期</h4>
+<table>
+  <tr><th>回调</th><th>行为</th></tr>
+  <tr><td><span class="tag tag-lifecycle">on_create</span></td><td>初始化状态（idx = PIC_IDX_LAST 锚定最新）；构建 viewer + grid 两套布局；注册 ui_svc_picture callbacks；调用 <span class="fn">ui_svc_picture_open()</span></td></tr>
+  <tr><td><span class="tag tag-lifecycle">on_enter</span></td><td>SETTINGS 脏 → <span class="fn">refresh_texts()</span>（刷新 i18n 文本）</td></tr>
+  <tr><td><span class="tag tag-lifecycle">on_leave</span></td><td>（空）</td></tr>
+  <tr><td><span class="tag tag-lifecycle">on_destroy</span></td><td>注销 callbacks → <span class="fn">ui_svc_picture_close()</span> → HIDDEN + <code>lv_obj_del_async</code> → 清空指针</td></tr>
+</table>
+</div> <!-- page-section -->
+
+
+<!-- ============================================================ -->
+<!--                  NAVIGATION SUMMARY                           -->
+<!-- ============================================================ -->
+<h2>页面导航总图</h2>
+<div class="page-section">
+<div class="widget-tree" style="font-size:13px;line-height:2;">
+                        ┌──────────────┐
+        ┌─── 左滑 ───→  │  CHAT (2)    │
+        │               │  AI 对话页    │
+        │   右滑 ←───┘  └──────────────┘
+        │
+  ┌─────┴──────┐   通话   ┌──────────────┐  选行  ┌──────────────┐
+  │  HOME (1)  │─────────→│ CONTACTS (8) │──────→│  CALL (7)    │
+  │  锁屏/主页  │          │ 联系人/NFC   │        │  P2P 通话    │──终局──→ 回 HOME
+  │            │          └──────────────┘        └──────────────┘ (reset+toast)
+  │            │          ┌──────────────┐
+  │            │  ──下滑──→│ PULLDOWN (3) │
+  │            │  ←上滑   │ 下拉快捷面板  │
+  └────────────┘          └──────┬───────┘
+                                 │ 点击"相册"卡片     │ 点击"设置"卡片
+                                 ▼                    ▼
+                          ┌──────────────┐    ┌──────────────┐
+                          │ PHOTO (9)    │    │ SETTINGS (4) │
+                          │   相册页      │    │   设置页      │
+                          └──────────────┘    └──┬────────┬──┘
+                                       点击"模式"│        │点击"关于"
+                                                 ▼        ▼
+                                        ┌──────────┐  ┌──────────┐
+                                        │ MODE (6) │  │ABOUT (5) │
+                                        │ 模式选择  │  │  关于页   │
+                                        └──────────┘  └──────────┘
+</div>
+
+<table>
+  <tr><th>起始页</th><th>操作</th><th>目标页</th><th>触发函数</th></tr>
+  <tr><td>Home</td><td>左滑</td><td>Chat</td><td><code>ui_route_push(UI_PAGE_CHAT)</code></td></tr>
+  <tr><td>Home</td><td>点击相机按钮</td><td>Camera</td><td><code>ui_route_push(UI_PAGE_CAMERA)</code>（不可用时不响应）</td></tr>
+  <tr><td>Home</td><td>点击通话按钮</td><td>Contacts</td><td><code>ui_route_push(UI_PAGE_CONTACTS)</code>（先选联系人；<code>ui_feature_available(CALL)</code> 为 false 时按钮 disabled / toast）</td></tr>
+  <tr><td>Home</td><td>点击闹钟卡片</td><td>Clock</td><td><code>ui_route_push(UI_PAGE_CLOCK)</code></td></tr>
+  <tr><td>Chat</td><td>右滑</td><td>Home</td><td><code>ui_route_pop()</code></td></tr>
+  <tr><td>Camera</td><td>点击相册缩略图</td><td>Photo</td><td><code>ui_route_push(UI_PAGE_PHOTO)</code></td></tr>
+  <tr><td>任意页</td><td>顶部 40px 下滑</td><td>Pulldown</td><td><code>ui_route_push(UI_PAGE_PULLDOWN)</code></td></tr>
+  <tr><td>Pulldown</td><td>上滑手势（deferred）</td><td>(返回上一页)</td><td><code>lv_async_call → ui_route_pop()</code></td></tr>
+  <tr><td>Pulldown</td><td>点击卡片（9 张）</td><td>Clock / Schedule / Pomodoro / Photo / Recording / Music / Detection / Files / Settings</td><td><code>dismiss() → ui_route_reset(card.target)</code>（应用为顶层切换，回根再开目标，不堆叠）</td></tr>
+  <tr><td>Recording</td><td>点击"列表"按钮</td><td>Recording List</td><td><code>ui_route_push(UI_PAGE_RECORDING_LIST)</code></td></tr>
+  <tr><td>Recording List</td><td>点击行内 AI 图标</td><td>Recording Transcribe</td><td><code>ui_route_push(UI_PAGE_RECORDING_TRANSCRIBE)</code></td></tr>
+  <tr><td>Music</td><td>点击"列表"按钮</td><td>Music List</td><td><code>ui_route_push(UI_PAGE_MUSIC_LIST)</code></td></tr>
+  <tr><td>Photo (viewer)</td><td>点击"查看全部"</td><td>Photo (grid)</td><td><code>set_mode(PICTURE_MODE_GRID)</code>（内部布局切换，不 push 页面）</td></tr>
+  <tr><td>Photo (grid)</td><td>右滑 / 返回按钮</td><td>Photo (viewer)</td><td><code>set_mode(PICTURE_MODE_VIEW)</code>（内部布局切换）</td></tr>
+  <tr><td>Photo (viewer)</td><td>点击 AI 按钮</td><td>Chat</td><td><code>pop() → push(UI_PAGE_CHAT)</code>（附件 hand-off，ADR-0003）</td></tr>
+  <tr><td>Settings</td><td>点击"模式"行</td><td>Mode</td><td><code>ui_route_push(UI_PAGE_MODE)</code></td></tr>
+  <tr><td>Settings</td><td>点击"音频诊断"行</td><td>Audio Diag</td><td><code>ui_route_push(UI_PAGE_AUDIO_DIAG)</code>（仅当可用时显示）</td></tr>
+  <tr><td>Settings</td><td>点击"关于"行</td><td>About</td><td><code>ui_route_push(UI_PAGE_ABOUT)</code></td></tr>
+  <tr><td>Settings</td><td>点击"重置"行</td><td>（弹出确认对话框）</td><td><code>ui_comp_popup_show(CONFIRM, ...)</code></td></tr>
+  <tr><td>Mode</td><td>选择新模式</td><td>Chat</td><td><code>ui_route_reset(UI_PAGE_CHAT)</code>（清空路由栈）</td></tr>
+  <tr><td>Contacts</td><td>点击联系人行</td><td>Call</td><td>set_peer_name + <code>ui_svc_call_dial()</code>/<code>dial_device()</code> → <code>ui_route_push(UI_PAGE_CALL)</code>（进入即 CALLING）</td></tr>
+  <tr><td>Call</td><td>返回按钮 / 右滑</td><td>(返回上层页)</td><td><code>ui_route_pop()</code> → on_leave（INCOMING→reject / 活动→hangup）</td></tr>
+  <tr><td>Call</td><td>终态 FAILED/ENDED/ENDED_BY_OTHERS</td><td>Home</td><td><code>ui_route_reset(UI_PAGE_HOME)</code> + toast（服务终态回调触发）</td></tr>
+  <tr><td>常规页（Settings/About/Mode/Contacts/Call/Clock/Schedule/Pomodoro/Recording*/Files/Detection/Audio Diag/Music*）</td><td>右滑 或 点击返回按钮 ←</td><td>(返回上一页)</td><td><code>ui_route_pop()</code></td></tr>
+</table>
+</div>
+
+<!-- ============================================================ -->
+<!--                  FRAMEWORK NOTES                              -->
+<!-- ============================================================ -->
+<h2>框架规则摘要</h2>
+<div class="page-section">
+<table>
+  <tr><th>规则</th><th>说明</th></tr>
+  <tr><td>单向数据流</td><td><code>ui_state_set_*()</code> → dirty 位图 → <code>ui_tick(30ms)</code> → <code>page.on_enter(dirty)</code> → LVGL 更新</td></tr>
+  <tr><td>页面销毁</td><td>必须 <code>lv_obj_add_flag(HIDDEN)</code> + <code>lv_obj_del_async()</code></td></tr>
+  <tr><td>状态唯一源</td><td>从 <code>ui_state</code> 读取数据，绝不反向读取 widget 状态</td></tr>
+  <tr><td>手势冒泡</td><td>子控件添加 <code>LV_OBJ_FLAG_GESTURE_BUBBLE</code> 以让手势传递到父级 screen</td></tr>
+  <tr><td>国际化</td><td>所有用户可见文案通过 <code>ui_i18n_text()</code> 获取</td></tr>
+  <tr><td>屏幕适配</td><td>所有尺寸值通过 <code>ui_adapt()</code> 缩放（基准 320×480）</td></tr>
+  <tr><td>覆盖层页面</td><td>创建在 <code>lv_layer_top()</code> 上，需提供 <code>_is_visible()</code> 函数，在 <code>_init()</code> 中注册 gesture_zone</td></tr>
+  <tr><td>共享组件</td><td>按钮(<code>ui_comp_btn</code>)、状态栏(<code>ui_comp_statusbar</code>)、弹窗(<code>ui_comp_popup</code>)、图片(<code>ui_comp_picture</code>)、超链接(<code>ui_comp_link</code>)等统一组件</td></tr>
+  <tr><td>服务层</td><td>天气(<code>ui_svc_weather</code>)、设备控制(<code>ui_svc_dev_ctrl</code>)、设备信息(<code>ui_svc_devinfo</code>)、图片(<code>ui_svc_picture</code>)、通话(<code>ui_svc_call</code>)等数据服务</td></tr>
+  <tr><td>设置持久化</td><td><code>ui_svc_dev_ctrl_save()</code> 在页面离开时(<code>on_leave</code>)异步写入 KV 存储</td></tr>
+</table>
+</div>
+
+<p style="text-align:center;color:#666;margin-top:32px;font-size:0.85em;">
+  Generated from <code>src/ui/pages/</code> — 9 pages, screen 320×480<br>
+  源文件：<code>ui_page_home.c</code> · <code>ui_page_chat.c</code> · <code>ui_page_pulldown.c</code> · <code>ui_page_settings.c</code> · <code>ui_page_about.c</code> · <code>ui_page_mode.c</code> · <code>ui_page_call.c</code> · <code>ui_page_contacts.c</code> · <code>ui_page_photo.c</code>
+</p>
+
+</body>
+</html>

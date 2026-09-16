@@ -1,0 +1,13 @@
+menuconfig ENABLE_TY_AVI_MEDIA
+    bool "Enable local AVI recording and playback"
+    depends on TUYA_MODULE_T5
+    depends on ENABLE_TUYA_CAMERA
+    depends on ENABLE_TAL_IMAGE
+    depends on WUKONG_STORAGE_SDCARD
+    default n
+    help
+      Enable video-only MJPEG AVI recording through the shared Wukong camera
+      service and callback playback through the Demo UI. Storage mounting,
+      directory listing and path management remain owned by the Demo storage
+      and filesystem services; AVI media does not own microphone, speaker or
+      display hardware.
