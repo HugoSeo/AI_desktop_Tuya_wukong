@@ -613,6 +613,13 @@ STATIC UINT8_T sc7a20B_read_acc(SC7A20_DATA_T *acc_buf, UINT8_T fs)
     float ay = raw_y * 0.001f;
     float az = raw_z * 0.001f;
 
+    if((ax_pre == 0)&&(ay_pre == 0)&&(az_pre == 0))
+    {
+        ax_pre = ax;
+        ay_pre = ay;
+        az_pre = az;
+    }
+
 
      //一阶低通滤波
      ax_pre = ax_pre*(1.0f - SC7A20_FILTER_K) + ax * SC7A20_FILTER_K;
@@ -647,8 +654,15 @@ STATIC UINT8_T sc7a20B_read_acc(SC7A20_DATA_T *acc_buf, UINT8_T fs)
     }
     
     // TAL_PR_NOTICE("angle = %.2f",direct_out);
-
-    // TAL_PR_NOTICE("prd[%.2f  %.2f  %.2f   = %.2f]",pitch_out,roll_out,az_pre,direct_out);
+    static int cnt = 0;
+    cnt++;
+    if (cnt > 20)
+    {
+        cnt = 0;
+        TAL_PR_NOTICE("prd[%.2f  %.2f  %.2f   = %.2f]",pitch_out,roll_out,az_pre,direct_out);
+    }
+    
+    
 
 
     return 0;

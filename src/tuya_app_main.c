@@ -100,7 +100,8 @@
  */
 
 //  #define PID            "gcwfmdfkv6824tuh"   // T5AI_BOARD_DESKTOP
-#define PID            "owmlbbc3auumktx5"        /*小康机器人*/
+// #define PID            "owmlbbc3auumktx5"        /*小康机器人*/
+#define PID            "oofegkisadfkohgm"        /*小康机器人*/
 // #define PID            "gk4wxa53gapeangs"        /*小康机器人*/
 
 /* ---------------------------------------------------------------------------

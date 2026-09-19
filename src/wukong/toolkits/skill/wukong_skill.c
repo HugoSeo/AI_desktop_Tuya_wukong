@@ -26,11 +26,6 @@ STATIC UINT_T        s_skill_count = 0;
  * every rescan and must not re-register/re-subscribe. */
 STATIC BOOL_T        s_lifecycle_started = FALSE;
 
-STATIC UINT8_T get_offon_state = 0;
-QUEUE_HANDLE  s_queue_voice_cmd;
-QUEUE_HANDLE  s_queue_state;
-QUEUE_HANDLE  s_queue_name_str;
-
 /* id must be non-empty, <= max, no '/' and no ".." */
 STATIC BOOL_T __id_safe(CONST CHAR_T *id)
 {

@@ -372,27 +372,62 @@ OPERATE_RET wukong_audio_player_alert(TY_AI_TOY_ALERT_TYPE_E type, BOOL_T send_e
     OPERATE_RET rt = OPRT_OK;
     CONST CHAR_T *audio_data = NULL;
     UINT32_T audio_size = 0;
+    STATIC UINT8_T testflg = 0xFF;    
 
     switch (type) {
     case AI_TOY_ALERT_TYPE_POWER_ON:
-    case AI_TOY_ALERT_TYPE_NETWORK_CONNECTED:
+    // case AI_TOY_ALERT_TYPE_NETWORK_CONNECTED:
     case AI_TOY_ALERT_TYPE_BATTERY_LOW:
     case AI_TOY_ALERT_TYPE_PLEASE_AGAIN:
     case AI_TOY_ALERT_TYPE_LONG_KEY_TALK:
     case AI_TOY_ALERT_TYPE_KEY_TALK:
     case AI_TOY_ALERT_TYPE_WAKEUP_TALK:
     case AI_TOY_ALERT_TYPE_RANDOM_TALK:
-    case AI_TOY_ALERT_TYPE_WAKEUP:  
+    // case AI_TOY_ALERT_TYPE_WAKEUP:  
 #if defined(ENABLE_CLOUD_ALERT) && ENABLE_CLOUD_ALERT==1    
         if (OPRT_OK == wukong_ai_agent_cloud_alert(type)) break;
 #endif
     case AI_TOY_ALERT_TYPE_NOT_ACTIVE:
     case AI_TOY_ALERT_TYPE_NETWORK_CFG:
-    case AI_TOY_ALERT_TYPE_NETWORK_FAIL:
-    case AI_TOY_ALERT_TYPE_NETWORK_DISCONNECT:      
     default:
         audio_data = (CONST CHAR_T*)media_src_dingdong_zh;
         audio_size = sizeof(media_src_dingdong_zh);   
+        break;
+
+    // Modified by Hugo    
+    case AI_TOY_ALERT_TYPE_NETWORK_CONNECTED:
+        if (tal_queue_fetch(s_queue_test, &testflg, 1) == OPRT_OK)
+        {
+            ;
+        }
+        if(testflg == 0)
+        {
+            return rt;
+        }
+#if defined(ENABLE_CLOUD_ALERT) && ENABLE_CLOUD_ALERT==1    
+    if (OPRT_OK == wukong_ai_agent_cloud_alert(type)) break;
+#endif
+        audio_data = (CONST CHAR_T*)media_src_dingdong_zh;
+        audio_size = sizeof(media_src_dingdong_zh);
+        break;    
+    case AI_TOY_ALERT_TYPE_NETWORK_FAIL:
+    case AI_TOY_ALERT_TYPE_NETWORK_DISCONNECT: 
+        audio_data = (CONST CHAR_T*)media_src_connect_error_zh;
+        audio_size = sizeof(media_src_connect_error_zh);
+        break;
+    case AI_TOY_ALERT_TYPE_WAKEUP:
+        if(tuya_ai_toy_is_cloud_connected() == TRUE)
+        {
+#if defined(ENABLE_CLOUD_ALERT) && ENABLE_CLOUD_ALERT==1    
+            if (OPRT_OK == wukong_ai_agent_cloud_alert(type)) break;
+#endif
+        }
+        else
+        {
+            audio_data = (CONST CHAR_T*)media_src_connect_error_zh;
+            audio_size = sizeof(media_src_connect_error_zh);
+            break;
+        }
         break;
     }
 

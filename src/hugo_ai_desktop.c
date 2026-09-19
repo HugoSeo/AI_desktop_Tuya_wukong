@@ -46,9 +46,9 @@
 // #define ADC_CHANNEL   14
 #define ADC_NUM                 TUYA_ADC_NUM_0
 #define ADC_CHANNEL_A           1
-#define ADC_CHANNEL_B           4
-#define ADC_CHANNEL_C           6
-#define ADC_CHANNEL_D           14
+#define ADC_CHANNEL_B           6
+#define ADC_CHANNEL_C           14
+#define ADC_CHANNEL_D           15
 
 #define LED_CTRL_PIN            TUYA_GPIO_NUM_50
 #define TOUCH_KEY_PIN           TUYA_GPIO_NUM_15
@@ -107,7 +107,7 @@ STATIC UINT8_T flag_moto_motion = 0;
 // STATIC UINT8_T flag_move_cmd = 0;
 STATIC UINT8_T flag_turn_off_on_cmd = 0;
 STATIC UINT8_T flag_shut_voice = 0;
-UINT8_T flag_turn_off_on_state = 2;
+UINT8_T flag_turn_off_on_state = POWER_STATUS_ON;
 STATIC UINT8_T flag_config_voic = 0;
 STATIC UINT8_T getdata[4]={0};
 STATIC UINT8_T wakeflag=0;
@@ -134,7 +134,7 @@ STATIC UINT16_T adc_check_time = 0;
 STATIC UINT16_T seg_dis_time = 0;
 STATIC UINT_T rgb_dis_time = 0;
 
-UINT8_T demo_test_state = 0;    //0:demo test first run     1:usually run
+UINT8_T demo_test_state = 1;    //0:demo test first run     1:usually run
 STATIC UINT16_T demo_test_time = 0;
 STATIC UINT8_T demo_test_flag = 0;
 STATIC UINT8_T demo_test_cmd = 0;
@@ -153,7 +153,9 @@ STATIC UINT8_T MOTO2_STOP_FLG = 0;
 
 
 STATIC WF_STATION_STAT_E net_state={0};
+STATIC BOOL_T online_state = FALSE;
 
+INT32_T adc_value[16] = {0};
 
 //                            0    1    2    3    4    5    6    7    8    9    A    B    C    D    E    F   NOP
 CONST UINT8_T seg_code[] = {0x3F,0x06,0x5B,0x4F,0x66,0x6D,0x7D,0x07,0x7F,0x6F,0x77,0x7C,0x39,0x5E,0x79,0x71,0x00};
@@ -440,6 +442,7 @@ VOID mcu_uart_rx_process(VOID)
                             flag_rgb_data = RGB_BLUE;
                             moto_state = STATE_MOTO_ON;
                             demo_test_state = 0;    //demo test mode
+                            tal_queue_post(s_queue_test, &demo_test_state, 0);
                         }
                         
                     }
@@ -643,24 +646,24 @@ VOID mcu_uart_task(VOID)
 
 
 // moto control
-STATIC UINT8_T hugo_ai_motoadc_init(VOID)
-{
-    OPERATE_RET rt = OPRT_OK;
-    STATIC TUYA_ADC_BASE_CFG_T sg_adc_cfg = {
-        .ch_list.data = (1<<MOTO_ADC_CHANNEL),
-        // .ch_list.data = (1<<ADC_CHANNEL_B) ,
-        .ch_nums = 1,    //adc Number of channel lists
-        .width = 12,
-        .mode = TUYA_ADC_CONTINUOUS,
-        .type = TUYA_ADC_INNER_SAMPLE_VOL,
-        .conv_cnt = 1,
-    };
+// STATIC UINT8_T hugo_ai_motoadc_init(VOID)
+// {
+//     OPERATE_RET rt = OPRT_OK;
+//     STATIC TUYA_ADC_BASE_CFG_T sg_adc_cfg = {
+//         .ch_list.data = (1<<MOTO_ADC_CHANNEL),
+//         // .ch_list.data = (1<<ADC_CHANNEL_B) ,
+//         .ch_nums = 1,    //adc Number of channel lists
+//         .width = 12,
+//         .mode = TUYA_ADC_CONTINUOUS,
+//         .type = TUYA_ADC_INNER_SAMPLE_VOL,
+//         .conv_cnt = 1,
+//     };
 
-    TUYA_CALL_ERR_GOTO(tkl_adc_init(ADC_NUM, &sg_adc_cfg), __EXIT_ADC);
-    return 1;
-__EXIT_ADC:
-    return 0;
-}
+//     TUYA_CALL_ERR_GOTO(tkl_adc_init(ADC_NUM, &sg_adc_cfg), __EXIT_ADC);
+//     return 1;
+// __EXIT_ADC:
+//     return 0;
+// }
 
 VOID hugo_ai_moto_init(VOID)
 {
@@ -1087,11 +1090,11 @@ VOID hugo_ai_moto_timer(VOID)
         flag_seg_data = 3;
     }
 
-    if (rgb_dis_time > 0)
+    if (rgb_dis_time > 1)
     {
         rgb_dis_time --;
     }
-    else
+    else if(rgb_dis_time == 1)
     {
         rgb_dis_time = 0;
         flag_rgb_data=RGB_OFF;
@@ -1133,6 +1136,8 @@ VOID hugo_ai_moto_process(VOID)
         // moto_power_en();
         MOTO2_STOP_FLG = 0;
         // moto_time = 10000;
+        moto_flag = MOTO_CHECK;
+        tal_system_sleep(100);
     }
 
     // if((MOTOR2_Cycle == 0)&&(hold_time == 0)&&(moto_time > 0))
@@ -1150,7 +1155,7 @@ VOID hugo_ai_moto_process(VOID)
         moto_state = STATE_MOTO_IDLE;
         moto_angle = 0;
 
-        TAL_PR_NOTICE("A[%d]= %f  %f",ret,direct_out,moto_angle);
+        TAL_PR_NOTICE("=============== on A[%d]= %f  %f",ret,direct_out,moto_angle);
         if((ret=moto_angle_check()) == 1)
             moto_flag = MOTO_RUN_UP;
         else
@@ -1162,7 +1167,7 @@ VOID hugo_ai_moto_process(VOID)
         moto_flag = MOTO_RUN_DOWN;
         moto_angle = 30;//80;//150;//75
         MOTOR2_Cycle = 4000;//3ms*700 = 2100ms
-        TAL_PR_NOTICE("A[%d]= %f  %f",ret,direct_out,moto_angle);
+        TAL_PR_NOTICE("=============== off A[%d]= %f  %f",ret,direct_out,moto_angle);
         break;
     case STATE_MOTO_NOD:
         moto_state = STATE_MOTO_IDLE;
@@ -1690,8 +1695,8 @@ VOID hugo_ai_moto_process(VOID)
 
 
 // ADC
-// P28      P12     P21     P25
-// ADC4     ADC14   ADC6    ADC1
+// P13      P12     P21     P25
+// ADC15    ADC14   ADC6    ADC1
 STATIC UINT8_T hugo_ai_adc_init(VOID)
 {
     OPERATE_RET rt = OPRT_OK;
@@ -1715,7 +1720,7 @@ __EXIT_ADC:
 VOID hugo_ai_adc_get(VOID)
 {
     OPERATE_RET rt = OPRT_OK;
-    INT32_T adc_value[16] = {0};
+    // INT32_T adc_value[16] = {0};
     UINT8_T i = 0;
 
     // TUYA_CALL_ERR_LOG(tkl_adc_read_single_channel(ADC_NUM, ADC_CHANNEL, &adc_value));
@@ -1730,12 +1735,12 @@ VOID hugo_ai_adc_get(VOID)
     //     TAL_PR_INFO("ADC%d[%d] get Volt = %d", i, adc_value[i], adc_value[i]/2*3300/4096);
     // }
 
-    TAL_PR_INFO("ADC get= [%d:%d %d] [%d:%d %d] [%d:%d %d] [%d:%d %d]",\
-        ADC_CHANNEL_A, adc_value[0], adc_value[0]/2*3300/4096,\
-        ADC_CHANNEL_B, adc_value[1], adc_value[1]/2*3300/4096,\
-        ADC_CHANNEL_C, adc_value[2], adc_value[2]/2*3300/4096,\
-        ADC_CHANNEL_D, adc_value[3], adc_value[3]/2*3300/4096\
-    );
+    // TAL_PR_INFO("ADC get= [%d:%d %d] [%d:%d %d] [%d:%d %d] [%d:%d %d]",\
+    //     ADC_CHANNEL_A, adc_value[0], adc_value[0]/2*3300/4096,\
+    //     ADC_CHANNEL_B, adc_value[1], adc_value[1]/2*3300/4096,\
+    //     ADC_CHANNEL_C, adc_value[2], adc_value[2]/2*3300/4096,\
+    //     ADC_CHANNEL_D, adc_value[3], adc_value[3]/2*3300/4096\
+    // );
 
     // tkl_adc_read_voltage(ADC_NUM, &adc_value, 4);
     // for(i=0;i<4;i++)
@@ -1746,10 +1751,44 @@ VOID hugo_ai_adc_get(VOID)
 
 STATIC UINT8_T hugo_ai_adc_task(VOID)
 {
-    hugo_ai_adc_init();
+    unsigned char mic_station_flag = 0;
+    unsigned char cnt = 0;
+    // hugo_ai_adc_init();
     // tal_system_sleep(100);
     hugo_ai_adc_get();
-    tal_system_sleep(100);
+    // tal_system_sleep(100);
+    if(adc_value[0] < 4300)
+    {
+        mic_station_flag |= 0x01;
+        cnt++;
+    }
+    if(adc_value[1] < 3100)
+    {
+        mic_station_flag |= 0x02;
+        cnt++;
+    }
+    if(adc_value[2] < 3100)
+    {
+        mic_station_flag |= 0x04;
+        cnt++;
+    }
+    if(adc_value[3] < 3100)
+    {
+        mic_station_flag |= 0x08;
+        cnt++;
+    }
+
+    if(cnt != 0)
+    {
+        TAL_PR_INFO("ADC get= [%d:%d %d] [%d:%d %d] [%d:%d %d] [%d:%d %d]",\
+            ADC_CHANNEL_A, adc_value[0], adc_value[0]/2*3300/4096,\
+            ADC_CHANNEL_B, adc_value[1], adc_value[1]/2*3300/4096,\
+            ADC_CHANNEL_C, adc_value[2], adc_value[2]/2*3300/4096,\
+            ADC_CHANNEL_D, adc_value[3], adc_value[3]/2*3300/4096\
+        );
+    
+        TAL_PR_INFO("=======================  mic_station_flag = %d  =======================",mic_station_flag);
+    }
 }
 
 OPERATE_RET hugo_ai_desktop_init(VOID)
@@ -1851,16 +1890,17 @@ OPERATE_RET hugo_ai_desktop_init(VOID)
     // demo_test_state = 1;
 
     // tal_system_sleep(1000);
-    tal_queue_post(s_queue_test, &demo_test_state, 0); 
+    // tal_queue_post(s_queue_test, &demo_test_state, 0); 
 
     while (1)
     { 
-        tal_wifi_station_get_status(&net_state);
+        // tal_wifi_station_get_status(&net_state);            //tuya_ai_toy_is_cloud_connected
+        online_state = tuya_ai_toy_is_cloud_connected();
         
         mcu_uart_task();
         // hugo_ai_adc_task();
         
-        if((flag_turn_off_on_state == POWER_STATUS_ON)&&(net_state == WSS_GOT_IP))
+        if((flag_turn_off_on_state == POWER_STATUS_ON)&&/*(net_state == WSS_GOT_IP)*/(online_state == TRUE))
         {
             hugo_Face_uart_task();
         }
@@ -2404,7 +2444,8 @@ OPERATE_RET hugo_ai_desktop_init(VOID)
         //     }
         // }
 
-        if(net_state == WSS_GOT_IP)
+        // if(net_state == WSS_GOT_IP)
+        if(online_state == TRUE)
         {
             if(face_voice_flag == 1)
             {
@@ -2454,7 +2495,7 @@ OPERATE_RET hugo_ai_desktop_init(VOID)
             }
         }
 
-        tal_system_sleep(100);
+        tal_system_sleep(10);
     }
     tal_queue_free(s_queue_voice_cmd);
     // tal_queue_free(s_queue_state);

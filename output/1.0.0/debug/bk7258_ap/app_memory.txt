@@ -1,8 +1,8 @@
 Memory region         Used Size  Region Size  %age Used
-           FLASH:     2549824 B      3584 KB     69.48%
+           FLASH:     2591924 B      3584 KB     70.62%
             IRAM:        1696 B       334 KB      0.50%
         SPINLOCK:       46100 B        64 KB     70.34%
-             RAM:      101956 B       334 KB     29.81%
+             RAM:      106424 B       334 KB     31.12%
             SWAP:          2 KB         2 KB    100.00%
            ITCM0:         152 B      16352 B      0.93%
            DTCM0:          0 GB      16380 B      0.00%

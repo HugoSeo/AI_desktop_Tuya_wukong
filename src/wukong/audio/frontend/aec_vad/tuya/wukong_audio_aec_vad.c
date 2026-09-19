@@ -35,7 +35,7 @@ STATIC OPERATE_RET __speex_rnn_init(UINT32_T min_speech_len_ms, UINT32_T max_spe
 
     if (__s_speex_aec_handle == NULL) {
         __s_speex_aec_handle = speex_aes_create(frame_size / 2);
-        speex_aes_set_param(__s_speex_aec_handle, 8);   //Modified by Hugo 26.09.16     5
+        speex_aes_set_param(__s_speex_aec_handle, 5);   //Modified by Hugo 26.09.16     5
         speex_ns_set_param(__s_speex_aec_handle, 8, 10);
         TUYA_CHECK_NULL_RETURN(__s_speex_aec_handle, OPRT_COM_ERROR);
     }

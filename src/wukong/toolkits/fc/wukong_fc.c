@@ -15,6 +15,13 @@
 #include "ty_cJSON.h"
 #include <stdio.h>
 
+//Add by Hugo
+#include "tal_queue.h"
+
+QUEUE_HANDLE  s_queue_voice_cmd;
+QUEUE_HANDLE  s_queue_state;
+QUEUE_HANDLE  s_queue_name_str;
+
 /* NLG 流状态：STOP=空闲(下一个有内容的包发 START)，DATA=流进行中。
  * 对话被打断(chat break)时直接复位为 STOP，保证打断后的新回复
  * 一定以 START 开始，不会被 UI 拼接到旧气泡上。 */
@@ -134,6 +141,142 @@ OPERATE_RET __wukong_ai_asr_process(AI_TEXT_TYPE_E type, ty_cJSON *root, BOOL_T 
     CHAR_T *content =  ty_cJSON_GetStringValue(root);
     TAL_PR_NOTICE("wukong text -> ASR result: %s", content);
     
+    //Added by Hugo
+    STATIC UINT8_T cmd_data[4] = {0};
+    STATIC UINT8_T name_str[31] = {0};
+    char* start_cnt = NULL;
+    char* end_cnt = NULL;
+    if((strstr((const char*)content,"开启小夜灯")!=NULL)||(strstr((const char*)content,"打开小夜灯")!=NULL))
+    {
+        TAL_PR_NOTICE("get cmd:开启小夜灯");
+        // flag_rgb_bit = 1;
+        cmd_data[0] = 10;
+        cmd_data[1] = 1;
+        tal_queue_post(s_queue_voice_cmd, &cmd_data, 0); 
+    }
+    else if(strstr((const char*)content,"关闭小夜灯")!=NULL)
+    {
+        TAL_PR_NOTICE("get cmd:关闭小夜灯");
+        cmd_data[0] = 10;
+        cmd_data[1] = 2;
+        tal_queue_post(s_queue_voice_cmd, &cmd_data, 0);
+    }
+
+    else if((strstr((const char*)content,"向右转")!=NULL)||(strstr((const char*)content,"向右旋转")!=NULL))
+    {
+        TAL_PR_NOTICE("get cmd:向右转");
+        cmd_data[0] = 1;
+        cmd_data[1] = 1;
+        tal_queue_post(s_queue_voice_cmd, &cmd_data, 0);
+    }
+    else if((strstr((const char*)content,"向左转")!=NULL)||(strstr((const char*)content,"向左旋转")!=NULL))
+    {
+        TAL_PR_NOTICE("get cmd:向左转");
+        cmd_data[0] = 1;
+        cmd_data[1] = 2;
+        tal_queue_post(s_queue_voice_cmd, &cmd_data, 0);
+    }    
+    else if((strstr((const char*)content,"向后转")!=NULL)||(strstr((const char*)content,"向后旋转")!=NULL))
+    {
+        TAL_PR_NOTICE("get cmd:向后转");
+        cmd_data[0] = 1;
+        cmd_data[1] = 3;
+        tal_queue_post(s_queue_voice_cmd, &cmd_data, 0);
+    }
+    else if((strstr((const char*)content,"坐着")!=NULL)||(strstr((const char*)content,"坐下")!=NULL)||(strstr((const char*)content,"做下")!=NULL)||(strstr((const char*)content,"趴下")!=NULL))
+    {
+        TAL_PR_NOTICE("get cmd:坐下");
+        cmd_data[0] = 1;
+        cmd_data[1] = 6;
+        tal_queue_post(s_queue_voice_cmd, &cmd_data, 0);
+    }
+    else if(strstr((const char*)content,"站起来")!=NULL)
+    {
+        TAL_PR_NOTICE("get cmd:站起来");
+        cmd_data[0] = 1;
+        cmd_data[1] = 7;
+        tal_queue_post(s_queue_voice_cmd, &cmd_data, 0);
+    }
+    else if((strstr((const char*)content,"不要说话")!=NULL)||(strstr((const char*)content,"别说话")!=NULL)||(strstr((const char*)content,"闭嘴")!=NULL)||(strstr((const char*)content,"安静")!=NULL))
+    {
+        TAL_PR_NOTICE("get cmd:stop talk");
+        cmd_data[0] = 1;
+        cmd_data[1] = 8;
+        tal_queue_post(s_queue_voice_cmd, &cmd_data, 0);
+    }
+    else if((strstr((const char*)content,"摇摇头")!=NULL)||(strstr((const char*)content,"摇一摇")!=NULL))
+    {
+        TAL_PR_NOTICE("get cmd:摇摇头");
+        cmd_data[0] = 1;
+        cmd_data[1] = 9;
+        tal_queue_post(s_queue_voice_cmd, &cmd_data, 0);
+    }
+    else if((strstr((const char*)content,"蹲下")!=NULL)||(strstr((const char*)content,"蹲着")!=NULL)||(strstr((const char*)content,"跪下")!=NULL)||(strstr((const char*)content,"跪着")!=NULL))
+    {
+        TAL_PR_NOTICE("get cmd:蹲下");
+        cmd_data[0] = 1;
+        cmd_data[1] = 10;
+        tal_queue_post(s_queue_voice_cmd, &cmd_data, 0);
+    }
+    else if((strstr((const char*)content,"跳个舞")!=NULL)||(strstr((const char*)content,"跳一个舞")!=NULL)||(strstr((const char*)content,"跳舞")!=NULL))
+    {
+        TAL_PR_NOTICE("get cmd:跳个舞");
+        cmd_data[0] = 1;
+        cmd_data[1] = 11;
+        tal_queue_post(s_queue_voice_cmd, &cmd_data, 0);
+    }    
+    // else if((strstr((const char*)content,"开启设备")!=NULL)||(strstr((const char*)content,"打开设备")!=NULL))
+    // {
+    //     TAL_PR_NOTICE("get cmd:打开设备");
+    //     cmd_data[0] = 2;
+    //     cmd_data[1] = 1;
+    //     tal_queue_post(s_queue_voice_cmd, &cmd_data, 0);
+    // }
+    else if(strstr((const char*)content,"关闭设备")!=NULL)
+    {
+        TAL_PR_NOTICE("get cmd:关闭设备");
+        cmd_data[0] = 2;
+        cmd_data[1] = 2;
+        tal_queue_post(s_queue_voice_cmd, &cmd_data, 0);
+    }
+    else if((strstr((const char*)content,"我是")!=NULL)||(strstr((const char*)content,"我叫")!=NULL))
+    {
+        cmd_data[0] = 11;
+        cmd_data[1] = 1;
+        tal_queue_post(s_queue_voice_cmd, &cmd_data, 0);
+        // strncpy((const char*)content,"",);
+        // TAL_PR_NOTICE("len=%d [%d %d]  data=%.2X %.2X %.2X   %.2X %.2X %.2X  %.2X %.2X %.2X",strlen((const char*)"。"),strlen((const char*)"，"),strlen((const char*)content),content[0],content[1],content[2],content[3],content[4],content[5],content[6],content[7],content[8]);
+
+        //  使用UTF-8，每个汉字3个字节
+        // name_str        
+        memset(name_str,0x00,31);
+
+        start_cnt = strstr((const char*)content,"我是");
+        if (start_cnt == NULL)
+        {
+            start_cnt = strstr((const char*)content,"我叫");
+        }        
+        if(start_cnt != NULL)
+        {
+            end_cnt = strstr((const char*)content,"，");
+            if (end_cnt == NULL)
+            {
+                end_cnt = strstr((const char*)content,"。");
+            }
+            if (end_cnt == NULL)
+            {
+                end_cnt = strlen((const char*)content);
+            }
+            start_cnt += 6;
+            if((end_cnt > start_cnt)&&(end_cnt-start_cnt <= 30))
+            {
+                strncpy(name_str,start_cnt,end_cnt-start_cnt);
+                TAL_PR_NOTICE("cnt=[%d, %d]  str=%s",start_cnt,end_cnt ,(const char*)name_str);
+                tal_queue_post(s_queue_name_str, &name_str, 0);
+            }
+        }     
+    }
+
     // send data to register cb
     WUKONG_AI_TEXT_T text;
     text.data      = content;

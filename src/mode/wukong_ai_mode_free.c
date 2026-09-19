@@ -654,6 +654,7 @@ STATIC OPERATE_RET wukong_ai_free_key_cb(VOID *data, INT_T len)
     switch (event) 
     {        
         case NORMAL_KEY:
+        case LONG_KEY:
         {
             wukong_ai_agent_output_stop(TRUE);
             wukong_audio_player_stop(AI_PLAYER_ALL);
@@ -674,10 +675,10 @@ STATIC OPERATE_RET wukong_ai_free_key_cb(VOID *data, INT_T len)
         }
         break;
 
-        case LONG_KEY: 
-        {
-            ;
-        }
+        // case LONG_KEY:
+        // {
+        //     ;
+        // }
         break;   
 
         case RELEASE_KEY: 

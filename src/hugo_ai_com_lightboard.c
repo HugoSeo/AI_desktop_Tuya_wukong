@@ -238,16 +238,16 @@ STATIC VOID_T hugo_ai_seg_reflash_time(VOID_T)
     {
         // return;
     }
-    if(tm.tm_sec % 5 != 0)
-    {
-        time_valid_flag = 0;
-        return;
-    }
-    // if ((tm.tm_min == s_last_min)&&(tm.tm_hour == s_last_hour))
+    // if(tm.tm_sec % 5 != 0)
     // {
     //     time_valid_flag = 0;
     //     return;
     // }
+    if ((tm.tm_min == s_last_min)&&(tm.tm_hour == s_last_hour))
+    {
+        time_valid_flag = 0;
+        return;
+    }
 
     time_valid_flag = 1;
     s_last_min = tm.tm_min;
@@ -286,7 +286,7 @@ VOID_T hugo_ai_lightboard_process(VOID_T)
         // buf[0] = 6;
         // lightboard_write_data(0x02,buf,1);
     }
-    else if((flag_seg_data == 3)&&(flag_turn_off_on_state == 2))
+    else if((flag_seg_data == 3)&&(flag_turn_off_on_state == 2))    //test mode
     {
         buf[0] = 0x03;
         buf[1] = 0x00;
@@ -298,7 +298,7 @@ VOID_T hugo_ai_lightboard_process(VOID_T)
     }
     else if(flag_rgb_data!=0xFF)
     {
-        // TAL_PR_INFO("=== flag_rgb_data=%d",flag_rgb_data);
+        TAL_PR_INFO("=== flag_rgb_data=%d",flag_rgb_data);
         lightboard_write_data(0x02,&flag_rgb_data,1);
         tal_system_sleep(300);
         lightboard_write_data(0x02,&flag_rgb_data,1);

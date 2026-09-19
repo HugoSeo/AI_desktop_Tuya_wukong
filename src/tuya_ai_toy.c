@@ -104,7 +104,7 @@
 #define AI_DEVICE_MODE_DEV(b)         ((AI_DEVICE_MODE_E)(((UINT8_T)(b) >> 4) & 0x0F))
 #define AI_DEVICE_MODE_SUB(b)         ((AI_CHAT_SUB_MODE_E)((UINT8_T)(b) & 0x0F))
 
-#define AUDIO_KEY_TIME        20
+#define AUDIO_KEY_TIME        100
 #define LONG_KEY_TIME         400
 #define SEQ_KEY_TIME          200
 #define TOY_IDLE_TIMEOUT      (30 * 1000)       /* 30 sec */
@@ -856,6 +856,8 @@ OPERATE_RET tuya_ai_toy_init(TY_AI_TOY_CFG_T *cfg)
     // TUYA_CALL_ERR_GOTO(tuya_ai_toy_led_init(s_ai_toy->cfg.led_pin), __error);
     // TUYA_CALL_ERR_GOTO(tuya_ai_toy_key_init(s_ai_toy->cfg.audio_trigger_pin, TRUE, SEQ_KEY_TIME, LONG_KEY_TIME, __on_ai_toy_audio_trigger_pin), __error);
     TUYA_CALL_ERR_GOTO(tuya_ai_toy_key_init(s_ai_toy->cfg.audio_trigger_pin, FALSE, AUDIO_KEY_TIME, AUDIO_KEY_TIME, __on_ai_toy_audio_trigger_pin), __error);
+    // TUYA_CALL_ERR_GOTO(tuya_ai_toy_key_init(s_ai_toy->cfg.audio_trigger_pin, FALSE, SEQ_KEY_TIME, LONG_KEY_TIME, __on_ai_toy_audio_trigger_pin), __error);
+    // TUYA_CALL_ERR_GOTO(tuya_ai_toy_key_init(s_ai_toy->cfg.net_pin, TRUE, SEQ_KEY_TIME, LONG_KEY_TIME * 10, __on_ai_toy_net_pin), __error);
     // TUYA_CALL_ERR_GOTO(tuya_ai_toy_key_init(s_ai_toy->cfg.net_pin, TRUE, SEQ_KEY_TIME, LONG_KEY_TIME * 10, __on_ai_toy_net_pin), __error);
 
 #if (defined(ENABLE_TUYA_CAMERA) && (ENABLE_TUYA_CAMERA == 1)) || \
