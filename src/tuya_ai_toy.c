@@ -119,6 +119,7 @@
 #define AI_TOY_ALERT_PLAY_ID   "ai_toy_alert"
 
 extern UINT8_T flag_turn_off_on_state;
+extern CHAR_T  keep_quiet;
 /* ---------------------------------------------------------------------------
  * File scope variables
  * --------------------------------------------------------------------------- */
@@ -266,6 +267,12 @@ STATIC OPERATE_RET __ai_toy_config_load(VOID)
 /** Forward mic data to wukong audio input. */
 STATIC INT_T __on_ai_toy_mic_data(UINT8_T *data, UINT16_T datalen)
 {
+    // TAL_PR_DEBUG("...........get voice ");
+    if(keep_quiet == 1)
+    {
+        return OPRT_OK;
+    }
+    
     return wukong_ai_mode_dispatch(AI_MODE_OP_AUDIO_INPUT, data, (INT_T)datalen);
 }
 

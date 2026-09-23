@@ -107,7 +107,7 @@
 /* ---------------------------------------------------------------------------
  * Forward declarations
  * --------------------------------------------------------------------------- */
-
+#define TIMER_ID1        TUYA_TIMER_NUM_0
 /* ---------------------------------------------------------------------------
  * File scope variables
  * --------------------------------------------------------------------------- */
@@ -701,9 +701,25 @@ STATIC VOID_T user_main(VOID_T)
     tal_sw_timer_create(hugo_ai_moto_timer_cb, NULL, &hugo_ai_motor_timer_id);
     tal_sw_timer_start(hugo_ai_motor_timer_id, 2, TAL_TIMER_CYCLE);
 
+//     TUYA_TIMER_BASE_CFG_T sg_timer_cfg = {
+//         .mode = TUYA_TIMER_MODE_PERIOD,
+//         .args = NULL,
+//         .cb = hugo_ai_moto_timer_cb
+//     };
+
+//     TUYA_CALL_ERR_GOTO(tkl_timer_init(TIMER_ID1, &sg_timer_cfg), __EXIT);
+
+//     /*start timer*/
+//     TUYA_CALL_ERR_GOTO(tkl_timer_start(TIMER_ID1, 2500), __EXIT);
+//     TAL_PR_NOTICE("timer %d is start", TIMER_ID1);
+// __EXIT:
+//     ;
+
+
     //Add by Hugo 26.6.11
     TAL_PR_DEBUG("Hugo desktop init");
     TUYA_CALL_ERR_LOG(hugo_ai_desktop_init());
+    
 
 }
 

@@ -33,7 +33,7 @@
 
 #define FACE_ENABLE
 
-#define FACE_PW_PIN             TUYA_GPIO_NUM_26
+#define FACE_PW_PIN             TUYA_GPIO_NUM_20
 
 #define Face_Buffln             64
 #define FACE_CMD_HEAD           0xef

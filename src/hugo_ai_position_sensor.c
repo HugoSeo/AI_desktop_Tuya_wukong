@@ -659,7 +659,7 @@ STATIC UINT8_T sc7a20B_read_acc(SC7A20_DATA_T *acc_buf, UINT8_T fs)
     if (cnt > 20)
     {
         cnt = 0;
-        TAL_PR_NOTICE("prd[%.2f  %.2f  %.2f   = %.2f]",pitch_out,roll_out,az_pre,direct_out);
+        TAL_PR_NOTICE("================ prd[%.2f  %.2f  %.2f   = %.2f]",pitch_out,roll_out,az_pre,direct_out);
     }
     
     

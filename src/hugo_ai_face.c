@@ -299,7 +299,6 @@ VOID Face_Init(VOID)
 
     face_flag_read(face_flag_buf);
     FACE_query(face_flag_buf);
-
 }
 VOID Face_disable(VOID)
 {
@@ -411,6 +410,7 @@ VOID Send_FaceCmd(unsigned char msgid, unsigned char *pData, unsigned int dataLe
         else
 #endif
         {
+            tal_system_sleep(200);
             sum = GetCRC(&SendCmd[2], dataLen + 3);
             SendCmd[SendLen++] = (uint8_t)(sum);    // 包校验和
             // 发送指令部分数据

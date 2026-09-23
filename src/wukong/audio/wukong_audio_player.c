@@ -373,7 +373,8 @@ OPERATE_RET wukong_audio_player_alert(TY_AI_TOY_ALERT_TYPE_E type, BOOL_T send_e
     CONST CHAR_T *audio_data = NULL;
     UINT32_T audio_size = 0;
     STATIC UINT8_T testflg = 0xFF;    
-
+    UINT8_T wakeupflg = 1;
+    
     switch (type) {
     case AI_TOY_ALERT_TYPE_POWER_ON:
     // case AI_TOY_ALERT_TYPE_NETWORK_CONNECTED:
@@ -415,7 +416,8 @@ OPERATE_RET wukong_audio_player_alert(TY_AI_TOY_ALERT_TYPE_E type, BOOL_T send_e
         audio_data = (CONST CHAR_T*)media_src_connect_error_zh;
         audio_size = sizeof(media_src_connect_error_zh);
         break;
-    case AI_TOY_ALERT_TYPE_WAKEUP:
+    case AI_TOY_ALERT_TYPE_WAKEUP:        
+        tal_queue_post(s_queue_wake, &wakeupflg, 0);
         if(tuya_ai_toy_is_cloud_connected() == TRUE)
         {
 #if defined(ENABLE_CLOUD_ALERT) && ENABLE_CLOUD_ALERT==1    

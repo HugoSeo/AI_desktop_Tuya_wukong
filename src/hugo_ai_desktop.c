@@ -39,6 +39,8 @@
 // #include "hugo_ai_position_sensor.h"
 
 // #include "wukong_ai_skills.h"
+
+#include "wukong_ai_mode.h"
 /***********************************************************
 *************************micro define***********************
 ***********************************************************/
@@ -85,6 +87,11 @@
 // #define Motor_B2_D_Pin          TUYA_GPIO_NUM_42
 
 // #define Motor_B2_S_Pin          TUYA_GPIO_NUM_47
+
+// #define Motor_B2_A_Pin          TUYA_GPIO_NUM_35
+// #define Motor_B2_B_Pin          TUYA_GPIO_NUM_34
+// #define Motor_B2_C_Pin          TUYA_GPIO_NUM_28
+// #define Motor_B2_D_Pin          TUYA_GPIO_NUM_8
 
 #define Motor_B2_A_Pin          TUYA_GPIO_NUM_28
 #define Motor_B2_B_Pin          TUYA_GPIO_NUM_8
@@ -156,6 +163,8 @@ STATIC WF_STATION_STAT_E net_state={0};
 STATIC BOOL_T online_state = FALSE;
 
 INT32_T adc_value[16] = {0};
+
+CHAR_T  keep_quiet = 0;
 
 //                            0    1    2    3    4    5    6    7    8    9    A    B    C    D    E    F   NOP
 CONST UINT8_T seg_code[] = {0x3F,0x06,0x5B,0x4F,0x66,0x6D,0x7D,0x07,0x7F,0x6F,0x77,0x7C,0x39,0x5E,0x79,0x71,0x00};
@@ -431,7 +440,7 @@ VOID mcu_uart_rx_process(VOID)
                             flag_rgb_data = RGB_OFF;
                             moto_state = STATE_MOTO_OFF;
 
-                            hugo_ai_set_free_idle();
+                            // hugo_ai_set_free_idle();
                         }
                         else if(flag_turn_off_on_state == POWER_STATUS_DEMO)
                         {
@@ -786,6 +795,19 @@ INT8_T moto_angle_check(VOID)
 
 VOID_T MOTO_B2_RUN(VOID)
 {
+#if 0    
+    static char cnt = 0;
+    if(cnt == 0)
+    {
+        tkl_gpio_write(Motor_B2_C_Pin, TUYA_GPIO_LEVEL_LOW);
+        cnt = 1;
+    }
+    else
+    {
+        tkl_gpio_write(Motor_B2_C_Pin, TUYA_GPIO_LEVEL_HIGH);
+        cnt = 0;
+    }
+#else
     // tkl_gpio_write(Motor_B2_S_Pin, TUYA_GPIO_LEVEL_HIGH);
     // moto_power_en();
     // moto_flag = MOTO_RUN_UP;   //test
@@ -869,15 +891,19 @@ VOID_T MOTO_B2_RUN(VOID)
             if(MOTO2_STOP_FLG<200) MOTO2_STOP_FLG++;
             if(MOTO2_STOP_FLG>MOTO_MAX)
             {
-                TAL_PR_NOTICE("============================ prd[%.2f  %.2f  %.2f]",pitch_out,roll_out,direct_out);
+                TAL_PR_NOTICE("============================ up1 prd[%.2f  %.2f  %.2f]",pitch_out,roll_out,direct_out);
                 MOTOR2_Cycle=0;
                 hold_time = 200;
                 moto_stop();
             }
+            // else if(moto_angle_check()==1)
+            // {
+            //     MOTO2_STOP_FLG=0;
+            // }
         }
         if(MOTOR2_Cycle==0)
         {
-            TAL_PR_NOTICE("============================prd[%.2f  %.2f  %.2f]",pitch_out,roll_out,direct_out);
+            TAL_PR_NOTICE("============================ up2 prd[%.2f  %.2f  %.2f]",pitch_out,roll_out,direct_out);
             MOTOR2_Cycle=0;
             hold_time = 200;
             moto_stop();
@@ -962,15 +988,20 @@ VOID_T MOTO_B2_RUN(VOID)
             if(MOTO2_STOP_FLG<200) MOTO2_STOP_FLG++;
             if(MOTO2_STOP_FLG>MOTO_MAX)
             {
-                TAL_PR_NOTICE("============================prd[%.2f  %.2f  %.2f]",pitch_out,roll_out,direct_out);
+                TAL_PR_NOTICE("============================ down1 prd[%.2f  %.2f  %.2f]",pitch_out,roll_out,direct_out);
                 MOTOR2_Cycle=0;
                 hold_time = 200;
                 moto_stop();
             }
+            // else if(moto_angle_check()==1)
+            // {
+            //     MOTO2_STOP_FLG=0;
+                
+            // }
         }
         if(MOTOR2_Cycle==0)
         {
-            TAL_PR_NOTICE("============================prd[%.2f  %.2f  %.2f]",pitch_out,roll_out,direct_out);
+            TAL_PR_NOTICE("============================ down2 prd[%.2f  %.2f  %.2f]",pitch_out,roll_out,direct_out);
             MOTOR2_Cycle=0;
             hold_time = 200;
             moto_stop();
@@ -982,6 +1013,7 @@ VOID_T MOTO_B2_RUN(VOID)
 		MOTOR2_Cycle=0;
 		moto_stop();
 	}
+#endif
 }
 
 
@@ -1160,18 +1192,18 @@ VOID hugo_ai_moto_process(VOID)
             moto_flag = MOTO_RUN_UP;
         else
             moto_flag = MOTO_RUN_DOWN;
-        MOTOR2_Cycle = 4500;//1ms*700 = 2100ms
+        MOTOR2_Cycle = 6500;//1ms*700 = 2100ms
         break;
     case STATE_MOTO_OFF:
         moto_state = STATE_MOTO_IDLE;        
         moto_flag = MOTO_RUN_DOWN;
         moto_angle = 30;//80;//150;//75
-        MOTOR2_Cycle = 4000;//3ms*700 = 2100ms
+        MOTOR2_Cycle = 6500;//3ms*700 = 2100ms
         TAL_PR_NOTICE("=============== off A[%d]= %f  %f",ret,direct_out,moto_angle);
         break;
     case STATE_MOTO_NOD:
         moto_state = STATE_MOTO_IDLE;
-        moto_flag = MOTO_RUN_UP;        
+        moto_flag = MOTO_RUN_UP;
         moto_angle = -30;
         MOTOR2_Cycle = 500;
         moto_step = 1;
@@ -1900,7 +1932,7 @@ OPERATE_RET hugo_ai_desktop_init(VOID)
         mcu_uart_task();
         // hugo_ai_adc_task();
         
-        if((flag_turn_off_on_state == POWER_STATUS_ON)&&/*(net_state == WSS_GOT_IP)*/(online_state == TRUE))
+        if((flag_turn_off_on_state == POWER_STATUS_ON)&&(online_state == TRUE))
         {
             hugo_Face_uart_task();
         }
@@ -1916,10 +1948,10 @@ OPERATE_RET hugo_ai_desktop_init(VOID)
             // TUYA_CALL_ERR_LOG(wukong_ai_agent_send_text(""));
             // tuya_ai_input_stop();
 
-            wukong_ai_agent_output_stop(TRUE);
-            wukong_audio_player_stop(AI_PLAYER_ALL);
-            wukong_audio_input_reset();
-            wukong_ai_agent_chat_break(NULL);
+            // wukong_ai_agent_output_stop(TRUE);
+            // wukong_audio_player_stop(AI_PLAYER_ALL);
+            // wukong_audio_input_reset();
+            // wukong_ai_agent_chat_break(NULL);
             
             switch (getdata[0])
             {
@@ -1943,11 +1975,15 @@ OPERATE_RET hugo_ai_desktop_init(VOID)
                         // tuya_ai_toy_lowpower_timer_ctrl(TRUE);
                         // //disable wakeup
                         // wukong_audio_input_wakeup_set(FALSE);
-                        hugo_ai_set_free_idle();
+                        wukong_ai_agent_output_stop(TRUE);
+                        wukong_audio_player_stop(AI_PLAYER_ALL);
+                        wukong_audio_input_reset();
+                        wukong_ai_agent_chat_break(NULL);
+                        // hugo_ai_set_free_idle();
                         // f();
+                        keep_quiet = 1;
                         break;
                     }
-
                 }
                 break;
             // case 3:
@@ -1992,7 +2028,7 @@ OPERATE_RET hugo_ai_desktop_init(VOID)
                         // //disable wakeup
                         // wukong_audio_input_wakeup_set(FALSE);
 
-                        hugo_ai_set_free_idle();
+                        // hugo_ai_set_free_idle();
                     }
                     continue;
                 }                
@@ -2062,9 +2098,10 @@ OPERATE_RET hugo_ai_desktop_init(VOID)
             
             // moto_state = STATE_MOTO_NOD;
             moto_nod_times = 5;
+            keep_quiet = 0;
             if(turnonkeyflag == 1)
             {
-                turnonkeyflag = 0;
+                turnonkeyflag = 0;                
             }
             else
             {
@@ -2096,8 +2133,8 @@ OPERATE_RET hugo_ai_desktop_init(VOID)
         }
         else if(flag_config_voic == 3)
         {
-            tuya_iot_wf_gw_reset();
-            // tuya_iot_wf_gw_fast_unactive(GWCM_OLD, WF_START_SMART_AP_CONCURRENT);
+            // tuya_iot_wf_gw_reset();
+            tuya_iot_wf_gw_fast_unactive(GWCM_OLD, WF_START_SMART_AP_CONCURRENT);
             flag_config_voic = 0;
         }
         
@@ -2184,7 +2221,11 @@ OPERATE_RET hugo_ai_desktop_init(VOID)
         //     }
         // }
 
-
+        // while(MOTOR2_Cycle)
+        // {
+        //     MOTO_B2_RUN();
+        //     tal_system_sleep(2);
+        // }
         if((demo_test_state == 0)&&(demo_test_time == 0)&&(demo_test_flag!=0))
         {           
             rgb_dis_time = 600000;
