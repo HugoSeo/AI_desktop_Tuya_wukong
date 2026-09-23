@@ -184,7 +184,7 @@ CONST UINT8_T seg_code[] = {0x3F,0x06,0x5B,0x4F,0x66,0x6D,0x7D,0x07,0x7F,0x6F,0x
 // static LED_ST ledctr;
 // beken_queue_t led_msg_que = NULL;
 // xTaskHandle led_thread_handle = NULL;
-
+INT8_T moto_angle_check(VOID);
 /***********************************************************
 ***********************typedef define***********************
 ***********************************************************/
@@ -427,6 +427,8 @@ VOID mcu_uart_rx_process(VOID)
                             rgb_dis_time = 10000;
                             flag_rgb_data = RGB_WAIT;
                             moto_state = STATE_MOTO_ON;
+                            moto_angle = 0;
+                            moto_angle_check();
                             // if(demo_test_state!=0)
                             demo_test_state = 1;
                             hugo_ai_set_free_wakeup();
@@ -439,7 +441,8 @@ VOID mcu_uart_rx_process(VOID)
                             flag_seg_data = 3;
                             flag_rgb_data = RGB_OFF;
                             moto_state = STATE_MOTO_OFF;
-
+                            moto_angle = 30;
+                            moto_angle_check();
                             // hugo_ai_set_free_idle();
                         }
                         else if(flag_turn_off_on_state == POWER_STATUS_DEMO)
@@ -778,323 +781,127 @@ VOID_T moto_power_en(VOID)
 INT8_T moto_angle_check(VOID)
 {
     INT8_T ret = 0;
-    if(direct_out < moto_angle)
-        ret = -1;
-    else if(direct_out > moto_angle)
-        ret = 1;
+    if(((direct_out > moto_angle)&&(direct_out>-150))||((direct_out < -150)&&direct_out < moto_angle))
+     {
+         moto_flag = MOTO_RUN_UP;
+        //  flag_rgb_data=RGB_BLUE;
+     }  
+   
+    else  if(((direct_out < moto_angle)&&(direct_out>-150))||((direct_out < -150)&&direct_out > moto_angle))
+    {
+        moto_flag = MOTO_RUN_DOWN;
+        // flag_rgb_data=RGB_RED;
+    }
     else
-        ret = 0;
-    // if((moto_cur_state == STATE_MOTO_ON)&&(direct_out > MOTO_ON_ANGLE))
-    // {
-    //     ret = -1;
-    // }
-    if((moto_cur_state == STATE_MOTO_ON)&&(direct_out < -150))
-        ret = 1;
+    {
+        moto_flag = MOTO_STOP;
+        // flag_rgb_data=RGB_GREEN;
+    }    
+    if(MOTOR2_Cycle==0) MOTOR2_Cycle = 5000;//3ms*700 = 2100ms
+    tkl_gpio_write(Motor_B2_S_Pin, TUYA_GPIO_LEVEL_HIGH);
     return ret;
 }
 
 VOID_T MOTO_B2_RUN(VOID)
 {
-#if 0    
-    static char cnt = 0;
-    if(cnt == 0)
+    switch (moto_flag)
     {
-        tkl_gpio_write(Motor_B2_C_Pin, TUYA_GPIO_LEVEL_LOW);
-        cnt = 1;
-    }
-    else
-    {
-        tkl_gpio_write(Motor_B2_C_Pin, TUYA_GPIO_LEVEL_HIGH);
-        cnt = 0;
-    }
-#else
-    // tkl_gpio_write(Motor_B2_S_Pin, TUYA_GPIO_LEVEL_HIGH);
-    // moto_power_en();
-    // moto_flag = MOTO_RUN_UP;   //test
-	if(moto_flag==MOTO_RUN_UP)  //右转
-	{
-        if((moto_angle_check() == 1)&&(MOTO2_STOP_FLG<MOTO_MAX))
+       case MOTO_RUN_UP:   //上转
+        // if((direct_out > moto_angle&&direct_out>=0)||(direct_out > moto_angle&&direct_out<=0))
+        if(((direct_out > moto_angle)&&(direct_out>-150))||((direct_out < -150)&&direct_out < moto_angle))
         {
-            if(moto_angle_check() == 1) MOTO2_STOP_FLG=0;
-            if(MOTOR2_Cycle>0) MOTOR2_Cycle--;
-            if(MOTOR2_UNMB<4)
+            MOTOR2_UNMB++;
+            MOTO2_STOP_FLG=0;
+            if(MOTOR2_UNMB>3)  MOTOR2_UNMB = 0;
+            switch (MOTOR2_UNMB)
             {
-                MOTOR2_UNMB++;
-            }
-            else 
-            {
-                MOTOR2_UNMB=1;
-            }
-            // if(MOTOR2_UNMB==1)
-            // {
-            //     tkl_gpio_write(Motor_B2_B_Pin, TUYA_GPIO_LEVEL_LOW);
-            //     tkl_gpio_write(Motor_B2_D_Pin, TUYA_GPIO_LEVEL_LOW);
-            //     tkl_gpio_write(Motor_B2_C_Pin, TUYA_GPIO_LEVEL_LOW);
-            //     tkl_gpio_write(Motor_B2_A_Pin, TUYA_GPIO_LEVEL_HIGH);
-            // }
-            // if(MOTOR2_UNMB==2)
-            if(MOTOR2_UNMB==1)
-            {
+            case 0:
                 tkl_gpio_write(Motor_B2_B_Pin, TUYA_GPIO_LEVEL_LOW);
                 tkl_gpio_write(Motor_B2_D_Pin, TUYA_GPIO_LEVEL_LOW);
                 tkl_gpio_write(Motor_B2_C_Pin, TUYA_GPIO_LEVEL_HIGH);
                 tkl_gpio_write(Motor_B2_A_Pin, TUYA_GPIO_LEVEL_HIGH);
-            }
-            // if(MOTOR2_UNMB==3)
-            // {
-            //     tkl_gpio_write(Motor_B2_A_Pin, TUYA_GPIO_LEVEL_LOW);
-            //     tkl_gpio_write(Motor_B2_D_Pin, TUYA_GPIO_LEVEL_LOW);
-            //     tkl_gpio_write(Motor_B2_B_Pin, TUYA_GPIO_LEVEL_LOW);
-            //     tkl_gpio_write(Motor_B2_C_Pin, TUYA_GPIO_LEVEL_HIGH);
-            // }
-            // if(MOTOR2_UNMB==4)
-            if(MOTOR2_UNMB==2)
-            {
+                break;
+            case 1:
                 tkl_gpio_write(Motor_B2_A_Pin, TUYA_GPIO_LEVEL_LOW);
                 tkl_gpio_write(Motor_B2_D_Pin, TUYA_GPIO_LEVEL_LOW);
                 tkl_gpio_write(Motor_B2_C_Pin, TUYA_GPIO_LEVEL_HIGH);
                 tkl_gpio_write(Motor_B2_B_Pin, TUYA_GPIO_LEVEL_HIGH);
-            }
-            // if(MOTOR2_UNMB==5)
-            // {
-            //     tkl_gpio_write(Motor_B2_A_Pin, TUYA_GPIO_LEVEL_LOW);
-            //     tkl_gpio_write(Motor_B2_D_Pin, TUYA_GPIO_LEVEL_LOW);
-            //     tkl_gpio_write(Motor_B2_C_Pin, TUYA_GPIO_LEVEL_LOW);
-            //     tkl_gpio_write(Motor_B2_B_Pin, TUYA_GPIO_LEVEL_HIGH);
-            // }
-            // if(MOTOR2_UNMB==6)
-            if(MOTOR2_UNMB==3)
-            {
+                break;
+            case 2:
                 tkl_gpio_write(Motor_B2_C_Pin, TUYA_GPIO_LEVEL_LOW);
                 tkl_gpio_write(Motor_B2_A_Pin, TUYA_GPIO_LEVEL_LOW);
                 tkl_gpio_write(Motor_B2_B_Pin, TUYA_GPIO_LEVEL_HIGH);
                 tkl_gpio_write(Motor_B2_D_Pin, TUYA_GPIO_LEVEL_HIGH);
-            } 
-            // if(MOTOR2_UNMB==7)
-            // {
-            //     tkl_gpio_write(Motor_B2_B_Pin, TUYA_GPIO_LEVEL_LOW);
-            //     tkl_gpio_write(Motor_B2_C_Pin, TUYA_GPIO_LEVEL_LOW);
-            //     tkl_gpio_write(Motor_B2_A_Pin, TUYA_GPIO_LEVEL_LOW);
-            //     tkl_gpio_write(Motor_B2_D_Pin, TUYA_GPIO_LEVEL_HIGH);
-            // }
-            // if(MOTOR2_UNMB==8)
-            if(MOTOR2_UNMB==4)
-            {
+                break;
+            case 3:
                 tkl_gpio_write(Motor_B2_B_Pin, TUYA_GPIO_LEVEL_LOW);
                 tkl_gpio_write(Motor_B2_C_Pin, TUYA_GPIO_LEVEL_LOW);
                 tkl_gpio_write(Motor_B2_D_Pin, TUYA_GPIO_LEVEL_HIGH);
                 tkl_gpio_write(Motor_B2_A_Pin, TUYA_GPIO_LEVEL_HIGH);
+                break;
+            default:
+                break;
             }
         }
-        else  //if(MOTOR2_Cycle==0)
-        { //停止转动
-            if(MOTO2_STOP_FLG<200) MOTO2_STOP_FLG++;
+        else
+        {
+           MOTO2_STOP_FLG++;       //if(MOTO2_STOP_FLG<200) 
+           if(MOTO2_STOP_FLG>MOTO_MAX) 
+            moto_flag=MOTO_STOP;
+        }
+        break;
+    case MOTO_RUN_DOWN: //下转
+        // if(direct_out < moto_angle) 
+        if(((direct_out < moto_angle)&&(direct_out>-150))||((direct_out < -150)&&direct_out > moto_angle))
+        {
+            MOTOR2_UNMB++;
+            MOTO2_STOP_FLG=0;
+            if(MOTOR2_UNMB>3)  MOTOR2_UNMB = 0;
+            switch (MOTOR2_UNMB)
+            {
+            case 3:
+                tkl_gpio_write(Motor_B2_B_Pin, TUYA_GPIO_LEVEL_LOW);
+                tkl_gpio_write(Motor_B2_D_Pin, TUYA_GPIO_LEVEL_LOW);
+                tkl_gpio_write(Motor_B2_C_Pin, TUYA_GPIO_LEVEL_HIGH);
+                tkl_gpio_write(Motor_B2_A_Pin, TUYA_GPIO_LEVEL_HIGH);
+                break;
+            case 2:
+                tkl_gpio_write(Motor_B2_A_Pin, TUYA_GPIO_LEVEL_LOW);
+                tkl_gpio_write(Motor_B2_D_Pin, TUYA_GPIO_LEVEL_LOW);
+                tkl_gpio_write(Motor_B2_C_Pin, TUYA_GPIO_LEVEL_HIGH);
+                tkl_gpio_write(Motor_B2_B_Pin, TUYA_GPIO_LEVEL_HIGH);
+                break;
+            case 1:
+                tkl_gpio_write(Motor_B2_C_Pin, TUYA_GPIO_LEVEL_LOW);
+                tkl_gpio_write(Motor_B2_A_Pin, TUYA_GPIO_LEVEL_LOW);
+                tkl_gpio_write(Motor_B2_B_Pin, TUYA_GPIO_LEVEL_HIGH);
+                tkl_gpio_write(Motor_B2_D_Pin, TUYA_GPIO_LEVEL_HIGH);
+                break;
+            case 0:
+                tkl_gpio_write(Motor_B2_B_Pin, TUYA_GPIO_LEVEL_LOW);
+                tkl_gpio_write(Motor_B2_C_Pin, TUYA_GPIO_LEVEL_LOW);
+                tkl_gpio_write(Motor_B2_D_Pin, TUYA_GPIO_LEVEL_HIGH);
+                tkl_gpio_write(Motor_B2_A_Pin, TUYA_GPIO_LEVEL_HIGH);
+                break;
+            default:
+                break;
+            }
+        }
+        else
+        {
+            MOTO2_STOP_FLG++;  //if(MOTO2_STOP_FLG<200) 
             if(MOTO2_STOP_FLG>MOTO_MAX)
-            {
-                TAL_PR_NOTICE("============================ up1 prd[%.2f  %.2f  %.2f]",pitch_out,roll_out,direct_out);
-                MOTOR2_Cycle=0;
-                hold_time = 200;
-                moto_stop();
-            }
-            // else if(moto_angle_check()==1)
-            // {
-            //     MOTO2_STOP_FLG=0;
-            // }
+            moto_flag=MOTO_STOP;
         }
-        if(MOTOR2_Cycle==0)
-        {
-            TAL_PR_NOTICE("============================ up2 prd[%.2f  %.2f  %.2f]",pitch_out,roll_out,direct_out);
-            MOTOR2_Cycle=0;
-            hold_time = 200;
-            moto_stop();
-        }
-	}
-	else if(moto_flag==MOTO_RUN_DOWN)   //左转
-	{
-        if((moto_angle_check() == -1)&&(MOTO2_STOP_FLG<MOTO_MAX))
-        {  
-            if(moto_angle_check() == -1) MOTO2_STOP_FLG=0;
-            if(MOTOR2_Cycle>0) MOTOR2_Cycle--;
-            if(MOTOR2_UNMB<4)
-            {
-                MOTOR2_UNMB++;                
-            }            
-            else
-            { 
-                MOTOR2_UNMB = 1;
-            }
-            // if(MOTOR2_UNMB==8)
-            // {
-            //     tkl_gpio_write(Motor_B2_B_Pin, TUYA_GPIO_LEVEL_LOW);
-            //     tkl_gpio_write(Motor_B2_D_Pin, TUYA_GPIO_LEVEL_LOW);
-            //     tkl_gpio_write(Motor_B2_C_Pin, TUYA_GPIO_LEVEL_LOW);
-            //     tkl_gpio_write(Motor_B2_A_Pin, TUYA_GPIO_LEVEL_HIGH);
-            // }
-            // if(MOTOR2_UNMB==7)
-            if(MOTOR2_UNMB==4)
-            {
-                tkl_gpio_write(Motor_B2_B_Pin, TUYA_GPIO_LEVEL_LOW);
-                tkl_gpio_write(Motor_B2_D_Pin, TUYA_GPIO_LEVEL_LOW);
-                tkl_gpio_write(Motor_B2_C_Pin, TUYA_GPIO_LEVEL_HIGH);
-                tkl_gpio_write(Motor_B2_A_Pin, TUYA_GPIO_LEVEL_HIGH);
-            }
-            // if(MOTOR2_UNMB==6)
-            // {
-            //     tkl_gpio_write(Motor_B2_A_Pin, TUYA_GPIO_LEVEL_LOW);
-            //     tkl_gpio_write(Motor_B2_D_Pin, TUYA_GPIO_LEVEL_LOW);
-            //     tkl_gpio_write(Motor_B2_B_Pin, TUYA_GPIO_LEVEL_LOW);
-            //     tkl_gpio_write(Motor_B2_C_Pin, TUYA_GPIO_LEVEL_HIGH);
-            // }
-            // if(MOTOR2_UNMB==5)
-            if(MOTOR2_UNMB==3)
-            {
-                tkl_gpio_write(Motor_B2_A_Pin, TUYA_GPIO_LEVEL_LOW);
-                tkl_gpio_write(Motor_B2_D_Pin, TUYA_GPIO_LEVEL_LOW);
-                tkl_gpio_write(Motor_B2_C_Pin, TUYA_GPIO_LEVEL_HIGH);
-                tkl_gpio_write(Motor_B2_B_Pin, TUYA_GPIO_LEVEL_HIGH);
-            }
-            // if(MOTOR2_UNMB==4)
-            // {
-            //     tkl_gpio_write(Motor_B2_A_Pin, TUYA_GPIO_LEVEL_LOW);
-            //     tkl_gpio_write(Motor_B2_D_Pin, TUYA_GPIO_LEVEL_LOW);
-            //     tkl_gpio_write(Motor_B2_C_Pin, TUYA_GPIO_LEVEL_LOW);
-            //     tkl_gpio_write(Motor_B2_B_Pin, TUYA_GPIO_LEVEL_HIGH);
-            // }
-            // if(MOTOR2_UNMB==3)
-            if(MOTOR2_UNMB==2)
-            {
-                tkl_gpio_write(Motor_B2_C_Pin, TUYA_GPIO_LEVEL_LOW);
-                tkl_gpio_write(Motor_B2_A_Pin, TUYA_GPIO_LEVEL_LOW);
-                tkl_gpio_write(Motor_B2_B_Pin, TUYA_GPIO_LEVEL_HIGH);
-                tkl_gpio_write(Motor_B2_D_Pin, TUYA_GPIO_LEVEL_HIGH);
-            } 
-            // if(MOTOR2_UNMB==2)
-            // {
-            //     tkl_gpio_write(Motor_B2_B_Pin, TUYA_GPIO_LEVEL_LOW);
-            //     tkl_gpio_write(Motor_B2_C_Pin, TUYA_GPIO_LEVEL_LOW);
-            //     tkl_gpio_write(Motor_B2_A_Pin, TUYA_GPIO_LEVEL_LOW);
-            //     tkl_gpio_write(Motor_B2_D_Pin, TUYA_GPIO_LEVEL_HIGH);
-            // }
-            if(MOTOR2_UNMB==1)
-            {
-                tkl_gpio_write(Motor_B2_B_Pin, TUYA_GPIO_LEVEL_LOW);
-                tkl_gpio_write(Motor_B2_C_Pin, TUYA_GPIO_LEVEL_LOW);
-                tkl_gpio_write(Motor_B2_D_Pin, TUYA_GPIO_LEVEL_HIGH);
-                tkl_gpio_write(Motor_B2_A_Pin, TUYA_GPIO_LEVEL_HIGH);
-            }
-        }
-        else  
-        { //停止转动
-            if(MOTO2_STOP_FLG<200) MOTO2_STOP_FLG++;
-            if(MOTO2_STOP_FLG>MOTO_MAX)
-            {
-                TAL_PR_NOTICE("============================ down1 prd[%.2f  %.2f  %.2f]",pitch_out,roll_out,direct_out);
-                MOTOR2_Cycle=0;
-                hold_time = 200;
-                moto_stop();
-            }
-            // else if(moto_angle_check()==1)
-            // {
-            //     MOTO2_STOP_FLG=0;
-                
-            // }
-        }
-        if(MOTOR2_Cycle==0)
-        {
-            TAL_PR_NOTICE("============================ down2 prd[%.2f  %.2f  %.2f]",pitch_out,roll_out,direct_out);
-            MOTOR2_Cycle=0;
-            hold_time = 200;
-            moto_stop();
-            
-        }
-	}
-	else
-	{
-		MOTOR2_Cycle=0;
-		moto_stop();
-	}
-#endif
+        break;
+    case MOTO_STOP:
+        moto_stop();
+        moto_flag = MOTO_IDLE;
+        break;
+    default:
+        break;
+    }
 }
-
-
-
-
-
-// STATIC VOID hugo_ai_moto_up(UINT_T pwm_duty)
-// {
-//     // TUYA_GPIO_BASE_CFG_T out_pin_cfg = {
-//     //     .mode = TUYA_GPIO_PUSH_PULL,
-//     //     .direct = TUYA_GPIO_OUTPUT,
-//     //     .level = TUYA_GPIO_LEVEL_LOW
-//     // };
-//     // tkl_gpio_init(MOTO_B_PIN, &out_pin_cfg);
-//     // tkl_gpio_write(MOTO_A_PIN, TUYA_GPIO_LEVEL_HIGH);
-//     // tkl_gpio_write(MOTO_B_PIN, TUYA_GPIO_LEVEL_LOW);
-//     // TAL_PR_INFO("=====hugo_ai_moto_up");
-//     OPERATE_RET rt = OPRT_OK;
-//     // UINT_T pwm_duty = 2500;
-//     // /*pwm init*/
-//     TUYA_PWM_BASE_CFG_T pwm_cfg = {
-//         .duty = pwm_duty, /* 1-10000 */
-//         .frequency = PWM_FREQUENCY,
-//         .polarity  = TUYA_PWM_NEGATIVE,
-//     };
-//     // TUYA_CALL_ERR_GOTO(tkl_pwm_init(PWM_ID_UP, &pwm_cfg), __EXIT);
-
-//     TUYA_CALL_ERR_LOG(tkl_pwm_info_set(PWM_ID_UP, &pwm_cfg));
-//     TUYA_CALL_ERR_GOTO(tkl_pwm_start(PWM_ID_UP), __EXIT);
-
-//     TAL_PR_NOTICE("==================pwm_up");
-
-//     __EXIT:
-//         ;
-// }
-// STATIC VOID hugo_ai_moto_down(UINT_T pwm_duty)
-// {
-//     // TAL_PR_INFO("=====hugo_ai_moto_down");
-//     // TUYA_GPIO_BASE_CFG_T out_pin_cfg = {
-//     //     .mode = TUYA_GPIO_PUSH_PULL,
-//     //     .direct = TUYA_GPIO_OUTPUT,
-//     //     .level = TUYA_GPIO_LEVEL_LOW
-//     // };
-//     // tkl_gpio_init(MOTO_A_PIN, &out_pin_cfg);
-
-//     // tkl_gpio_write(MOTO_NSLEEP_PIN, TUYA_GPIO_LEVEL_HIGH);
-//     // tkl_gpio_write(MOTO_A_PIN, TUYA_GPIO_LEVEL_LOW);
-//     // tkl_gpio_write(MOTO_B_PIN, TUYA_GPIO_LEVEL_HIGH);
-
-
-//     OPERATE_RET rt = OPRT_OK;
-//     // UINT_T pwm_duty = 2500;
-//     /*pwm init*/
-//     TUYA_PWM_BASE_CFG_T pwm_cfg = {
-//         .duty = pwm_duty, /* 1-10000 */
-//         .frequency = PWM_FREQUENCY,
-//         .polarity  = TUYA_PWM_NEGATIVE,
-//     };
-//     // TUYA_CALL_ERR_GOTO(tkl_pwm_init(PWM_ID_DOWN, &pwm_cfg), __EXIT);
-//     TUYA_CALL_ERR_LOG(tkl_pwm_info_set(PWM_ID_DOWN, &pwm_cfg));
-//     TUYA_CALL_ERR_GOTO(tkl_pwm_start(PWM_ID_DOWN), __EXIT);
-//     TAL_PR_NOTICE("==================pwm_up");
-
-//     // pwm_cfg.duty = 0;
-//     // TUYA_CALL_ERR_LOG(tkl_pwm_info_set(PWM_ID_UP, &pwm_cfg));
-//     // TUYA_CALL_ERR_GOTO(tkl_pwm_start(PWM_ID_UP), __EXIT);
-
-
-//     __EXIT:
-//         ;
-// }
-
-// STATIC VOID hugo_ai_moto_stop(VOID)
-// {
-//     // tkl_gpio_write(MOTO_NSLEEP_PIN, TUYA_GPIO_LEVEL_LOW);
-//     // tkl_gpio_write(MOTO_A_PIN, TUYA_GPIO_LEVEL_LOW);
-//     // tkl_gpio_write(MOTO_B_PIN, TUYA_GPIO_LEVEL_LOW);
-//     OPERATE_RET rt = OPRT_OK;
-//     TUYA_CALL_ERR_LOG(tkl_pwm_stop(PWM_ID_UP));
-//     TUYA_CALL_ERR_LOG(tkl_pwm_stop(PWM_ID_DOWN));
-// }
 VOID hugo_ai_moto_timer(VOID)
 {
     if(moto_time > 0)
@@ -1139,6 +946,26 @@ VOID hugo_ai_moto_timer(VOID)
             demo_test_time --;
         }        
     }
+
+    if(MOTOR2_Cycle > 1)
+    {
+        MOTOR2_Cycle --;
+        if ((MOTOR2_Cycle%300)== 0)
+        {
+            /* code */
+           if(moto_flag == MOTO_IDLE)
+           moto_angle_check();
+        }
+    }
+    else 
+    {
+        if(MOTOR2_Cycle == 1) 
+        {
+            MOTOR2_Cycle=0;
+            moto_stop();
+            moto_flag = MOTO_IDLE;
+        } 
+    }
     
 }
 
@@ -1160,15 +987,17 @@ VOID hugo_ai_moto_process(VOID)
     // }
 
     UINT8_T ret = 0;
-
-    // STATIC UINT8_T wakeup_cnt = 0;
+      // STATIC UINT8_T wakeup_cnt = 0;
     if(moto_state != 0)
     {
         moto_cur_state = moto_state;
         // moto_power_en();
         MOTO2_STOP_FLG = 0;
+        MOTOR2_Cycle = 0;
+        //moto_flag = MOTO_STOP;
+        moto_stop();
         // moto_time = 10000;
-        moto_flag = MOTO_CHECK;
+         moto_flag = MOTO_CHECK;
         tal_system_sleep(100);
     }
 
@@ -1186,39 +1015,30 @@ VOID hugo_ai_moto_process(VOID)
     case STATE_MOTO_ON:
         moto_state = STATE_MOTO_IDLE;
         moto_angle = 0;
-
         TAL_PR_NOTICE("=============== on A[%d]= %f  %f",ret,direct_out,moto_angle);
-        if((ret=moto_angle_check()) == 1)
-            moto_flag = MOTO_RUN_UP;
-        else
-            moto_flag = MOTO_RUN_DOWN;
-        MOTOR2_Cycle = 6500;//1ms*700 = 2100ms
+        moto_angle_check();        
         break;
     case STATE_MOTO_OFF:
-        moto_state = STATE_MOTO_IDLE;        
-        moto_flag = MOTO_RUN_DOWN;
-        moto_angle = 30;//80;//150;//75
-        MOTOR2_Cycle = 6500;//3ms*700 = 2100ms
-        TAL_PR_NOTICE("=============== off A[%d]= %f  %f",ret,direct_out,moto_angle);
+        moto_state = STATE_MOTO_IDLE;
+        moto_angle = 70;//80;//150;//75
+        moto_angle_check();
+        TAL_PR_NOTICE("=============== off A[%d]= %f  %f",ret,direct_out,moto_angle);        
         break;
     case STATE_MOTO_NOD:
         moto_state = STATE_MOTO_IDLE;
-        moto_flag = MOTO_RUN_UP;
         moto_angle = -30;
-        MOTOR2_Cycle = 500;
+        moto_angle_check();
         moto_step = 1;
         break;
     case STATE_MOTO_UP:
-        moto_state = STATE_MOTO_IDLE;
-        moto_flag = MOTO_RUN_UP;        
+        moto_state = STATE_MOTO_IDLE;    
         moto_angle = -30;
-        MOTOR2_Cycle = 600;
+        moto_angle_check();
         break;
     case STATE_MOTO_DOWN:
-        moto_state = STATE_MOTO_IDLE;
-        moto_flag = MOTO_RUN_DOWN;        
+        moto_state = STATE_MOTO_IDLE;       
         moto_angle = 30;
-        MOTOR2_Cycle = 600;
+        moto_angle_check();
         break;
     default:
         break;
@@ -1244,488 +1064,29 @@ VOID hugo_ai_moto_process(VOID)
             // case 0:
             case 1:
             case 3:
-            case 5:
-                moto_flag = MOTO_RUN_DOWN;        
+            case 5:     
                 moto_angle = 30;
-                MOTOR2_Cycle = 1000;
+                moto_angle_check();
                 moto_step++;
                 break;
             
             case 2:
             case 4:
-                moto_flag = MOTO_RUN_UP;        
                 moto_angle = -30;
-                MOTOR2_Cycle = 1000;
+                moto_angle_check();
                 moto_step++;
                 break;
             case 6:
-                // moto_cur_state = STATE_MOTO_IDLE;
-                moto_flag = MOTO_RUN_UP;        
+                // moto_cur_state = STATE_MOTO_IDLE;     
                 moto_angle = 0;
-                MOTOR2_Cycle = 500;
+                moto_angle_check();
                 moto_step = 0;
             default:
                 break;
             }
         }
     }
-
-
-    // else if(moto_state == STATE_MOTO_QUIET)
-    // {
-    //     moto_time = 20000;
-    //     moto_state = STATE_MOTO_IDLE;
-    //     moto_angle = -90;
-    //     hold_time = 0;
-    // }
-    // else if(moto_state == STATE_MOTO_NOD)
-    // {
-    //     moto_time = 20000;
-    //     moto_state = STATE_MOTO_IDLE;
-    //     // wakeup_cnt = moto_nod_times;
-    //     hold_time = 0;
-    //     moto_flag = MOTO_IDLE;
-    // }
-
-    // if((moto_nod_times>0)&&(hold_time==0)&&(moto_flag == MOTO_IDLE))
-    // {
-    //     if (moto_nod_times % 2 == 0)
-    //     {
-    //         moto_angle = 30;
-    //         hold_time = 500;
-    //     }
-    //     else
-    //     {
-    //         moto_angle = -30;
-    //         hold_time = 500;
-    //     }        
-    //     moto_nod_times--;
-    //     if(moto_nod_times == 0)
-    //     {
-    //         moto_angle = 0;
-    //         hold_time = 500;
-    //     }
-    // }
-    
-    // if(moto_time > 0)
-    // {
-    //     if(moto_flag == MOTO_IDLE)
-    //     {
-    //         moto_flag = MOTO_CHECK;
-    //         // TAL_PR_INFO("=====set MOTO_CHECK");
-    //     }
-    // }
-
-    // if(moto_state != 0)
-    //     moto_cur_state = moto_state;
-    // if(moto_state == STATE_MOTO_ON)
-    // {
-    //     moto_state = STATE_MOTO_IDLE;
-    //     moto_flag = MOTO_RUN_DOWN;
-    //     // moto_step = 1;
-    //     TAL_PR_INFO("=====set STATE_MOTO_ON");
-    // }
-    // else if(moto_state == STATE_MOTO_OFF)
-    // {
-
-    //     moto_state = STATE_MOTO_IDLE;
-    //     moto_flag = MOTO_RUN_DOWN;
-    //     // moto_step = 0;
-    //     TAL_PR_INFO("=====set STATE_MOTO_OFF");
-    // }
-    // else if(moto_state == STATE_MOTO_TEST1)
-    // {
-    //     moto_state = STATE_MOTO_IDLE;
-    //     moto_flag = MOTO_RUN_UP;
-    // }
-    // else if(moto_state == STATE_MOTO_TEST2)
-    // {
-    //     moto_state = STATE_MOTO_IDLE;
-    //     moto_flag = MOTO_RUN_DOWN;
-    // }
-    // else if(moto_state == STATE_MOTO_TEST3)
-    // {
-    //     moto_state = STATE_MOTO_IDLE;
-    //     moto_flag = MOTO_RUN_DOWN;
-    // }
-    // else if(moto_state == STATE_MOTO_TEST4)
-    // {
-    //     moto_state = STATE_MOTO_IDLE;
-    //     moto_flag = MOTO_RUN_UP;
-    // }
-    // else if(moto_state == STATE_MOTO_NOD)
-    // {
-    //     moto_state = STATE_MOTO_IDLE;
-    //     moto_flag = MOTO_RUN_UP;
-    //     moto_step = 1;
-    //     // moto_time = 200;
-    // }
-    // else if(moto_state == STATE_MOTO_NOD1)
-    // {
-    //     moto_state = STATE_MOTO_IDLE;
-    //     moto_flag = MOTO_RUN_DOWN;
-    //     moto_step = 1;
-    //     // moto_time = 200;
-    // }
 }
-// VOID hugo_ai_moto_task(VOID)
-// {
-//     // STATIC INT16_T hold_times = 0;
-//     STATIC INT8_T run_flag = 0;
-//     // STATIC float range_angle=180;
-//     STATIC INT8_T run_direction = 0;
-
-//     #if 0
-//     if((pitch_out > 15)||(pitch_out<-15))
-//     {
-//         moto_state = STATE_MOTO_IDLE;
-//         moto_flag = MOTO_IDLE;
-//         return;
-//     }
-
-//     if (hold_time != 0)
-//         return;
-
-//     if (moto_flag == MOTO_CHECK)
-//     {
-// //         float pitch_out = 0;
-// // float roll_out = 0;
-// // float direct_out = 0;
-//         // if(moto_cur_state == STATE_MOTO_ON)
-//         // {
-//         //     range_angle = 150;
-//         // }
-
-
-//         // if(direct_out>moto_angle+10.0)
-//         // {
-//         //     if((moto_cur_state == STATE_MOTO_ON)&&(direct_out>130))
-//         //     {
-//         //         run_direction = MOTO_RUN_DOWN;
-//         //     }
-//         //     else
-//         //     {
-//         //         run_direction = MOTO_RUN_UP;
-//         //     }            
-//         // }
-//         // else if(direct_out<moto_angle-10.0)
-//         // {
-//         //     run_direction = MOTO_RUN_DOWN;
-//         // }
-//         // else
-//         // {
-//         //     run_direction = MOTO_IDLE;
-//         // }
-
-//         if(direct_out>moto_angle+10.0)
-//         // if(run_direction == MOTO_RUN_UP)
-//         {
-//             hugo_ai_moto_up(5000);
-//             hugo_ai_moto_down(0);
-//             // TAL_PR_INFO("=====set hugo_ai_moto_up");
-//             run_flag = 1;
-//             moto_flag=MOTO_WAIT;
-//         }
-//         else if(direct_out<moto_angle-10.0)
-//         // else if(run_direction == MOTO_RUN_DOWN)
-//         {
-//             hugo_ai_moto_down(5000);
-//             hugo_ai_moto_up(0);
-//             // TAL_PR_INFO("=====set hugo_ai_moto_down");
-//             moto_flag=MOTO_WAIT;
-//             run_flag = -1;
-//         }
-//         else
-//         {
-//             moto_flag = MOTO_IDLE;
-//             // TAL_PR_INFO("=====set MOTO_IDLE");
-//         }
-//     }
-//     else if (moto_flag == MOTO_WAIT)
-//     {
-
-//         if((run_flag == 1)&&(direct_out<moto_angle+40)&&(direct_out>moto_angle+10.0))
-//         {
-//             hugo_ai_moto_up(1500);
-//             hugo_ai_moto_down(0);
-//             run_flag = 2;
-//         }
-//         if((run_flag == 1)&&(direct_out>moto_angle-40)&&(direct_out<moto_angle-10.0))
-//         {
-//             hugo_ai_moto_down(1500);
-//             hugo_ai_moto_up(0);
-//             run_flag = -2;
-//         }
-//         if((direct_out>moto_angle-10.0)&&(direct_out<moto_angle+10.0))
-//         {
-//             hugo_ai_moto_up(10000);
-//             hugo_ai_moto_down(10000);
-//             moto_flag = MOTO_HOLD;
-//             hold_time = 200;
-//             // TAL_PR_INFO("=====set MOTO_HOLD");
-//         }
-//     }
-//     else if (moto_flag == MOTO_STOP)
-//     {
-//         hugo_ai_moto_stop();
-//         moto_flag = MOTO_IDLE;
-//     }
-//     else if (moto_flag == MOTO_HOLD)
-//     {
-//         // hugo_ai_moto_up(10000);
-//         // hugo_ai_moto_down(10000);
-//         // if(hold_time>0)
-//         // {
-
-//         // }
-//         // else
-//         // {
-//             moto_flag = MOTO_STOP;
-//             // TAL_PR_INFO("=====set hold MOTO_STOP");
-//         // }
-//     }
-//     #endif
-
-
-//     // switch(moto_flag)
-//     // {       
-//     //     case MOTO_RUN_UP:
-//     //         hugo_ai_moto_up(5500);
-//     //         hugo_ai_moto_down(0);
-//     //         TAL_PR_INFO("=====set hugo_ai_moto_up");     
-//     //         moto_flag=MOTO_RUN_UP_END;
-//     //         adc_check_time = 100;
-//     //         moto_time = 5000;
-//     //         if((moto_cur_state == STATE_MOTO_ON)||(moto_cur_state == STATE_MOTO_TEST1))
-//     //         {
-//     //             moto_time = 2200;
-//     //         }
-//     //         else if(moto_cur_state == STATE_MOTO_TEST3)
-//     //         {
-//     //             moto_time = 3200;
-//     //         }
-//     //         else if(moto_cur_state == STATE_MOTO_TEST4)
-//     //         {
-//     //             moto_time = 1300;
-//     //         }
-//     //         else if(moto_cur_state == STATE_MOTO_NOD)
-//     //         {
-//     //             // adc_check_time = 200;
-//     //             if(moto_step == 1)
-//     //             {
-//     //                 moto_time = 750;//200;
-//     //                 moto_step++;
-//     //             }
-//     //             else if((moto_step == 3)||(moto_step == 5))
-//     //             {
-//     //                 moto_time = 750;//500;
-//     //                 moto_step++;
-//     //             }
-//     //         }
-//     //         else if(moto_cur_state == STATE_MOTO_NOD1)
-//     //         {
-//     //             // adc_check_time = 900;
-//     //             if((moto_step == 2)||(moto_step == 4))
-//     //             {
-//     //                 moto_time = 750;
-//     //                 moto_step++;
-//     //             }
-//     //             else if(moto_step == 6)
-//     //             {
-//     //                 moto_time = 750;
-//     //                 moto_step++;
-//     //             }
-//     //         }
-//     //     break;
-//     //     case MOTO_RUN_UP_END:
-//     //         while(1)
-//     //         {
-//     //             if((moto_time==0)||((adc_check_time==0)&&(moto_adc_get()==FALSE)))
-//     //             {
-                    
-//     //                 hugo_ai_moto_up(10000);
-//     //                 hugo_ai_moto_down(10000);
-//     //                 // tal_system_sleep(100);
-//     //                 // hugo_ai_moto_stop();
-//     //                 TAL_PR_INFO("=====ADC MOTO_STOP");
-//     //                 if((moto_step!=0)&&(moto_step!=7))
-//     //                 {
-//     //                     moto_flag = MOTO_RUN_DOWN;
-//     //                     moto_time=200;
-//     //                 }
-//     //                 else
-//     //                 {                    
-                        
-//     //                     if(moto_cur_state == STATE_MOTO_ON)
-//     //                     {
-//     //                         moto_cur_state = STATE_MOTO_NOD;
-//     //                         moto_flag = MOTO_RUN_UP;
-//     //                         moto_time = 500;
-//     //                         moto_step = 1;
-//     //                     }
-//     //                     else
-//     //                     {
-//     //                         moto_flag = MOTO_STOP;
-//     //                         moto_time = 200;
-//     //                         moto_step = 0;
-//     //                     }
-//     //                 }
-//     //                 break;
-//     //             }
-//     //             tal_system_sleep(1);
-//     //         }
-//     //     break;
-//     //     case  MOTO_RUN_DOWN:
-//     //         hugo_ai_moto_down(5500);
-//     //         hugo_ai_moto_up(0);
-//     //         TAL_PR_INFO("=====set hugo_ai_moto_down");
-//     //         moto_flag=MOTO_RUN_DOWN_END;
-//     //         adc_check_time = 100;
-//     //         moto_time = 5000;
-//     //         if(moto_cur_state == STATE_MOTO_TEST2)
-//     //         {
-//     //             moto_time = 600;
-//     //         }
-//     //         else if(moto_cur_state == STATE_MOTO_NOD)
-//     //         {
-//     //             // adc_check_time = 900;
-//     //             if((moto_step == 2)||(moto_step == 4))
-//     //             {
-//     //                 moto_time = 500;//800;
-//     //                 moto_step++;
-//     //             }
-//     //             else if(moto_step == 6)
-//     //             {
-//     //                 moto_time = 100;
-//     //                 moto_step++;
-//     //             }
-//     //         }
-//     //         else if(moto_cur_state == STATE_MOTO_NOD1)
-//     //         {
-//     //             // adc_check_time = 200;
-//     //             if(moto_step == 1)
-//     //             {
-//     //                 moto_time = 200;
-//     //                 moto_step++;
-//     //             }
-//     //             else if((moto_step == 3)||(moto_step == 5))
-//     //             {
-//     //                 moto_time = 500;
-//     //                 moto_step++;
-//     //             }
-//     //         }
-//     //     break;
-//     //     case MOTO_RUN_DOWN_END:
-//     //         while(1)
-//     //         {
-//     //             if((moto_time==0)||((adc_check_time==0)&&(moto_adc_get()==FALSE)))
-//     //             {
-//     //                 // if(moto_cur_state == STATE_MOTO_ON)
-//     //                 // {
-//     //                 //     moto_flag = MOTO_RUN_UP;
-//     //                 //     moto_time=3000;
-//     //                 // }
-//     //                 // else  
-//     //                 hugo_ai_moto_up(10000);
-//     //                 hugo_ai_moto_down(10000);
-//     //                 // tal_system_sleep(100);
-                    
-//     //                 // hugo_ai_moto_stop();
-//     //                 TAL_PR_INFO("=====ADC MOTO_STOP");
-//     //                 // moto_time = 0;
-//     //                 if((moto_cur_state == STATE_MOTO_ON)||(moto_cur_state == STATE_MOTO_TEST3)||(moto_step!=0)&&(moto_step!=7))
-//     //                 {
-//     //                     moto_flag = MOTO_RUN_UP;
-//     //                     moto_time = 200;
-//     //                 }
-//     //                 else
-//     //                 {
-//     //                     moto_flag= MOTO_STOP;
-//     //                     moto_time = 200;
-//     //                     moto_step = 0;
-//     //                 }
-//     //                 break;
-//     //             }
-//     //             tal_system_sleep(1);
-//     //         }
-//     //     break;
-//     //     case MOTO_STOP:
-//     //         hugo_ai_moto_stop();
-//     //         moto_flag = MOTO_IDLE;
-            
-//     //     break;
-//     //     case MOTO_IDLE:
-//     //     default:
-//     //     break;
-//     // }
-
-
-
-
-
-
-
-//     // if(hold_time!=0)
-//     //     return;
-//     // if(moto_flag == MOTO_RUN_UP)
-//     // {
-//     //     hugo_ai_moto_up(5000);
-//     //     hugo_ai_moto_down(0);
-//     //     TAL_PR_INFO("=====set hugo_ai_moto_up");     
-//     //     moto_flag=MOTO_WAIT;
-//     //     adc_check_time = 50;
-//     // }
-//     // else if(moto_flag == MOTO_RUN_DOWN)
-//     // {
-//     //     hugo_ai_moto_down(5000);
-//     //     hugo_ai_moto_up(0);
-//     //     TAL_PR_INFO("=====set hugo_ai_moto_down");
-//     //     moto_flag=MOTO_WAIT;
-//     //     adc_check_time = 50;      
-//     // }
-//     // else if (moto_flag == MOTO_WAIT)
-//     // {
-//     //     if(moto_time==0)
-//     //     {
-//     //         moto_time = 0;
-//     //         hugo_ai_moto_up(10000);
-//     //         hugo_ai_moto_down(10000);
-//     //         moto_flag = MOTO_STOP;
-//     //         hold_time = 200;
-//     //         // TAL_PR_INFO("=====set MOTO_HOLD");
-//     //         adc_check_time = 50;
-//     //     }
-//     // }
-//     // else if (moto_flag == MOTO_STOP)
-//     // {
-//     //     if(moto_step>0)
-//     //     {
-//     //         moto_time = 0;
-//     //         moto_step++;
-//     //     }
-            
-//     //     hugo_ai_moto_stop();
-//     //     moto_flag = MOTO_IDLE;
-//     // }
-
-
-//     // if((adc_check_time==0)&&(moto_adc_get()==FALSE))
-//     // {
-//     //     // if(moto_step>0)
-//     //     // {
-//     //     //     moto_time = 0;
-//     //     //     moto_step++;
-//     //     //     return;
-//     //     // }
-//     //     moto_flag = MOTO_STOP;
-//     //     // moto_time = 0;
-//     //     TAL_PR_INFO("=====ADC MOTO_STOP");
-//     // }
-// }
-
-
-
-
 // ADC
 // P13      P12     P21     P25
 // ADC15    ADC14   ADC6    ADC1
@@ -1982,6 +1343,7 @@ OPERATE_RET hugo_ai_desktop_init(VOID)
                         // hugo_ai_set_free_idle();
                         // f();
                         keep_quiet = 1;
+                        moto_state = STATE_MOTO_ON;
                         break;
                     }
                 }
@@ -2363,7 +1725,7 @@ OPERATE_RET hugo_ai_desktop_init(VOID)
                 audio_data = (CONST CHAR_T*)media_src_to_get_testing_1_zh;
                 audio_size = sizeof(media_src_to_get_testing_1_zh);
                 TUYA_CALL_ERR_LOG(wukong_audio_play_data(AI_AUDIO_CODEC_MP3, audio_data, audio_size));
-                tuya_ai_input_start(TRUE);                
+                tuya_ai_input_start(TRUE);
                 demo_test_flag++;
                 demo_test_time = 8000;//6000;
                 flag_moto_motion = 8;
@@ -2375,7 +1737,7 @@ OPERATE_RET hugo_ai_desktop_init(VOID)
                 audio_data = (CONST CHAR_T*)media_src_out_of_range_1_zh;
                 audio_size = sizeof(media_src_out_of_range_1_zh);
                 TUYA_CALL_ERR_LOG(wukong_audio_play_data(AI_AUDIO_CODEC_MP3, audio_data, audio_size));
-                tuya_ai_input_start(TRUE);                
+                tuya_ai_input_start(TRUE);
                 demo_test_flag++;
                 demo_test_time = 5600;
                 moto_state = STATE_MOTO_NOD;

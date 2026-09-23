@@ -118,6 +118,7 @@ STATIC THREAD_HANDLE ty_app_thread = NULL;
 STATIC THREAD_HANDLE hugo_self_ai_i2c_thread = NULL;
 STATIC THREAD_HANDLE hugo_self_ai_general_thread = NULL;
 
+extern UINT8_T moto_flag;
 /* ---------------------------------------------------------------------------
  * QR code helpers (cellular / QR code active only)
  * --------------------------------------------------------------------------- */
@@ -620,6 +621,7 @@ STATIC VOID_T hugo_ai_i2c_thread(VOID_T *arg)
     {
         hugo_ai_position_process();
         // hugo_ai_moto_task();
+        if(moto_flag == MOTO_IDLE)
         hugo_ai_lightboard_process();
         tal_system_sleep(1);
     }
@@ -710,7 +712,7 @@ STATIC VOID_T user_main(VOID_T)
 //     TUYA_CALL_ERR_GOTO(tkl_timer_init(TIMER_ID1, &sg_timer_cfg), __EXIT);
 
 //     /*start timer*/
-//     TUYA_CALL_ERR_GOTO(tkl_timer_start(TIMER_ID1, 2500), __EXIT);
+//     TUYA_CALL_ERR_GOTO(tkl_timer_start(TIMER_ID1, 2000), __EXIT);
 //     TAL_PR_NOTICE("timer %d is start", TIMER_ID1);
 // __EXIT:
 //     ;
@@ -774,7 +776,7 @@ VOID_T tuya_app_main(VOID)
 
 #if OPERATING_SYSTEM == SYSTEM_LINUX
     while (1) {
-        tal_system_sleep(1000);
+        // tal_system_sleep(1000);
     }
 #endif
 }
