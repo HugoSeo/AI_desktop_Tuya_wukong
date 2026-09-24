@@ -443,6 +443,8 @@ VOID mcu_uart_rx_process(VOID)
                             moto_state = STATE_MOTO_OFF;
                             moto_angle = 30;
                             moto_angle_check();
+                            demo_test_flag = 0;          
+                            demo_test_state = 1;
                             // hugo_ai_set_free_idle();
                         }
                         else if(flag_turn_off_on_state == POWER_STATUS_DEMO)
@@ -815,25 +817,25 @@ VOID_T MOTO_B2_RUN(VOID)
             if(MOTOR2_UNMB>3)  MOTOR2_UNMB = 0;
             switch (MOTOR2_UNMB)
             {
-            case 0:
+            case 3:
                 tkl_gpio_write(Motor_B2_B_Pin, TUYA_GPIO_LEVEL_LOW);
                 tkl_gpio_write(Motor_B2_D_Pin, TUYA_GPIO_LEVEL_LOW);
                 tkl_gpio_write(Motor_B2_C_Pin, TUYA_GPIO_LEVEL_HIGH);
                 tkl_gpio_write(Motor_B2_A_Pin, TUYA_GPIO_LEVEL_HIGH);
                 break;
-            case 1:
+            case 2:
                 tkl_gpio_write(Motor_B2_A_Pin, TUYA_GPIO_LEVEL_LOW);
                 tkl_gpio_write(Motor_B2_D_Pin, TUYA_GPIO_LEVEL_LOW);
                 tkl_gpio_write(Motor_B2_C_Pin, TUYA_GPIO_LEVEL_HIGH);
                 tkl_gpio_write(Motor_B2_B_Pin, TUYA_GPIO_LEVEL_HIGH);
                 break;
-            case 2:
+            case 1:
                 tkl_gpio_write(Motor_B2_C_Pin, TUYA_GPIO_LEVEL_LOW);
                 tkl_gpio_write(Motor_B2_A_Pin, TUYA_GPIO_LEVEL_LOW);
                 tkl_gpio_write(Motor_B2_B_Pin, TUYA_GPIO_LEVEL_HIGH);
                 tkl_gpio_write(Motor_B2_D_Pin, TUYA_GPIO_LEVEL_HIGH);
                 break;
-            case 3:
+            case 0:
                 tkl_gpio_write(Motor_B2_B_Pin, TUYA_GPIO_LEVEL_LOW);
                 tkl_gpio_write(Motor_B2_C_Pin, TUYA_GPIO_LEVEL_LOW);
                 tkl_gpio_write(Motor_B2_D_Pin, TUYA_GPIO_LEVEL_HIGH);
@@ -859,25 +861,25 @@ VOID_T MOTO_B2_RUN(VOID)
             if(MOTOR2_UNMB>3)  MOTOR2_UNMB = 0;
             switch (MOTOR2_UNMB)
             {
-            case 3:
+            case 0:
                 tkl_gpio_write(Motor_B2_B_Pin, TUYA_GPIO_LEVEL_LOW);
                 tkl_gpio_write(Motor_B2_D_Pin, TUYA_GPIO_LEVEL_LOW);
                 tkl_gpio_write(Motor_B2_C_Pin, TUYA_GPIO_LEVEL_HIGH);
                 tkl_gpio_write(Motor_B2_A_Pin, TUYA_GPIO_LEVEL_HIGH);
                 break;
-            case 2:
+            case 1:
                 tkl_gpio_write(Motor_B2_A_Pin, TUYA_GPIO_LEVEL_LOW);
                 tkl_gpio_write(Motor_B2_D_Pin, TUYA_GPIO_LEVEL_LOW);
                 tkl_gpio_write(Motor_B2_C_Pin, TUYA_GPIO_LEVEL_HIGH);
                 tkl_gpio_write(Motor_B2_B_Pin, TUYA_GPIO_LEVEL_HIGH);
                 break;
-            case 1:
+            case 2:
                 tkl_gpio_write(Motor_B2_C_Pin, TUYA_GPIO_LEVEL_LOW);
                 tkl_gpio_write(Motor_B2_A_Pin, TUYA_GPIO_LEVEL_LOW);
                 tkl_gpio_write(Motor_B2_B_Pin, TUYA_GPIO_LEVEL_HIGH);
                 tkl_gpio_write(Motor_B2_D_Pin, TUYA_GPIO_LEVEL_HIGH);
                 break;
-            case 0:
+            case 3:
                 tkl_gpio_write(Motor_B2_B_Pin, TUYA_GPIO_LEVEL_LOW);
                 tkl_gpio_write(Motor_B2_C_Pin, TUYA_GPIO_LEVEL_LOW);
                 tkl_gpio_write(Motor_B2_D_Pin, TUYA_GPIO_LEVEL_HIGH);
@@ -950,11 +952,11 @@ VOID hugo_ai_moto_timer(VOID)
     if(MOTOR2_Cycle > 1)
     {
         MOTOR2_Cycle --;
-        if ((MOTOR2_Cycle%300)== 0)
+        if ((MOTOR2_Cycle%500)== 0)
         {
             /* code */
-           if(moto_flag == MOTO_IDLE)
-           moto_angle_check();
+          if((moto_flag == MOTO_IDLE)&&(moto_cur_state!=STATE_MOTO_OFF))
+            moto_angle_check();
         }
     }
     else 
@@ -1458,7 +1460,7 @@ OPERATE_RET hugo_ai_desktop_init(VOID)
         if (tal_queue_fetch(s_queue_wake, &wakeflag, 1) == OPRT_OK)
         {
             
-            // moto_state = STATE_MOTO_NOD;
+            moto_state = STATE_MOTO_NOD;
             moto_nod_times = 5;
             keep_quiet = 0;
             if(turnonkeyflag == 1)
@@ -1676,10 +1678,24 @@ OPERATE_RET hugo_ai_desktop_init(VOID)
                 TUYA_CALL_ERR_LOG(wukong_audio_play_data(AI_AUDIO_CODEC_MP3, audio_data, audio_size));
                 tuya_ai_input_start(TRUE);                
                 demo_test_flag++;
-                demo_test_time = 6100;//3100;
+                demo_test_time = 5800;//6100;//3100;
                 moto_state = STATE_MOTO_NOD;
                 
             }
+#if 1
+            else if(demo_test_flag == 9)
+            {
+                audio_data = (CONST CHAR_T*)media_src_get_moving_3_5_zh;
+                audio_size = sizeof(media_src_get_moving_3_5_zh);
+                TUYA_CALL_ERR_LOG(wukong_audio_play_data(AI_AUDIO_CODEC_MP3, audio_data, audio_size));
+                tuya_ai_input_start(TRUE);                
+                demo_test_flag = 12;
+                demo_test_time = 5800;//3100;
+                moto_state = STATE_MOTO_NOD;
+                
+            }
+#else
+            
             else if(demo_test_flag == 9)
             {
                 audio_data = (CONST CHAR_T*)media_src_get_moving_3_zh;
@@ -1709,7 +1725,8 @@ OPERATE_RET hugo_ai_desktop_init(VOID)
                 demo_test_flag++;
                 demo_test_time = 4200;//2600;
                 moto_state = STATE_MOTO_NOD;
-            }            
+            }
+#endif
             else if(demo_test_flag == 12)
             {
                 audio_data = (CONST CHAR_T*)media_src_get_moving_6_zh;
@@ -1815,8 +1832,8 @@ OPERATE_RET hugo_ai_desktop_init(VOID)
                 TUYA_CALL_ERR_LOG(wukong_audio_play_data(AI_AUDIO_CODEC_MP3, audio_data, audio_size));
                 tuya_ai_input_start(TRUE);                
                 demo_test_flag++;
-                // flag_turn_off_on_cmd = 2;
-                demo_test_time = 4200;
+                flag_turn_off_on_cmd = POWER_STATUS_ON;
+                demo_test_time = 5500;//4200;
                 moto_state = STATE_MOTO_NOD;
             }
             else if(demo_test_flag == 22)

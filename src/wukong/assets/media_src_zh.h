@@ -31,6 +31,7 @@ extern CONST BYTE_T media_src_breakfast_2_zh[34634];
 // extern CONST BYTE_T media_src_order_breakfast_2_zh[14262];
 extern CONST BYTE_T media_src_get_moving_1_zh[13130];
 extern CONST BYTE_T media_src_get_moving_2_zh[43643];
+extern CONST BYTE_T media_src_get_moving_3_5_zh[39419];
 extern CONST BYTE_T media_src_get_moving_3_zh[38699];
 extern CONST BYTE_T media_src_get_moving_4_zh[41387];
 extern CONST BYTE_T media_src_get_moving_5_zh[40115];
