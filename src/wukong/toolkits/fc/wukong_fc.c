@@ -239,6 +239,13 @@ OPERATE_RET __wukong_ai_asr_process(AI_TEXT_TYPE_E type, ty_cJSON *root, BOOL_T 
         cmd_data[1] = 2;
         tal_queue_post(s_queue_voice_cmd, &cmd_data, 0);
     }
+    else if((strstr((const char*)content,"演示一下功能")!=NULL)||(strstr((const char*)content,"进入演示状态")!=NULL))
+    {
+        TAL_PR_NOTICE("get cmd:进入演示状态");
+        cmd_data[0] = 2;
+        cmd_data[1] = 3;
+        tal_queue_post(s_queue_voice_cmd, &cmd_data, 0);
+    }
     else if((strstr((const char*)content,"我是")!=NULL)||(strstr((const char*)content,"我叫")!=NULL))
     {
         cmd_data[0] = 11;
@@ -346,6 +353,8 @@ OPERATE_RET __wukong_ai_nlg_process(AI_TEXT_TYPE_E type, ty_cJSON *root, BOOL_T 
             emo.emoji = emoji;
             emo.name = wukong_emoji_get_name(emoji);
             wukong_ai_event_notify(WUKONG_AI_EVENT_EMOTION, &emo);
+
+            TAL_PR_INFO("-------------emo.emoji = %s         emo.name=%s",emo.emoji,emo.name);
         }
     }    
 

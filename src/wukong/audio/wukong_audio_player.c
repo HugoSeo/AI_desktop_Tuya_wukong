@@ -23,7 +23,7 @@ STATIC AI_PLAYER_HANDLE __s_music_player = NULL;
 STATIC AI_PLAYLIST_HANDLE __s_music_playlist = NULL;
 
 QUEUE_HANDLE  s_queue_wake;
-QUEUE_HANDLE  s_queue_test;
+QUEUE_HANDLE  s_queue_onvoice;
 STATIC OPERATE_RET __audio_output_open(UINT32_T sample_rate, UINT8_T sample_bits, UINT8_T channel)
 {
     WUKONG_AUDIO_OUTPUT_CFG_T cfg = {0};
@@ -372,11 +372,12 @@ OPERATE_RET wukong_audio_player_alert(TY_AI_TOY_ALERT_TYPE_E type, BOOL_T send_e
     OPERATE_RET rt = OPRT_OK;
     CONST CHAR_T *audio_data = NULL;
     UINT32_T audio_size = 0;
-    STATIC UINT8_T testflg = 0xFF;    
+    STATIC UINT8_T vocieflg = 0xFF;    
     UINT8_T wakeupflg = 1;
+    STATIC UINT8_T first_run_flag = 1;
     
     switch (type) {
-    case AI_TOY_ALERT_TYPE_POWER_ON:
+    // case AI_TOY_ALERT_TYPE_POWER_ON:
     // case AI_TOY_ALERT_TYPE_NETWORK_CONNECTED:
     case AI_TOY_ALERT_TYPE_BATTERY_LOW:
     case AI_TOY_ALERT_TYPE_PLEASE_AGAIN:
@@ -388,8 +389,6 @@ OPERATE_RET wukong_audio_player_alert(TY_AI_TOY_ALERT_TYPE_E type, BOOL_T send_e
 #if defined(ENABLE_CLOUD_ALERT) && ENABLE_CLOUD_ALERT==1    
         if (OPRT_OK == wukong_ai_agent_cloud_alert(type)) break;
 #endif
-    case AI_TOY_ALERT_TYPE_NOT_ACTIVE:
-    case AI_TOY_ALERT_TYPE_NETWORK_CFG:
     default:
         audio_data = (CONST CHAR_T*)media_src_dingdong_zh;
         audio_size = sizeof(media_src_dingdong_zh);   
@@ -397,11 +396,11 @@ OPERATE_RET wukong_audio_player_alert(TY_AI_TOY_ALERT_TYPE_E type, BOOL_T send_e
 
     // Modified by Hugo    
     case AI_TOY_ALERT_TYPE_NETWORK_CONNECTED:
-        if (tal_queue_fetch(s_queue_test, &testflg, 1) == OPRT_OK)
+        if (tal_queue_fetch(s_queue_onvoice, &vocieflg, 1) == OPRT_OK)
         {
             ;
         }
-        if(testflg == 0)
+        if(vocieflg == 0)
         {
             return rt;
         }
@@ -410,13 +409,13 @@ OPERATE_RET wukong_audio_player_alert(TY_AI_TOY_ALERT_TYPE_E type, BOOL_T send_e
 #endif
         audio_data = (CONST CHAR_T*)media_src_dingdong_zh;
         audio_size = sizeof(media_src_dingdong_zh);
-        break;    
+        break;
     case AI_TOY_ALERT_TYPE_NETWORK_FAIL:
-    case AI_TOY_ALERT_TYPE_NETWORK_DISCONNECT: 
+    case AI_TOY_ALERT_TYPE_NETWORK_DISCONNECT:
         audio_data = (CONST CHAR_T*)media_src_connect_error_zh;
         audio_size = sizeof(media_src_connect_error_zh);
         break;
-    case AI_TOY_ALERT_TYPE_WAKEUP:        
+    case AI_TOY_ALERT_TYPE_WAKEUP:
         tal_queue_post(s_queue_wake, &wakeupflg, 0);
         if(tuya_ai_toy_is_cloud_connected() == TRUE)
         {
@@ -430,6 +429,11 @@ OPERATE_RET wukong_audio_player_alert(TY_AI_TOY_ALERT_TYPE_E type, BOOL_T send_e
             audio_size = sizeof(media_src_connect_error_zh);
             break;
         }
+        break;
+    case AI_TOY_ALERT_TYPE_POWER_ON:
+    
+    case AI_TOY_ALERT_TYPE_NOT_ACTIVE:
+    case AI_TOY_ALERT_TYPE_NETWORK_CFG:
         break;
     }
 

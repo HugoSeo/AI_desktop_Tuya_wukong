@@ -6,7 +6,7 @@ flash,ram,text,code,rodata,data,bss,dec,hex,filename
 12558,100,12558,7846,4712,0,100,12658,`3172,armino/bk_wifi/libbk_wifi.a
 657357,25918,652598,477720,174878,4759,21159,678516,`a5a74,/home/tuya/Documents/tuya/Projects/T5_TuyaOS-3.14.0/software/TuyaOS/libs/libtuyaos.a
 3676,0,3676,3676,0,0,0,3676,`e5c,/home/tuya/Documents/tuya/Projects/T5_TuyaOS-3.14.0/software/TuyaOS/vendor/T5/toolchain/gcc-arm-none-eabi-10.3-2021.10/bin/../lib/gcc/arm-none-eabi/10.3.1/thumb/v8-m.main+fp/hard/libgcc.a
-41151,1441,39713,38168,1545,1438,3,41154,`a0c2,/home/tuya/Documents/tuya/Projects/T5_TuyaOS-3.14.0/software/TuyaOS/vendor/T5/toolchain/gcc-arm-none-eabi-10.3-2021.10/bin/../lib/gcc/arm-none-eabi/10.3.1/../../../../arm-none-eabi/lib/thumb/v8-m.main+fp/hard/libc.a
+41159,1441,39721,38176,1545,1438,3,41162,`a0ca,/home/tuya/Documents/tuya/Projects/T5_TuyaOS-3.14.0/software/TuyaOS/vendor/T5/toolchain/gcc-arm-none-eabi-10.3-2021.10/bin/../lib/gcc/arm-none-eabi/10.3.1/../../../../arm-none-eabi/lib/thumb/v8-m.main+fp/hard/libc.a
 4540,364,4540,3312,1228,0,364,4904,`1328,armino/cm33/libcm33.a
 100624,7128,99868,82814,17054,756,6372,106996,`1a1f4,armino/driver/libdriver.a
 1308,76,1307,1226,81,1,75,1383,`567,armino/bk_system/libbk_system.a

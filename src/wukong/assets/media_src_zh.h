@@ -6,8 +6,10 @@
 extern CONST BYTE_T media_src_dingdong_zh[3537];
 extern CONST BYTE_T media_src_zaine_zh[8241];
 
-extern CONST BYTE_T media_src_connect_error_zh[14544];
-extern CONST BYTE_T media_src_connected_zh[16695];
+extern CONST BYTE_T media_src_introduction_zh[16410];
+extern CONST BYTE_T media_src_connect_error_zh[18714];
+extern CONST BYTE_T media_src_connected_zh[26058];
+extern CONST BYTE_T media_src_disconnected_zh[28326];
 extern CONST BYTE_T media_src_turnoff_zh[104400];
 extern CONST BYTE_T media_src_bingo_msc[12941];
 extern CONST BYTE_T media_src_bingo1_msc[4068];
