@@ -63,7 +63,7 @@ STATIC char Face_rxdata[RXBUFFERSIZE];
 STATIC unsigned char RX_Msgid;
 
 STATIC unsigned int  FACE_TIME=8000;
-
+STATIC unsigned int  FACE_RELEASE_TIME=0;
 STATIC unsigned int  FACE_ADD_TIME = 0;
 STATIC unsigned char FACE_Work_Mode=FACE_STANDBY;
 //unsigned char PIR_DATA=0;
@@ -73,6 +73,7 @@ STATIC unsigned char FACE_WORK_FLG=ENABLE;
 STATIC unsigned char FACE_POWER_FLG=DISABLE;
 STATIC unsigned char opendoor_time=0;
 STATIC UINT8_T  FACE_ID=0;
+STATIC UINT8_T  face_store_ID=0xFF;
 STATIC unsigned int  PIR_READ_TIME=0;
 STATIC unsigned char Face_error_ts=0;
 STATIC unsigned char FACE_MODE_ERROR=1;
@@ -93,6 +94,7 @@ int encBytes(unsigned char *bytes, int length, unsigned char *out);
 int DencBytes(unsigned char *bytes, int length, unsigned char *out);
 unsigned char GetCRC(const unsigned char *pData, unsigned char len);
 
+extern UINT8_T hugo_radar_valid(VOID);
 
 VOID face_flag_write(BYTE_T *data)
 {
@@ -298,7 +300,8 @@ VOID Face_Init(VOID)
 
 
     face_flag_read(face_flag_buf);
-    FACE_query(face_flag_buf);
+    // face_flag_buf[1] = 0;    //test
+    // FACE_query(face_flag_buf);
 }
 VOID Face_disable(VOID)
 {
@@ -410,7 +413,7 @@ VOID Send_FaceCmd(unsigned char msgid, unsigned char *pData, unsigned int dataLe
         else
 #endif
         {
-            tal_system_sleep(200);
+            tal_system_sleep(300);
             sum = GetCRC(&SendCmd[2], dataLen + 3);
             SendCmd[SendLen++] = (uint8_t)(sum);    // 包校验和
             // 发送指令部分数据
@@ -618,6 +621,7 @@ VOID Check_FACE_TimeOut(VOID)
         // }
     }
 }
+
 VOID Dispay_fled(char t)
 {
     char i=0;
@@ -631,7 +635,8 @@ VOID Dispay_fled(char t)
 }
 unsigned char  Face_Start(VOID)
 {
-    if(FACE_TIME==0) return 1;   
+    //检测时间到了，且雷达数据有效
+    if((FACE_TIME==0)/*&&(hugo_radar_valid()!=0)*/) return 1;
     else return 0;
 }
 VOID Face_uart_rx(VOID)
@@ -758,10 +763,16 @@ VOID Face_uart_task(VOID)
                 // {                    
                 //     Bread_STANDBY();
                 // }
-                if(i == 1)
+                if(i == 1)  // 存在这个id
                 {
-                    //                    
-                    face_voice_flag = 3;
+                    // 判断跟上次保存ID是否一样
+                    if((FACE_ID == face_store_ID)&&(FACE_RELEASE_TIME==0)||(FACE_ID != face_store_ID))
+                    {
+                        // 去获取名字并打招呼
+                        face_voice_flag = 3;
+                        face_store_ID = FACE_ID;
+                        FACE_RELEASE_TIME = 300000;
+                    }
 
                 }
                 else
@@ -1108,6 +1119,8 @@ VOID hugo_ai_face_timer(VOID)
     if(FACE_TIME>0) FACE_TIME --;    
     if(FACE_ADD_TIME>0) FACE_ADD_TIME --;
     Face_RXtime += 1;
+
+    if(FACE_RELEASE_TIME>0) FACE_RELEASE_TIME--;
 }
 
 VOID hugo_ai_face_intimer(VOID)
@@ -1117,6 +1130,8 @@ VOID hugo_ai_face_intimer(VOID)
         FACE_TIME = 10;
         FACE_Work_Mode=FACE_STANDBY;
         Face_error_ts = 0;
+        face_store_ID = 0xFF;
+        FACE_RELEASE_TIME = 0;
     }
 
 }

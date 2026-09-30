@@ -6,10 +6,10 @@
 extern CONST BYTE_T media_src_dingdong_zh[3537];
 extern CONST BYTE_T media_src_zaine_zh[8241];
 
-extern CONST BYTE_T media_src_introduction_zh[16410];
-extern CONST BYTE_T media_src_connect_error_zh[18714];
-extern CONST BYTE_T media_src_connected_zh[26058];
-extern CONST BYTE_T media_src_disconnected_zh[28326];
+extern CONST BYTE_T media_src_introduction_zh[16430];
+extern CONST BYTE_T media_src_connect_error_zh[18734];
+extern CONST BYTE_T media_src_connected_zh[25898];
+extern CONST BYTE_T media_src_disconnected_zh[27950];
 extern CONST BYTE_T media_src_turnoff_zh[104400];
 extern CONST BYTE_T media_src_bingo_msc[12941];
 extern CONST BYTE_T media_src_bingo1_msc[4068];
@@ -50,4 +50,6 @@ extern CONST BYTE_T media_src_sedentary_remind_2_zh[18026];
 extern CONST BYTE_T media_src_turnoff_remind_1_zh[33674];
 extern CONST BYTE_T media_src_turnoff_remind_2_zh[10422];
 extern CONST BYTE_T media_src_turnoff_remind_3_zh[20234];
+
+extern CONST BYTE_T media_src_get_username_zh[14414];
 #endif // __MEDIA_SRC_ZH_H__

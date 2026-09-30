@@ -19,7 +19,7 @@
 #include "tal_queue.h"
 
 QUEUE_HANDLE  s_queue_voice_cmd;
-QUEUE_HANDLE  s_queue_state;
+QUEUE_HANDLE  s_queue_emotion;
 QUEUE_HANDLE  s_queue_name_str;
 
 /* NLG 流状态：STOP=空闲(下一个有内容的包发 START)，DATA=流进行中。
@@ -123,7 +123,7 @@ OPERATE_RET __wukong_ai_skill_process(AI_TEXT_TYPE_E type, ty_cJSON *root, BOOL_
         return OPRT_OK;
     // ty_cJSON_PrintUnformatted(root);
     TAL_PR_NOTICE("wukong text -> skill code: %s", ty_cJSON_PrintUnformatted(root));
-
+        
     rt = wukong_tool_exec(WUKONG_TOOL_FC, code, root, NULL);   /* 未注册 code → NOT_FOUND */
     if (rt == OPRT_NOT_FOUND) {
         TAL_PR_NOTICE("skill %s not handled", code);
@@ -131,6 +131,104 @@ OPERATE_RET __wukong_ai_skill_process(AI_TEXT_TYPE_E type, ty_cJSON *root, BOOL_
         wukong_ai_event_notify(WUKONG_AI_EVENT_SKILL, root);
     }
 
+    //{"code":"emo","skillContent":{"emotion":["NEUTRAL"],"text":["😐"]}}
+    STATIC UINT8_T emoj_num = 0xFF;
+    node = ty_cJSON_GetObjectItem(root, "skillContent");
+    TAL_PR_NOTICE("skillContent: %s",  ty_cJSON_PrintUnformatted(node));
+    node = ty_cJSON_GetObjectItem(node, "emotion");
+    CHAR_T *emo = ty_cJSON_GetStringValue(ty_cJSON_GetArrayItem(node,0));
+    TAL_PR_NOTICE("emotion: %s",emo);
+    if(strstr((const char*)emo,"NEUTRAL") !=NULL)      //neutral😐 😶
+    {
+        emoj_num = 0;
+    }
+    else if((strstr((const char*)emo,"HAPPY") !=NULL)) //happy 🙂😀
+    {
+        emoj_num = 1;
+    }
+    else if(strstr((const char*)emo,"LAUGHING") !=NULL) //laughing 😆
+    {
+        emoj_num = 2;
+    }
+    else if(strstr((const char*)emo,"FUNNY") !=NULL) //funny 😂
+    {
+        emoj_num = 3;
+    }
+    else if(strstr((const char*)emo,"SAD") !=NULL) //sad 😔
+    {
+        emoj_num = 4;
+    }
+    else if(strstr((const char*)emo,"ANGRY") !=NULL) //angry 😠
+    {
+        emoj_num = 5;
+    }
+    else if(strstr((const char*)emo,"CRYING") !=NULL) //crying  😭
+    {
+        emoj_num = 6;
+    }
+    else if(strstr((const char*)emo,"LOVING") !=NULL) //loving 😍
+    {
+        emoj_num = 7;
+    }
+    else if(strstr((const char*)emo,"EMBARRASSED") !=NULL) //embarrassed 😳
+    {
+        emoj_num = 8;
+    }
+
+    else if(strstr((const char*)emo,"SUPRISE") !=NULL) //surprise 😯
+    {
+        emoj_num = 9;
+    }
+    else if(strstr((const char*)emo,"SHOCKED") !=NULL) //shocked 😱
+    {
+        emoj_num = 10;
+    }
+    else if(strstr((const char*)emo,"THINKING") !=NULL) //thinking 🤔
+    {
+        emoj_num = 11;
+    }
+    else if(strstr((const char*)emo,"WINKING") !=NULL) //winking 😉
+    {
+        emoj_num = 12;
+    }
+    else if(strstr((const char*)emo,"COOL") !=NULL) //cool 😎
+    {
+        emoj_num = 13;
+    }
+    else if(strstr((const char*)emo,"RELAXED") !=NULL) //relaxed 😌
+    {
+        emoj_num = 14;
+    }
+    else if(strstr((const char*)emo,"DELICIOUS") !=NULL) //delicious 🤤
+    {
+        emoj_num = 15;
+    }
+    else if(strstr((const char*)emo,"KISSY") !=NULL) //kissy 😘
+    {
+        emoj_num = 16;
+    }
+    else if(strstr((const char*)emo,"CONFIDENT") !=NULL) //confident 😏
+    {
+        emoj_num = 17;
+    }
+    else if(strstr((const char*)emo,"SLEEPY") !=NULL) //sleepy 😴
+    {
+        emoj_num = 18;
+    }
+    else if(strstr((const char*)emo,"SILLY") !=NULL) //silly 😜
+    {
+        emoj_num = 19;
+    }
+    else if(strstr((const char*)emo,"CONFUSED") !=NULL) //confused 🙄
+    {
+        emoj_num = 20;
+    }
+
+    if(emoj_num != 0xFF)
+    {
+        
+        tal_queue_post(s_queue_emotion, &emoj_num, 0);
+    }
     return OPRT_OK;
 }
 
@@ -353,8 +451,6 @@ OPERATE_RET __wukong_ai_nlg_process(AI_TEXT_TYPE_E type, ty_cJSON *root, BOOL_T 
             emo.emoji = emoji;
             emo.name = wukong_emoji_get_name(emoji);
             wukong_ai_event_notify(WUKONG_AI_EVENT_EMOTION, &emo);
-
-            TAL_PR_INFO("-------------emo.emoji = %s         emo.name=%s",emo.emoji,emo.name);
         }
     }    
 

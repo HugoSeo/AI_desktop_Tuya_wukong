@@ -71,25 +71,6 @@
 #define SEG_4_PIN               TUYA_GPIO_NUM_7
 
 // Moto define
-
-// #define MOTO_C_PIN              TUYA_GPIO_NUM_49    //brown wire
-// #define MOTO_D_PIN              TUYA_GPIO_NUM_47    //blue wire
-// #define MOTO_NSLEEP_PIN          TUYA_GPIO_NUM_17    //nSleep wire
-// #define MOTO_NFAULT_PIN              TUYA_GPIO_NUM_17    //nSleep wire
-
-//18 19 42 43
-// #define Motor_B2_A_Pin          TUYA_GPIO_NUM_18
-// #define Motor_B2_B_Pin          TUYA_GPIO_NUM_19
-// #define Motor_B2_C_Pin          TUYA_GPIO_NUM_43
-// #define Motor_B2_D_Pin          TUYA_GPIO_NUM_42
-
-// #define Motor_B2_S_Pin          TUYA_GPIO_NUM_47
-
-// #define Motor_B2_A_Pin          TUYA_GPIO_NUM_35
-// #define Motor_B2_B_Pin          TUYA_GPIO_NUM_34
-// #define Motor_B2_C_Pin          TUYA_GPIO_NUM_28
-// #define Motor_B2_D_Pin          TUYA_GPIO_NUM_8
-
 #define Motor_B2_A_Pin          TUYA_GPIO_NUM_28
 #define Motor_B2_B_Pin          TUYA_GPIO_NUM_8
 #define Motor_B2_C_Pin          TUYA_GPIO_NUM_35
@@ -107,6 +88,7 @@ STATIC UINT8_T uart_txbuff[Maxdatalen] = {0x00};
 STATIC UINT16_T uart_Rxln = 0;
 
 STATIC UINT8_T flag_moto_motion = 0;
+STATIC UINT8_T flag_moto_motion_store = 0;
 // STATIC UINT8_T flag_mcu_uart_ack = 0;
 // STATIC UINT8_T flag_move_cmd = 0;
 STATIC UINT8_T flag_turn_off_on_cmd = 0;
@@ -115,6 +97,8 @@ UINT8_T flag_turn_off_on_state = POWER_STATUS_ON;
 STATIC UINT8_T flag_config_voic = 0;
 STATIC UINT8_T getdata[4]={0};
 STATIC UINT8_T wakeflag=0;
+STATIC UINT8_T emoji_num=0xFF;
+STATIC UINT16_T emotiong_time = 0;
 STATIC UINT8_T turnonkeyflag=0;
 STATIC UINT8_T getnamestr[31]={0};
 
@@ -133,8 +117,7 @@ STATIC UINT8_T moto_nod_times = 0;
 STATIC UINT8_T moto_state = 0;
 STATIC UINT8_T moto_cur_state = 0;
 STATIC UINT16_T moto_time = 0;
-STATIC UINT16_T hold_time = 0;
-STATIC UINT16_T adc_check_time = 0;
+// STATIC UINT16_T hold_time = 0;
 STATIC UINT16_T seg_dis_time = 0;
 STATIC UINT_T rgb_dis_time = 0;
 
@@ -144,6 +127,7 @@ STATIC UINT8_T demo_test_flag = 0;
 STATIC UINT8_T demo_test_cmd = 0;
 
 STATIC UINT8_T  radar_flag_valid = 0;
+STATIC UINT16_T radar_check_time = 2000;
 
 STATIC UINT8_T moto_step = 0;
 // STATIC UINT8_T moto_
@@ -154,7 +138,7 @@ STATIC UINT16_T MOTOR2_Cycle = 0;
 STATIC UINT8_T MOTO2_STOP_FLG = 0;
 // STATIC UINT16_T M2angle = 0;
 // STATIC UINT16_T M2SC7A20_Ydata = 0;
-
+STATIC UINT_T nod_time = 0;
 
 STATIC WF_STATION_STAT_E net_state={0};
 STATIC BOOL_T online_state = FALSE;
@@ -169,21 +153,6 @@ CHAR_T  keep_quiet = 0;
 //                            0    1    2    3    4    5    6    7    8    9    A    B    C    D    E    F   NOP
 CONST UINT8_T seg_code[] = {0x3F,0x06,0x5B,0x4F,0x66,0x6D,0x7D,0x07,0x7F,0x6F,0x77,0x7C,0x39,0x5E,0x79,0x71,0x00};
 
-// BYTE_T flag_gateway_state = 0;
-
-// typedef struct led_st {
-// beken_timer_t led_timer;
-// DEV_STATE state;
-// GPIO_INDEX gpio_idx;
-// } LED_ST, LED_PTR;
-
-// typedef struct led_message {
-// DEV_STATE led_msg;
-// } LED_MSG_T;
-
-// static LED_ST ledctr;
-// beken_queue_t led_msg_que = NULL;
-// xTaskHandle led_thread_handle = NULL;
 INT8_T moto_angle_check(VOID);
 /***********************************************************
 ***********************typedef define***********************
@@ -203,7 +172,7 @@ INT8_T moto_angle_check(VOID);
 // };
 
 extern QUEUE_HANDLE  s_queue_voice_cmd;
-// extern QUEUE_HANDLE  s_queue_state;
+extern QUEUE_HANDLE  s_queue_emotion;
 extern QUEUE_HANDLE  s_queue_name_str;
 extern QUEUE_HANDLE  s_queue_wake;
 extern QUEUE_HANDLE  s_queue_onvoice;
@@ -217,7 +186,6 @@ extern UINT8_T time_dis_flag;
 
 extern OPERATE_RET hugo_ai_set_free_idle(VOID);
 extern OPERATE_RET hugo_ai_set_free_wakeup(VOID);
-// extern unsigned int  FACE_TIME;
 
 /***********************************************************
 ***********************function define**********************
@@ -319,10 +287,13 @@ VOID mcu_uart_rx_process(VOID)
                             moto_angle = 0;
                             moto_angle_check();
                             // if(demo_test_state!=0)
+                            demo_test_state = 0;
+                            tal_queue_post(s_queue_onvoice, &demo_test_state, 0);
                             demo_test_state = 1;
+
                             hugo_ai_set_free_wakeup();
                             turnonkeyflag = 1;
-
+                            nod_time = 3000;
                         }
                         else if(flag_turn_off_on_state == POWER_STATUS_OFF)
                         {
@@ -361,21 +332,17 @@ VOID mcu_uart_rx_process(VOID)
                             radar_distance += (uart_rxbuff[t+7]-'0')*10;
                             radar_distance += uart_rxbuff[t+8]-'0';
                             TAL_PR_INFO("radar_distance = %d",radar_distance);
-                            if((radar_distance<200)&&(radar_distance>10))
+                            if((radar_distance<300)&&(radar_distance>10))
                             {
+                                radar_check_time = 10000;   //10s后检查雷达
                                 if(radar_flag_valid < 2)
                                 {
                                     radar_flag_valid++;
                                 
                                 }
                                 if(radar_flag_valid == 1)   // New get radar
-                                {
-                                // if(FACE_TIME>5000)
-                                // {
-                                //     FACE_TIME = 200;
-                                // }
-                                    hugo_ai_face_intimer();
-                                    
+                                {                               
+                                    hugo_ai_face_intimer();                                    
                                     
                                     // seg_dis_time = 10000;
                                     flag_seg_data = 1;
@@ -469,6 +436,7 @@ VOID mcu_uart_tx_process(VOID)
     
     if(flag_moto_motion!=0)
     {
+        flag_moto_motion_store = flag_moto_motion;
         send_mcu_data(0x01,&flag_moto_motion,1);
         flag_moto_motion = 0;
     }
@@ -486,6 +454,7 @@ VOID mcu_uart_tx_process(VOID)
         // }
         send_mcu_data(0x02,&flag_turn_off_on_cmd,1);
         flag_turn_off_on_cmd = 0;
+        flag_moto_motion_store = 0;
     }
 
     // if(flag_mcu_uart_ack != 0)
@@ -502,6 +471,7 @@ VOID mcu_uart_tx_process(VOID)
 
     if(demo_test_cmd!=0)
     {
+        flag_moto_motion_store = demo_test_cmd + 0x20;
         send_mcu_data(0x05,&demo_test_cmd,1);
         demo_test_cmd = 0;
     }
@@ -769,16 +739,11 @@ VOID hugo_ai_moto_timer(VOID)
     {
         moto_time --;
     }
-    
-    if(adc_check_time>0)
-    {
-        adc_check_time --;
-    }   
-
-    if(hold_time>0)
-    {
-        hold_time --;
-    }    
+        
+    // if(hold_time>0)
+    // {
+    //     hold_time --;
+    // }    
 
     if(seg_dis_time>0)
     {
@@ -828,7 +793,31 @@ VOID hugo_ai_moto_timer(VOID)
             moto_flag = MOTO_IDLE;
         } 
     }
+
+    if(nod_time > 1)
+    {
+        nod_time--;        
+    }
+    else if(nod_time == 1)
+    {
+        nod_time = 0;
+        moto_state = STATE_MOTO_NOD;
+    }
+
+    if(radar_check_time > 1)
+    {
+        radar_check_time--;
+    }
+    else if(radar_check_time == 1)  //长时间没有收到雷达数据则无效
+    {
+        radar_check_time = 0;
+        radar_flag_valid = 0;
+    }
     
+    if(emotiong_time>0) 
+    {
+        emotiong_time--;
+    }
 }
 
 //==================================================//
@@ -876,7 +865,7 @@ VOID hugo_ai_moto_process(VOID)
     {
     case STATE_MOTO_ON:
         moto_state = STATE_MOTO_IDLE;
-        moto_angle = -20;
+        moto_angle = -40;
         TAL_PR_NOTICE("=============== on A[%d]= %f  %f",ret,direct_out,moto_angle);
         moto_angle_check();        
         break;
@@ -909,7 +898,7 @@ VOID hugo_ai_moto_process(VOID)
 
     if(moto_cur_state == STATE_MOTO_NOD)
     {        
-        if((MOTOR2_Cycle == 0)&&(hold_time == 0))
+        if(MOTOR2_Cycle == 0)
         {
             /*if((moto_time > 0)&&(moto_step==0))
             {
@@ -927,21 +916,21 @@ VOID hugo_ai_moto_process(VOID)
             case 1:
             case 3:
             case 5:     
-                moto_angle = 20;
+                moto_angle = 0;
                 moto_angle_check();
                 moto_step++;
                 break;
             
             case 2:
             case 4:
-                moto_angle = -50;
+                moto_angle = -60;
                 moto_angle_check();
 
                 moto_step++;
                 break;
             case 6:
                 // moto_cur_state = STATE_MOTO_IDLE;     
-                moto_angle = -20;
+                moto_angle = -35;
                 moto_angle_check();
                 moto_step = 0;
             default:
@@ -1075,6 +1064,11 @@ STATIC UINT8_T hugo_ai_adc_task(VOID)
     adc_value_poit++;
 }
 
+UINT8_T hugo_radar_valid(VOID)
+{
+    return radar_flag_valid;
+}
+
 OPERATE_RET hugo_ai_desktop_init(VOID)
 {
     OPERATE_RET rt = OPRT_OK;
@@ -1095,7 +1089,7 @@ OPERATE_RET hugo_ai_desktop_init(VOID)
     TAL_PR_NOTICE("------------------Hugo run------------------");
 
     tal_queue_create_init(&s_queue_voice_cmd, 4*SIZEOF(UINT8_T), 1);
-    // tal_queue_create_init(&s_queue_state, SIZEOF(UINT8_T), 1);
+    tal_queue_create_init(&s_queue_emotion, SIZEOF(UINT8_T), 1);
     tal_queue_create_init(&s_queue_name_str, 31*SIZEOF(UINT8_T), 1);
     tal_queue_create_init(&s_queue_wake, 1*SIZEOF(UINT8_T), 1);
     tal_queue_create_init(&s_queue_onvoice, 1*SIZEOF(UINT8_T), 1);
@@ -1131,6 +1125,7 @@ OPERATE_RET hugo_ai_desktop_init(VOID)
                 // TAL_PR_NOTICE("------------------get data 2------------------");
                 if(getdata[1]<=20)
                 {
+                    emotiong_time = 15000;
                     flag_moto_motion = getdata[1];
                     if (flag_moto_motion == 8)  //闭嘴
                     {
@@ -1160,7 +1155,7 @@ OPERATE_RET hugo_ai_desktop_init(VOID)
                     {
                         flag_moto_motion = 0;   //不需要MCU处理
                         moto_state = STATE_MOTO_NOD;
-                    }
+                    }                    
                 }
                 break;
             case 2:
@@ -1191,12 +1186,12 @@ OPERATE_RET hugo_ai_desktop_init(VOID)
 
                         // hugo_ai_set_free_idle();
                     // }
-                    if(flag_turn_off_on_cmd == POWER_STATUS_ON)
-                    {
-                        demo_test_state = 0; 
-                        tal_queue_post(s_queue_onvoice, &demo_test_state, 0);
-                        demo_test_state = 1;
-                    }
+                    // if(flag_turn_off_on_cmd == POWER_STATUS_ON)
+                    // {
+                    //     demo_test_state = 0; 
+                    //     tal_queue_post(s_queue_onvoice, &demo_test_state, 0);
+                    //     demo_test_state = 1;
+                    // }
                     if(flag_turn_off_on_cmd == POWER_STATUS_DEMO)
                     {
                         flag_seg_data = 1;
@@ -1205,8 +1200,11 @@ OPERATE_RET hugo_ai_desktop_init(VOID)
                         rgb_dis_time = 600000;//10000;
                         flag_rgb_data = RGB_BLUE;
                         moto_state = STATE_MOTO_ON;
+                        hugo_ai_set_free_idle();
                         demo_test_state = 0;    //demo test mode
-                        tal_queue_post(s_queue_onvoice, &flag_turn_off_on_cmd, 0);   //0 no voice    1 have voice
+                        tal_queue_post(s_queue_onvoice, &demo_test_state, 0);   //0 no voice    1 have voice
+                        flag_turn_off_on_cmd = 0;
+                        tal_system_sleep(500);
                     }
                     
                     continue;
@@ -1248,7 +1246,7 @@ OPERATE_RET hugo_ai_desktop_init(VOID)
                     }
                 }
                 // break;
-                continue;
+                continue;            
             // case 0xFF:
             default:
                 // if (flag_turn_off_on_state == 2)
@@ -1268,16 +1266,69 @@ OPERATE_RET hugo_ai_desktop_init(VOID)
             // TUYA_CALL_ERR_LOG(wukong_ai_agent_send_text("你收到了一条控制指令，用下面的话术进行应答，不要加任何其他的词包括“好的”和“正在处理”等词，注意只说一遍，直接说：“好嘞，马上安排。”。"));
             // tuya_ai_input_stop();
         }
+        if (tal_queue_fetch(s_queue_emotion, &emoji_num, 1) == OPRT_OK)
+        {            
+            TAL_PR_NOTICE("-------------emo: %d",getdata[1]);
+
+            if(emotiong_time == 0)
+            {                
+                moto_state = STATE_MOTO_NOD;
+                nod_time = 2000;
+                emotiong_time = 15000;
+
+                //高兴系列，点头,左右旋转
+                if((emoji_num == 0)||(emoji_num == 1)||(emoji_num == 2)||(emoji_num == 3)||(emoji_num == 8)||(emoji_num == 11)||
+                (emoji_num == 12)||(emoji_num == 15)||(emoji_num == 16)||(emoji_num == 17)||(emoji_num == 19))
+                {               
+                    if(flag_moto_motion_store >= 6)
+                    {
+                        flag_turn_off_on_cmd = POWER_STATUS_ON;
+                    }
+                    else
+                    {
+                        flag_moto_motion = 9;
+                    }                
+                }
+                //惊喜系列,左右旋转
+                else if((emoji_num == 7)||(emoji_num == 9)||(emoji_num == 10))
+                {
+                    flag_moto_motion = 9;
+                }
+                //生气系列
+                else if((emoji_num == 5))
+                {
+                    // flag_moto_motion = 8;
+                    demo_test_cmd = 4;
+                }
+                //伤心系列
+                else if((emoji_num == 4)||(emoji_num == 6))
+                {
+                    flag_moto_motion = 6;
+                }
+                //躺平系列
+                else if((emoji_num == 13)||(emoji_num == 14)||(emoji_num == 18)||(emoji_num == 20))
+                {
+                    flag_moto_motion = 10;
+                }
+            }
+            
+        }
+
         if (tal_queue_fetch(s_queue_wake, &wakeflag, 1) == OPRT_OK)
         {
             
-            moto_state = STATE_MOTO_NOD;
+            // moto_state = STATE_MOTO_NOD;
+            nod_time = 2000;
             moto_nod_times = 5;
             keep_quiet = 0;
             adc_check_flag = TRUE;
             if(turnonkeyflag == 1)
             {
                 turnonkeyflag = 0;                
+            }
+            else if(flag_moto_motion_store >= 6)
+            {
+                flag_turn_off_on_cmd = POWER_STATUS_ON;
             }
             else
             {
@@ -1331,6 +1382,7 @@ OPERATE_RET hugo_ai_desktop_init(VOID)
             if(demo_test_time == 0)
             {
                 flag_shut_voice = 0;
+                tal_queue_post(s_queue_onvoice, &demo_test_state, 0);
                 if(online_state == TRUE)
                 {
                     audio_data = (CONST CHAR_T*)media_src_connected_zh;
@@ -1700,12 +1752,15 @@ OPERATE_RET hugo_ai_desktop_init(VOID)
             if(face_voice_flag == 1)
             {
                 face_voice_flag = 0;
-                tuya_ai_input_start(TRUE);
+                // tuya_ai_input_start(TRUE);
                 // TUYA_CALL_ERR_LOG(wukong_ai_agent_send_text("这个是一个陌生人，打一下招呼，问一下对方怎么称呼"));
                 // TUYA_CALL_ERR_LOG(wukong_ai_agent_send_text("这个是一个陌生人，用下面这个话术进行打招呼，不要加任何其他的词包括“好的”和“正在处理”等词，直接说：“你好呀，我是小康，请问您怎么称呼呀?”。"));
-                TUYA_CALL_ERR_LOG(wukong_ai_agent_send_text("跟陌生人打个招呼，问一下他叫什么名字。"));
-
-                tuya_ai_input_stop();            
+                // TUYA_CALL_ERR_LOG(wukong_ai_agent_send_text("跟陌生人打个招呼，问一下他叫什么名字。"));
+                // tuya_ai_input_stop();
+                audio_data = (CONST CHAR_T*)media_src_get_username_zh;
+                audio_size = sizeof(media_src_get_username_zh);
+                TUYA_CALL_ERR_LOG(wukong_audio_play_data(AI_AUDIO_CODEC_MP3, audio_data, audio_size));
+                tuya_ai_input_start(TRUE);
             }
             if(face_voice_flag == 2)
             {
@@ -1748,7 +1803,7 @@ OPERATE_RET hugo_ai_desktop_init(VOID)
         tal_system_sleep(10);
     }
     tal_queue_free(s_queue_voice_cmd);
-    // tal_queue_free(s_queue_state);
+    tal_queue_free(s_queue_emotion);
     tal_queue_free(s_queue_name_str);
     tal_queue_free(s_queue_wake);
     tal_queue_free(s_queue_onvoice);

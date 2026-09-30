@@ -117,3 +117,16 @@ CONST CHAR_T* wukong_emoji_get_by_name(CONST CHAR_T* name)
     return g_emotions[0].emoji; // 未找到匹配的emoji, use neutral as default
 }
 
+size_t wukong_emoji_get_nun(CONST CHAR_T* emoji) 
+{
+    TUYA_CHECK_NULL_RETURN(emoji, NULL);
+    
+    for (size_t i = 0; i < CNTSOF(g_emotions); i++) {
+        if (strcmp(g_emotions[i].emoji, emoji) == 0) {
+            TAL_PR_NOTICE("wukong_emoji_get_nun: %i", i);
+            return i;
+        }
+    }
+    
+    return 0xFFFF; // 未找到匹配的emoji, use neutral as default
+}

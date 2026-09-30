@@ -569,7 +569,7 @@ STATIC OPERATE_RET wukong_ai_free_wakeup(VOID *data, INT_T len)
     wukong_audio_input_reset();
     wukong_ai_agent_chat_break(NULL);
 
-    wukong_audio_player_alert(AI_TOY_ALERT_TYPE_WAKEUP, FALSE);
+    // wukong_audio_player_alert(AI_TOY_ALERT_TYPE_WAKEUP, FALSE);
     // s_ai_free.state = AI_CHAT_LISTEN;
     CHAT_SUB_STATE_CHANGE(AI_CHAT_SUB_FREE, s_ai_free.state, AI_CHAT_LISTEN);
     s_ai_free.wakeup_stat = TRUE;
