@@ -37,6 +37,7 @@ int ret_gateway_state(void);
 VOID_T hugo_ai_seg_process(VOID_T);
 VOID_T seg_init(VOID_T);
 
+
 // UINT16_T flag_rgb_bit;
 // UINT8_T flag_moto_direction;
 // UINT16_T flag_moto_time;
@@ -100,6 +101,11 @@ VOID_T seg_init(VOID_T);
 #define MOTO_ON_ANGLE		180
 
 
+#define ADC_REFERENCE_0		4891
+#define ADC_REFERENCE_1		3974
+#define ADC_REFERENCE_2		4006
+#define ADC_REFERENCE_3		4126
+	
 
 typedef enum {
 	STA_NONE         = 0,

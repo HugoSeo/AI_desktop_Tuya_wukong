@@ -19,6 +19,7 @@ STATIC AI_CHAT_MODE_HANDLE_T s_ai_free_cb = {0};
 STATIC AI_CHAT_MODE_PARAM_T s_ai_free = {0};
 STATIC AI_CHAT_STATE_E s_ai_cur_state = AI_CHAT_INVALID;
 
+STATIC CHAR_T speak_flag = 0;
 /**
  * @brief Handle ASR result event in free mode.
  *
@@ -403,6 +404,7 @@ STATIC OPERATE_RET wukong_ai_free_event_cb(VOID *data, INT_T len)
         {
             // s_ai_free.state = AI_CHAT_SPEAK;
             CHAT_SUB_STATE_CHANGE(AI_CHAT_SUB_FREE, s_ai_free.state, AI_CHAT_SPEAK);
+            speak_flag = 1;
         }
         break;
 
@@ -499,7 +501,7 @@ STATIC OPERATE_RET wukong_ai_free_event_cb(VOID *data, INT_T len)
             {
                 // s_ai_free.state = AI_CHAT_LISTEN;
                 CHAT_SUB_STATE_CHANGE(AI_CHAT_SUB_FREE, s_ai_free.state, AI_CHAT_LISTEN);
-                
+                speak_flag = 0;
             }
             else
             {
@@ -573,6 +575,7 @@ STATIC OPERATE_RET wukong_ai_free_wakeup(VOID *data, INT_T len)
     // s_ai_free.state = AI_CHAT_LISTEN;
     CHAT_SUB_STATE_CHANGE(AI_CHAT_SUB_FREE, s_ai_free.state, AI_CHAT_LISTEN);
     s_ai_free.wakeup_stat = TRUE;
+    speak_flag = 0;
 
     return rt;
 }
@@ -666,7 +669,7 @@ STATIC OPERATE_RET wukong_ai_free_key_cb(VOID *data, INT_T len)
             // s_ai_free.state = AI_CHAT_LISTEN;
             CHAT_SUB_STATE_CHANGE(AI_CHAT_SUB_FREE, s_ai_free.state, AI_CHAT_LISTEN);
             s_ai_free.wakeup_stat = TRUE;
-
+            speak_flag = 0;
         } 
         break;  
 
@@ -800,4 +803,9 @@ OPERATE_RET hugo_ai_set_free_idle(VOID)
 OPERATE_RET hugo_ai_set_free_wakeup(VOID)
 {
     wukong_ai_free_wakeup(NULL,0);
+}
+
+CHAR_T hugo_ai_get_speak_flag(VOID)
+{
+    return speak_flag;
 }

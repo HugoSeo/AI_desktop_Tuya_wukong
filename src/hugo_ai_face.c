@@ -62,7 +62,7 @@ STATIC unsigned char Face_rxbuff[Face_Buffln];
 STATIC char Face_rxdata[RXBUFFERSIZE];
 STATIC unsigned char RX_Msgid;
 
-STATIC unsigned int  FACE_TIME=8000;
+STATIC unsigned int  FACE_TIME=20000;
 STATIC unsigned int  FACE_RELEASE_TIME=0;
 STATIC unsigned int  FACE_ADD_TIME = 0;
 STATIC unsigned char FACE_Work_Mode=FACE_STANDBY;
@@ -84,6 +84,8 @@ STATIC unsigned char FACE_TX_FLG=0;
 STATIC UINT8_T setting_flag = SET_INPW;
 UINT8_T face_voice_flag = 0;
 STATIC BYTE_T  face_flag_buf[100] = {0};
+
+STATIC UCHAR_T face_first_run_flag = 1;
 /***********************************************************
 ***********************function define**********************
 ***********************************************************/
@@ -95,6 +97,7 @@ int DencBytes(unsigned char *bytes, int length, unsigned char *out);
 unsigned char GetCRC(const unsigned char *pData, unsigned char len);
 
 extern UINT8_T hugo_radar_valid(VOID);
+extern CHAR_T hugo_ai_get_speak_flag(VOID);
 
 VOID face_flag_write(BYTE_T *data)
 {
@@ -636,7 +639,7 @@ VOID Dispay_fled(char t)
 unsigned char  Face_Start(VOID)
 {
     //检测时间到了，且雷达数据有效
-    if((FACE_TIME==0)/*&&(hugo_radar_valid()!=0)*/) return 1;
+    if((FACE_TIME==0)/*&&(hugo_radar_valid()!=0)*/&&(hugo_ai_get_speak_flag() == 0)) return 1;
     else return 0;
 }
 VOID Face_uart_rx(VOID)
@@ -1125,14 +1128,23 @@ VOID hugo_ai_face_timer(VOID)
 
 VOID hugo_ai_face_intimer(VOID)
 {
-    // if(FACE_TIME > 5000)
+    if(face_first_run_flag == 1)
     {
-        FACE_TIME = 10;
-        FACE_Work_Mode=FACE_STANDBY;
-        Face_error_ts = 0;
-        face_store_ID = 0xFF;
-        FACE_RELEASE_TIME = 0;
+        face_first_run_flag = 0;
+        FACE_TIME = 15000;
     }
+    else
+    {
+        FACE_TIME = 100;
+    }
+    
+    FACE_Work_Mode=FACE_STANDBY;
+    Face_error_ts = 0;
+    face_store_ID = 0xFF;
+    FACE_RELEASE_TIME = 0;
+
+
+    
 
 }
 

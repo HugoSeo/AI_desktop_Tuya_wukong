@@ -372,9 +372,14 @@ OPERATE_RET wukong_audio_player_alert(TY_AI_TOY_ALERT_TYPE_E type, BOOL_T send_e
     OPERATE_RET rt = OPRT_OK;
     CONST CHAR_T *audio_data = NULL;
     UINT32_T audio_size = 0;
-    STATIC UINT8_T vocieflg = 0xFF;    
+    STATIC UINT8_T vocieflg = 0x0;    
     UINT8_T wakeupflg = 1;
     STATIC UINT8_T first_run_flag = 1;
+
+    if (tal_queue_fetch(s_queue_onvoice, &vocieflg, 1) == OPRT_OK)
+    {
+        ;
+    }
     
     switch (type) {
     // case AI_TOY_ALERT_TYPE_POWER_ON:
@@ -396,13 +401,14 @@ OPERATE_RET wukong_audio_player_alert(TY_AI_TOY_ALERT_TYPE_E type, BOOL_T send_e
 
     // Modified by Hugo    
     case AI_TOY_ALERT_TYPE_NETWORK_CONNECTED:
-        if (tal_queue_fetch(s_queue_onvoice, &vocieflg, 1) == OPRT_OK)
-        {
-            ;
-        }
+        // if (tal_queue_fetch(s_queue_onvoice, &vocieflg, 1) == OPRT_OK)
+        // {
+        //     ;
+        // }
         if(vocieflg == 0)
         {
             return rt;
+            // break;
         }
 #if defined(ENABLE_CLOUD_ALERT) && ENABLE_CLOUD_ALERT==1    
     if (OPRT_OK == wukong_ai_agent_cloud_alert(type)) break;
