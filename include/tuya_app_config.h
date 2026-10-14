@@ -45,7 +45,15 @@ extern "C" {
 // CONFIG_DEVICE_POWER_CONTROL is not set
 // end of Pin Configuration
 
-// CONFIG_ENABLE_TUYA_DISPLAY is not set
+#define ENABLE_TUYA_DISPLAY 1
+#define TUYA_LCD_IC_NAME_STR "spi_st7735s"
+#define TUYA_LCD_WIDTH_VAL 128
+#define TUYA_LCD_HEIGHT_VAL 128
+#define LCD_FPS_VAL 10
+#define TUYA_LCD_ROTATION_VAL 0
+#define LCD_SPI_DEVICE_NUM 1
+#define TUYA_MULTI_TYPES_LCD 1
+#define TUYA_APP_DRIVERS_TP 1
 
 //
 // AI Mode Configuration
@@ -107,6 +115,7 @@ extern "C" {
 #define ENABLE_TOOLKITS_PLAYBACK 1
 // CONFIG_ENABLE_TOOLKITS_IMM is not set
 // CONFIG_ENABLE_TOOLKITS_SOCIAL is not set
+// CONFIG_ENABLE_TUYA_UI is not set
 
 //
 // Audio Configuration

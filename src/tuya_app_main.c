@@ -766,7 +766,7 @@ VOID_T tuya_app_main(VOID)
 #endif
 
     // THREAD_CFG_T thrd_param = {4096, THREAD_PRIO_2, "tuya_app_main"};
-    THREAD_CFG_T thrd_param = {5120, THREAD_PRIO_2, "tuya_app_main"};   //Modified by Hugo 26.10.02
+    THREAD_CFG_T thrd_param = {6144, THREAD_PRIO_2, "tuya_app_main"};   //Modified by Hugo 26.10.02
 #if defined(ENABLE_EXT_RAM) && (ENABLE_EXT_RAM == 1)
     thrd_param.psram_mode = 1;
 #endif

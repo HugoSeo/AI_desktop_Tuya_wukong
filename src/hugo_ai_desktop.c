@@ -97,6 +97,7 @@ UINT8_T flag_turn_off_on_state = POWER_STATUS_ON;
 STATIC UINT8_T flag_config_voic = 0;
 STATIC UINT8_T getdata[4]={0};
 STATIC UINT8_T wakeflag=0;
+STATIC UINT16_T waketime=0;
 STATIC UINT8_T emoji_num=0xFF;
 STATIC UINT16_T emotiong_time = 0;
 STATIC UINT8_T turnonkeyflag=0;
@@ -145,8 +146,15 @@ STATIC BOOL_T online_state = FALSE;
 
 INT32_T adc_value[16] = {0};
 INT16_T adc_value_store[4][250] = {0};
-INT16_T adc_value_poit = 0;
-CHAR_T  adc_check_flag = FALSE;
+STATIC INT16_T adc_value_poit = 0;
+CHAR_T  adc_check_flag = 0;
+STATIC INT8_T direction_value = DIRECT_MIDDLE;
+
+STATIC UINT16_T cnt_left = 0;
+STATIC UINT16_T cnt_right = 0;
+STATIC UINT16_T cnt_middle = 0;
+STATIC UINT16_T cnt_total = 0;
+STATIC UINT8_T flag_adc_check_en = 0;
 
 CHAR_T  keep_quiet = 0;
 
@@ -176,6 +184,7 @@ extern QUEUE_HANDLE  s_queue_emotion;
 extern QUEUE_HANDLE  s_queue_name_str;
 extern QUEUE_HANDLE  s_queue_wake;
 extern QUEUE_HANDLE  s_queue_onvoice;
+extern QUEUE_HANDLE  s_queue_vad_flag;
 
 extern float pitch_out;
 extern float roll_out;
@@ -449,11 +458,11 @@ VOID mcu_uart_tx_process(VOID)
 {
     UINT8_T data[10];
 
-    
     if(flag_moto_motion!=0)
     {
         flag_moto_motion_store = flag_moto_motion;
         send_mcu_data(0x01,&flag_moto_motion,1);
+        TAL_PR_INFO("=============Tx motion : %d",flag_moto_motion);
         flag_moto_motion = 0;
     }
     // if(flag_move_cmd != 0)
@@ -834,6 +843,17 @@ VOID hugo_ai_moto_timer(VOID)
     {
         emotiong_time--;
     }
+
+    if(waketime > 1)
+    {
+        waketime--;
+    }
+    else if(waketime == 1)
+    {
+        waketime = 0;
+        wakeflag = 0;
+        // TAL_PR_NOTICE("-----------  clear wake flag");
+    }
 }
 
 //==================================================//
@@ -977,7 +997,23 @@ __EXIT_ADC:
     TUYA_CALL_ERR_LOG(tkl_adc_deinit(ADC_NUM));
     return 0;
 }
+VOID adc_average_diff(VOID)
+{
+    CONST INT32_T average_adc[4] = {150,1300,149,174};   //100,943,149,174
+    UINT8_T i = 0;
 
+    for(i=0; i<4; i++)
+    {
+        if (adc_value[i] > average_adc[i])
+        {
+            adc_value[i] -= average_adc[i];
+        }
+        else
+        {
+            adc_value[i] = 0;
+        }        
+    }
+}
 VOID hugo_ai_adc_get(VOID)
 {
     OPERATE_RET rt = OPRT_OK;
@@ -985,7 +1021,7 @@ VOID hugo_ai_adc_get(VOID)
     UINT8_T i = 0;
 
     // TUYA_CALL_ERR_LOG(tkl_adc_read_single_channel(ADC_NUM, ADC_CHANNEL, &adc_value));
-    TUYA_CALL_ERR_LOG(tkl_adc_read_data(ADC_NUM,adc_value,4));
+    TUYA_CALL_ERR_LOG(tkl_adc_read_data(ADC_NUM,adc_value,4));  //4
     // tkl_adc_read_single_channel(ADC_NUM,ADC_CHANNEL_A,&adc_value[0]);
     // tkl_adc_read_single_channel(ADC_NUM,ADC_CHANNEL_B,&adc_value[1]);
     // tkl_adc_read_single_channel(ADC_NUM,ADC_CHANNEL_C,&adc_value[2]);
@@ -995,13 +1031,14 @@ VOID hugo_ai_adc_get(VOID)
     // {        
     //     TAL_PR_INFO("ADC%d[%d] get Volt = %d", i, adc_value[i], adc_value[i]/2*3300/4096);
     // }
+    // adc_average_diff();
 
-    // TAL_PR_INFO("ADC get= [%d:%d %d] [%d:%d %d] [%d:%d %d] [%d:%d %d]",\
-    //     ADC_CHANNEL_A, adc_value[0], adc_value[0]/2*3300/4096,\
-    //     ADC_CHANNEL_B, adc_value[1], adc_value[1]/2*3300/4096,\
-    //     ADC_CHANNEL_C, adc_value[2], adc_value[2]/2*3300/4096,\
-    //     ADC_CHANNEL_D, adc_value[3], adc_value[3]/2*3300/4096\
-    // );
+    TAL_PR_INFO("ADC get= [%d:%d %d] [%d:%d %d] [%d:%d %d] [%d:%d %d]",\
+        ADC_CHANNEL_A, adc_value[0], adc_value[0]/2*3300/4096,\
+        ADC_CHANNEL_B, adc_value[1], adc_value[1]/2*3300/4096,\
+        ADC_CHANNEL_C, adc_value[2], adc_value[2]/2*3300/4096,\
+        ADC_CHANNEL_D, adc_value[3], adc_value[3]/2*3300/4096\
+    );
 
     // tkl_adc_read_voltage(ADC_NUM, &adc_value, 4);
     // for(i=0;i<4;i++)
@@ -1010,38 +1047,269 @@ VOID hugo_ai_adc_get(VOID)
     return;
 }
 
+VOID hugo_ai_adc_data_clear(VOID)
+{
+    cnt_left = 0;
+    cnt_right = 0;
+    cnt_middle = 0;
+    cnt_total = 0;
+    flag_adc_check_en = 1;
+}
+STATIC VOID_T hugo_ai_adc_result(VOID)
+{
+
+    if(flag_adc_check_en != 1)
+    {
+        return;
+    }
+
+    flag_adc_check_en = 0;
+    
+    TAL_PR_INFO("============================ adc result= %d %d %d %d",cnt_total,cnt_left,cnt_middle,cnt_right);
+    if((cnt_left > cnt_right)&&(cnt_left > cnt_total/3))
+    {
+        if(direction_value > DIRECT_LEFT)
+        {
+            direction_value--;
+            flag_moto_motion = 2;
+            TAL_PR_INFO("============== TURN LEFT ==============");
+        }
+    }
+    else if ((cnt_right > cnt_left)&&(cnt_right > cnt_total/3))
+    {
+        if(direction_value < DIRECT_RIGHT)
+        {
+            direction_value++;
+            flag_moto_motion = 1;
+            TAL_PR_INFO("============== TURN RIGHT ==============");
+        }
+    }
+    
+}
 STATIC UINT8_T hugo_ai_adc_task(VOID)
 {
+    OPERATE_RET rt = OPRT_OK;
+    CONST CHAR_T *audio_data = NULL;
+    UINT32_T audio_size = 0;
     unsigned char mic_station_flag = 0;
     unsigned char cnt = 0, i = 0;
     unsigned char end = 0;
     // hugo_ai_adc_init();
     // tal_system_sleep(100);
-    INT32_T adc_value_sum[4] = {0};
-    INT32_T adc_value_div[4] = {0};
+    STATIC INT32_T adc_value_sum[4] = {0};
+    STATIC INT32_T adc_value_div[4] = {0};//{0xFFFF,0xFFFF,0xFFFF,0xFFFF};
+    INT32_T adc_max = 0;
+    INT32_T adc_min = 0xFFFF;
+    INT32_T point = 0xFF;
+
+    INT32_T adc_left = 0x0000;
+    INT32_T adc_right = 0x0000;
+
+
+
+    if(adc_check_flag != 1)
+        return  rt;
+
     hugo_ai_adc_get();
     // tal_system_sleep(100);
     // if(adc_value_poit >= 250)
     //     adc_value_poit = 0;
-    for(cnt = 0; cnt < 4; cnt++)
+
+
+#if 0
+    //max data check
+    for(cnt = 0; cnt < 3; cnt++)
     {
         adc_value_store[cnt][adc_value_poit] = adc_value[cnt];
-    }
-    adc_value_poit++;
-    if(adc_value_poit >= 250)
-    {
-        adc_value_poit = 0;
-        for(cnt = 0; cnt < 4; cnt++)
+
+        if(adc_min > adc_value_store[cnt][adc_value_poit])
         {
-            for(i=0;i++;i<250)
+            adc_min = adc_value_store[cnt][adc_value_poit];
+        }
+        
+        if(adc_max < adc_value_store[cnt][adc_value_poit])
+        {
+            adc_max = adc_value_store[cnt][adc_value_poit];
+            point = cnt;
+        }
+
+        if(adc_value_store[cnt][adc_value_poit] < 500)
+        {
+            adc_value_div[cnt] ++;
+
+            if(adc_value_div[cnt]>80)
             {
-                if(adc_value_div[cnt]<adc_value_store[cnt][i])
+                adc_value_sum[cnt] = 0;
+                adc_value_div[cnt] = 0;
+            }
+        }
+    }
+
+    if(adc_max-adc_min > 800)
+    {
+        adc_value_sum[point] ++;
+        if(adc_value_sum[point] > 20)
+        {
+            for(cnt = 0; cnt < 3; cnt++)    //clear all
+            {
+                adc_value_sum[cnt] = 0;
+                adc_value_div[cnt] = 0;
+            }
+            TAL_PR_INFO("========== get chanel = %d     wakeflag = %d       direction_value = %d",point,wakeflag,direction_value);
+            if(wakeflag == 1)
+            {
+                wakeflag = 0;
+                if((point == 0)||(point==1))
                 {
-                    adc_value_div[cnt]=adc_value_store[cnt][i];
+                    if(direction_value < DIRECT_RIGHT)
+                    {
+                        direction_value++;
+                        flag_moto_motion = 1;
+                        TAL_PR_INFO("============== TURN RIGHT ==============");
+                        // audio_data = (CONST CHAR_T*)media_src_bingo2_msc;
+                        // audio_size = sizeof(media_src_bingo2_msc);
+                        // TUYA_CALL_ERR_LOG(wukong_audio_play_data(AI_AUDIO_CODEC_MP3, audio_data, audio_size));
+                        // tuya_ai_input_start(TRUE);
+                    }
+                    
+                }
+                if((point == 2)||(point==3))
+                {
+                    if(direction_value > DIRECT_LEFT)
+                    {
+                        direction_value--;
+                        flag_moto_motion = 2;
+                        TAL_PR_INFO("============== TURN LEFT ==============");
+                        // audio_data = (CONST CHAR_T*)media_src_dingdong_zh;
+                        // audio_size = sizeof(media_src_dingdong_zh);
+                        // TUYA_CALL_ERR_LOG(wukong_audio_play_data(AI_AUDIO_CODEC_MP3, audio_data, audio_size));
+                        // tuya_ai_input_start(TRUE);
+                    }
                 }
             }
         }
     }
+#elif 0
+    //chanel 0 & chanel 2 check
+    adc_left = adc_value[2];
+    adc_right = adc_value[0];
+    
+    if((adc_left>adc_right)&&(adc_left>800)&&(adc_left-adc_right>300))
+    {
+        cnt_left++;
+        if(cnt_left>10)
+        {            
+            cnt_left = 0;
+            cnt_right = 0;
+            
+            TAL_PR_INFO("========== get LEFT: wakeflag = %d       direction_value = %d",wakeflag,direction_value);
+            if(wakeflag == 1)
+            {
+                wakeflag = 0;
+                if(direction_value > DIRECT_LEFT)
+                {
+                    direction_value--;
+                    flag_moto_motion = 2;
+                    TAL_PR_INFO("============== TURN LEFT ==============");
+                }
+            }
+        }
+    }
+
+
+    if((adc_right>adc_left)&&(adc_right>800)&&(adc_right-adc_left>300))
+    {
+        cnt_right++;
+        if(cnt_right>10)
+        {            
+            cnt_left = 0;
+            cnt_right = 0;
+
+            TAL_PR_INFO("========== get RIGHT: wakeflag = %d       direction_value = %d",wakeflag,direction_value);
+            if(wakeflag == 1)
+            {
+                wakeflag = 0;
+                if(direction_value < DIRECT_RIGHT)
+                {
+                    direction_value++;
+                    flag_moto_motion = 1;
+                    TAL_PR_INFO("============== TURN RIGHT ==============");
+                }
+            }            
+        }        
+    }
+#else
+    cnt_total++;
+    adc_left = adc_value[2];
+    adc_right = adc_value[0];
+
+    if((adc_left>adc_right)&&(adc_left>700))
+    {
+        if(adc_left>adc_right*1.1)
+            cnt_left++;
+        else
+            cnt_middle++;
+    }
+    
+    if((adc_right>adc_left)&&(adc_right>700))
+    {
+        if(adc_right>adc_left*1.1)
+            cnt_right++;
+        else
+            cnt_middle++;
+    }
+#endif
+    
+    // for(cnt = 0; cnt < 4; cnt++)
+    // {
+    //     if(adc_value_store[cnt][adc_value_poit] > ADC_REFERENCE_0)
+    //     {
+    //         adc_value_sum[cnt] ++;
+    //         if(adc_value_sum[cnt]>10)
+    //         {
+    //             adc_value_sum[cnt] = 0;
+    //             adc_value_div[cnt] = 0;
+    //             TAL_PR_INFO("========== get chanel = %d",cnt);
+    //         }
+    //     }
+    //     else
+    //     {
+    //         if(adc_value_store[cnt][adc_value_poit] < 500)
+    //         {
+    //             adc_value_div[cnt] ++;
+    //             if(adc_value_div[cnt] > 80)
+    //             {                    
+    //                 adc_value_sum[cnt] = 0;
+    //                 adc_value_div[cnt] = 0;
+    //                 // TAL_PR_INFO("========== clear chanel = %d",cnt);
+    //             }
+    //         }
+    //     }
+
+    // }
+
+
+
+    adc_value_poit++;
+    if(adc_value_poit >= 250)
+    {
+        adc_value_poit = 0;
+        // for(cnt = 0; cnt < 4; cnt++)
+        // {
+        //     for(i=0; i<250; i++)
+        //     {
+        //         // TAL_PR_INFO("===div = %d",adc_value_store[cnt][i]);
+        //         if(adc_value_div[cnt]<adc_value_store[cnt][i])
+        //         {
+        //             adc_value_div[cnt]=adc_value_store[cnt][i];
+        //         }
+        //         ADC_REFERENCE_0
+        //     }
+        // }
+        // TAL_PR_INFO("============= adc div = [%d  %d  %d  %d]",adc_value_div[0],adc_value_div[1],adc_value_div[2],adc_value_div[3]);
+    }
+
+
 
 
     // // if(adc_check_flag == TRUE)
@@ -1114,7 +1382,7 @@ STATIC UINT8_T hugo_ai_adc_task(VOID)
         // adc_value_div[3] = adc_value_sum[0]/200 - ADC_REFERENCE_3;
 
 
-        TAL_PR_INFO("=============adc div = [%d  %d  %d  %d]",adc_value_div[0],adc_value_div[1],adc_value_div[2],adc_value_div[3]);
+        // TAL_PR_INFO("=============adc div = [%d  %d  %d  %d]",adc_value_div[0],adc_value_div[1],adc_value_div[2],adc_value_div[3]);
     // }
 
     // adc_value_poit++;
@@ -1132,7 +1400,7 @@ OPERATE_RET hugo_ai_desktop_init(VOID)
     CONST CHAR_T *audio_data = NULL;
     UINT32_T audio_size = 0;
 
-    // hugo_ai_adc_init();
+    hugo_ai_adc_init();
 
     // uart test
     mcu_uart_init();
@@ -1149,15 +1417,15 @@ OPERATE_RET hugo_ai_desktop_init(VOID)
     tal_queue_create_init(&s_queue_name_str, 31*SIZEOF(UINT8_T), 1);
     tal_queue_create_init(&s_queue_wake, 1*SIZEOF(UINT8_T), 1);
     tal_queue_create_init(&s_queue_onvoice, 1*SIZEOF(UINT8_T), 1);
+    tal_queue_create_init(&s_queue_vad_flag, 1*SIZEOF(UINT8_T), 1);
     
-
     while (1)
     { 
         // tal_wifi_station_get_status(&net_state);            //tuya_ai_toy_is_cloud_connected
         online_state = tuya_ai_toy_is_cloud_connected();
         
         mcu_uart_task();
-        // hugo_ai_adc_task();
+        hugo_ai_adc_task();
         
         if((flag_turn_off_on_state == POWER_STATUS_ON)&&(online_state == TRUE))
         {
@@ -1386,7 +1654,8 @@ OPERATE_RET hugo_ai_desktop_init(VOID)
             // moto_state = STATE_MOTO_NOD;            
             // moto_nod_times = 5;
             keep_quiet = 0;
-            adc_check_flag = TRUE;
+            adc_check_flag = 0;
+            waketime = 2000;
             // if(turnonkeyflag == 1)
             // {
             //     turnonkeyflag = 0;                
@@ -1414,7 +1683,18 @@ OPERATE_RET hugo_ai_desktop_init(VOID)
             // rgb_dis_time = 30000;
             // flag_rgb_data = RGB_WAIT;
             TAL_PR_NOTICE("------------------wake up = %d--flag_seg_data=%d----------------",wakeflag,flag_seg_data);
+            hugo_ai_adc_result();
         }
+        if (tal_queue_fetch(s_queue_vad_flag, &adc_check_flag, 1) == OPRT_OK)
+        {
+            TAL_PR_NOTICE("------------------adc_check_flag = %d----------------",adc_check_flag);
+            if(adc_check_flag == 1)
+            {
+                hugo_ai_adc_data_clear();
+            }
+            
+        }
+
         
         if(flag_config_voic == 1)
         {
@@ -1886,13 +2166,14 @@ OPERATE_RET hugo_ai_desktop_init(VOID)
             }
         }
 
-        tal_system_sleep(10);
+        tal_system_sleep(1);
     }
     tal_queue_free(s_queue_voice_cmd);
     tal_queue_free(s_queue_emotion);
     tal_queue_free(s_queue_name_str);
     tal_queue_free(s_queue_wake);
     tal_queue_free(s_queue_onvoice);
+    tal_queue_free(s_queue_vad_flag);
     
     return rt;
 }

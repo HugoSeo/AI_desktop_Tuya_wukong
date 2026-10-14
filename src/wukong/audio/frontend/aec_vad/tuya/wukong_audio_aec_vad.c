@@ -17,6 +17,7 @@
 #include "wukong_audio_frontend.h"
 #include "speexdsp/audio_subsys_speexdsp_wrap2.h"
 #include "speexdsp/audio_subsys_rnn_vad.h"
+#include "tal_queue.h"
 
 #define TUYA_AEC_VAD_DEBUG 1
 
@@ -25,6 +26,8 @@ STATIC VOID *__s_rnn_vad_handle = NULL;
 STATIC UINT16_T *__s_linearaec = NULL;
 STATIC UINT32_T __s_frame_size = 0;
 STATIC WUKONG_AUDIO_VAD_FLAG_E __s_aec_vad_flag = WUKONG_AUDIO_VAD_STOP;
+
+QUEUE_HANDLE  s_queue_vad_flag;
 
 STATIC OPERATE_RET __speex_rnn_vad_set_threshold(WUKONG_AUDIO_VAD_THRESHOLD_E level);
 STATIC OPERATE_RET __speex_rnn_deinit(VOID);
@@ -119,9 +122,11 @@ STATIC OPERATE_RET __speex_rnn_process(INT16_T *mic_data, INT16_T *ref_data, INT
         if (has_vad && __s_aec_vad_flag != WUKONG_AUDIO_VAD_START) {
             TAL_PR_DEBUG("################ [vad start] ################ \r\n");
             __s_aec_vad_flag = WUKONG_AUDIO_VAD_START;
+            tal_queue_post(s_queue_vad_flag, &__s_aec_vad_flag, 0);
         } else if (!has_vad && __s_aec_vad_flag != WUKONG_AUDIO_VAD_STOP) {
             TAL_PR_DEBUG("################ [vad stop] ################ \r\n");
             __s_aec_vad_flag = WUKONG_AUDIO_VAD_STOP;
+            tal_queue_post(s_queue_vad_flag, &__s_aec_vad_flag, 0);
         }
         UINT32_T end = tal_system_get_millisecond();
 

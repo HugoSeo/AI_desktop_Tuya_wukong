@@ -8,13 +8,13 @@ flash,ram,text,code,rodata,data,bss,dec,hex,filename
 3676,0,3676,3676,0,0,0,3676,`e5c,/home/tuya/Documents/tuya/Projects/T5_TuyaOS-3.14.0/software/TuyaOS/vendor/T5/toolchain/gcc-arm-none-eabi-10.3-2021.10/bin/../lib/gcc/arm-none-eabi/10.3.1/thumb/v8-m.main+fp/hard/libgcc.a
 41159,1441,39721,38176,1545,1438,3,41162,`a0ca,/home/tuya/Documents/tuya/Projects/T5_TuyaOS-3.14.0/software/TuyaOS/vendor/T5/toolchain/gcc-arm-none-eabi-10.3-2021.10/bin/../lib/gcc/arm-none-eabi/10.3.1/../../../../arm-none-eabi/lib/thumb/v8-m.main+fp/hard/libc.a
 4540,364,4540,3312,1228,0,364,4904,`1328,armino/cm33/libcm33.a
-100624,7128,99868,82814,17054,756,6372,106996,`1a1f4,armino/driver/libdriver.a
+103225,7129,102469,85238,17231,756,6373,109598,`1ac1e,armino/driver/libdriver.a
 1308,76,1307,1226,81,1,75,1383,`567,armino/bk_system/libbk_system.a
 473,4,473,336,137,0,4,477,`1dd,armino/bk_init/libbk_init.a
 19580,9770,19187,15652,3535,393,9377,28957,`711d,armino/bk_cli/libbk_cli.a
-45424,3588,44375,31674,12701,1049,2539,47963,`bb5b,armino/tuyaos_adapter/libtuyaos_adapter.a
-4337,114,4228,3950,278,109,5,4342,`10f6,armino/bk7258_ap/libbk7258_ap.a
-18231,232,18167,16130,2037,64,168,18399,`47df,armino/common/libcommon.a
+58533,4752,57347,43420,13927,1186,3566,62099,`f293,armino/tuyaos_adapter/libtuyaos_adapter.a
+4339,114,4230,3952,278,109,5,4344,`10f8,armino/bk7258_ap/libbk7258_ap.a
+18405,232,18341,16304,2037,64,168,18573,`488d,armino/common/libcommon.a
 251,32,251,246,5,0,32,283,`11b,armino/bk_startup/libbk_startup.a
 2544,17,2544,2022,522,0,17,2561,`a01,armino/bk_event/libbk_event.a
 3585,73,3584,3080,504,1,72,3657,`e49,armino/bk_aud_param_ctrl/libbk_aud_param_ctrl.a

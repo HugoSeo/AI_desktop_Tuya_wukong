@@ -100,12 +100,20 @@ VOID_T seg_init(VOID_T);
 
 #define MOTO_ON_ANGLE		180
 
+#define DIRECT_LEFT			-1
+#define DIRECT_MIDDLE		0
+#define DIRECT_RIGHT		1
 
-#define ADC_REFERENCE_0		4891
-#define ADC_REFERENCE_1		3974
-#define ADC_REFERENCE_2		4006
-#define ADC_REFERENCE_3		4126
+
+// #define ADC_REFERENCE_0		4891
+// #define ADC_REFERENCE_1		3974
+// #define ADC_REFERENCE_2		4006
+// #define ADC_REFERENCE_3		4126
 	
+#define ADC_REFERENCE_0		2200
+#define ADC_REFERENCE_1		3000
+#define ADC_REFERENCE_2		3000
+#define ADC_REFERENCE_3		3000
 
 typedef enum {
 	STA_NONE         = 0,

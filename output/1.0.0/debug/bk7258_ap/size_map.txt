@@ -527,9 +527,10 @@
     268	    111	    268	    268	      0	      0	    111	    379	    17b	mbox0_adapter.c.obj (ex armino/driver/libdriver.a)
     428	     25	    428	    404	     24	      0	     25	    453	    1c5	mbox0_drv.c.obj (ex armino/driver/libdriver.a)
      70	      0	     70	     70	      0	      0	      0	     70	     46	mbox0_cross_core.c.obj (ex armino/driver/libdriver.a)
+    252	     17	    252	    252	      0	      0	     17	    269	    10d	flash_notify.c.obj (ex armino/driver/libdriver.a)
    2431	     10	   2431	   1246	   1185	      0	     10	   2441	    989	flash_client.c.obj (ex armino/driver/libdriver.a)
     116	      0	    116	    116	      0	      0	      0	    116	     74	driver.c.obj (ex armino/driver/libdriver.a)
-    106	      0	    106	    106	      0	      0	      0	    106	     6a	sys_driver.c.obj (ex armino/driver/libdriver.a)
+    132	      0	    132	    132	      0	      0	      0	    132	     84	sys_driver.c.obj (ex armino/driver/libdriver.a)
     172	      0	    172	    172	      0	      0	      0	    172	     ac	sys_ps_driver.c.obj (ex armino/driver/libdriver.a)
     692	      0	    692	    692	      0	      0	      0	    692	    2b4	sys_audio_driver.c.obj (ex armino/driver/libdriver.a)
      26	      0	     26	     26	      0	      0	      0	     26	     1a	sys_psram_driver.c.obj (ex armino/driver/libdriver.a)
@@ -537,7 +538,7 @@
     360	     33	    360	    360	      0	      0	     33	    393	    189	timer_driver.c.obj (ex armino/driver/libdriver.a)
    3369	    141	   3321	   2906	    415	     48	     93	   3462	    d86	uart_driver.c.obj (ex armino/driver/libdriver.a)
    4546	      0	   4546	   4428	    118	      0	      0	   4546	   11c2	printf.c.obj (ex armino/driver/libdriver.a)
-    275	     10	    275	    176	     99	      0	     10	    285	    11d	saradc_client.c.obj (ex armino/driver/libdriver.a)
+   2728	     10	   2728	   2452	    276	      0	     10	   2738	    ab2	saradc_client.c.obj (ex armino/driver/libdriver.a)
      64	      4	     64	     64	      0	      0	      4	     68	     44	saradc_notify.c.obj (ex armino/driver/libdriver.a)
    1362	     28	   1362	   1192	    170	      0	     28	   1390	    56e	pwr_clk.c.obj (ex armino/driver/libdriver.a)
     444	    560	    444	    444	      0	      0	    560	   1004	    3ec	pm_ap_misc.c.obj (ex armino/driver/libdriver.a)
@@ -548,7 +549,7 @@
    3333	     44	   3329	   2880	    449	      4	     40	   3373	    d2d	hw_scale_driver.c.obj (ex armino/driver/libdriver.a)
      10	      0	     10	     10	      0	      0	      0	     10	      a	sys_usb_driver.c.obj (ex armino/driver/libdriver.a)
    3714	    669	   3714	   3398	    316	      0	    669	   4383	   111f	dma_driver.c.obj (ex armino/driver/libdriver.a)
-   2737	    153	   2737	   2504	    233	      0	    153	   2890	    b4a	i2c_driver.c.obj (ex armino/driver/libdriver.a)
+   2807	    153	   2807	   2574	    233	      0	    153	   2960	    b90	i2c_driver.c.obj (ex armino/driver/libdriver.a)
    2709	    257	   2709	   2580	    129	      0	    257	   2966	    b96	pwm_driver.c.obj (ex armino/driver/libdriver.a)
    7017	    304	   7017	   6480	    537	      0	    304	   7321	   1c99	i2s_driver.c.obj (ex armino/driver/libdriver.a)
    7617	    304	   7617	   6664	    953	      0	    304	   7921	   1ef1	i2s_multi_driver.c.obj (ex armino/driver/libdriver.a)
@@ -557,10 +558,9 @@
     680	     25	    680	    556	    124	      0	     25	    705	    2c1	dma2d_driver.c.obj (ex armino/driver/libdriver.a)
     156	     13	    156	    156	      0	      0	     13	    169	     a9	trng_driver.c.obj (ex armino/driver/libdriver.a)
     597	      0	    597	    196	    401	      0	      0	    597	    255	flash_partition.c.obj (ex armino/driver/libdriver.a)
-    228	     16	    228	    228	      0	      0	     16	    244	     f4	flash_notify.c.obj (ex armino/driver/libdriver.a)
    3485	    147	   3389	   2976	    413	     96	     51	   3536	    dd0	spi_driver.c.obj (ex armino/driver/libdriver.a)
      32	     64	     32	     32	      0	      0	     64	     96	     60	spi_statis.c.obj (ex armino/driver/libdriver.a)
-   1073	     25	   1049	    936	    113	     24	      1	   1074	    432	qspi_driver.c.obj (ex armino/driver/libdriver.a)
+   1101	     25	   1077	    964	    113	     24	      1	   1102	    44e	qspi_driver.c.obj (ex armino/driver/libdriver.a)
      93	      0	     93	     56	     37	      0	      0	     93	     5d	qspi_flash_common.c.obj (ex armino/driver/libdriver.a)
    2829	     30	   2804	   2232	    572	     25	      5	   2834	    b12	lcd_qspi_driver.c.obj (ex armino/driver/libdriver.a)
     828	     71	    822	    792	     30	      6	     65	    893	    37d	jpeg_driver.c.obj (ex armino/driver/libdriver.a)
@@ -585,7 +585,7 @@
     104	      0	    104	    104	      0	      0	      0	    104	     68	sys_bt_driver.c.obj (ex armino/driver/libdriver.a)
     718	      0	    718	    678	     40	      0	      0	    718	    2ce	lcd_spi.c.obj (ex armino/driver/libdriver.a)
    1050	      0	   1050	    902	    148	      0	      0	   1050	    41a	spi_flash.c.obj (ex armino/driver/libdriver.a)
- 100624	   7128	  99868	  82814	  17054	    756	   6372	 106996	  1a1f4	armino/driver/libdriver.a
+ 103225	   7129	 102469	  85238	  17231	    756	   6373	 109598	  1ac1e	armino/driver/libdriver.a
 
   flash	    ram	   text	   code	 rodata	   data	    bss	    dec	    hex	filename
    1160	     75	   1159	   1078	     81	      1	     74	   1234	    4d2	printf.c.obj (ex armino/bk_system/libbk_system.a)
@@ -623,7 +623,7 @@
     817	      0	    817	    448	    369	      0	      0	    817	    331	cli_tuya_test_1.c.obj (ex armino/tuyaos_adapter/libtuyaos_adapter.a)
     665	      4	    665	    380	    285	      0	      4	    669	    29d	tkl_memory.c.obj (ex armino/tuyaos_adapter/libtuyaos_adapter.a)
     176	      0	    176	    176	      0	      0	      0	    176	     b0	tkl_semaphore.c.obj (ex armino/tuyaos_adapter/libtuyaos_adapter.a)
-    436	      1	    436	    376	     60	      0	      1	    437	    1b5	tkl_system.c.obj (ex armino/tuyaos_adapter/libtuyaos_adapter.a)
+    438	      1	    438	    378	     60	      0	      1	    439	    1b7	tkl_system.c.obj (ex armino/tuyaos_adapter/libtuyaos_adapter.a)
     166	      0	    166	    166	      0	      0	      0	    166	     a6	tkl_thread.c.obj (ex armino/tuyaos_adapter/libtuyaos_adapter.a)
    6675	    614	   6371	   4674	   1697	    304	    310	   6985	   1b49	tkl_wifi.c.obj (ex armino/tuyaos_adapter/libtuyaos_adapter.a)
     274	     12	    274	    240	     34	      0	     12	    286	    11e	tkl_hci.c.obj (ex armino/tuyaos_adapter/libtuyaos_adapter.a)
@@ -639,12 +639,16 @@
     829	      0	    829	    420	    409	      0	      0	    829	    33d	fs_init.c.obj (ex armino/tuyaos_adapter/libtuyaos_adapter.a)
     785	      7	    779	    480	    299	      6	      1	    786	    312	tuya_sdio.c.obj (ex armino/tuyaos_adapter/libtuyaos_adapter.a)
     822	      6	    820	    588	    232	      2	      4	    826	    33a	tkl_uart.c.obj (ex armino/tuyaos_adapter/libtuyaos_adapter.a)
-    766	    729	    766	    728	     38	      0	    729	   1495	    5d7	tuya_dma.c.obj (ex armino/tuyaos_adapter/libtuyaos_adapter.a)
+   4799	    321	   4695	   4252	    443	    104	    217	   5016	   1398	tkl_spi.c.obj (ex armino/tuyaos_adapter/libtuyaos_adapter.a)
+   2950	     64	   2926	   2676	    250	     24	     40	   2990	    bae	tkl_qspi.c.obj (ex armino/tuyaos_adapter/libtuyaos_adapter.a)
+   1621	    797	   1621	   1540	     81	      0	    797	   2418	    972	tuya_dma.c.obj (ex armino/tuyaos_adapter/libtuyaos_adapter.a)
      28	      0	     28	     28	      0	      0	      0	     28	     1c	tkl_output.c.obj (ex armino/tuyaos_adapter/libtuyaos_adapter.a)
      42	      0	     42	     42	      0	      0	      0	     42	     2a	tkl_wired.c.obj (ex armino/tuyaos_adapter/libtuyaos_adapter.a)
     258	      0	    258	    258	      0	      0	      0	    258	    102	tkl_pinmux.c.obj (ex armino/tuyaos_adapter/libtuyaos_adapter.a)
-    120	      8	    112	    112	      0	      8	      0	    120	     78	tkl_spi.c.obj (ex armino/tuyaos_adapter/libtuyaos_adapter.a)
-     48	     12	     36	     36	      0	     12	      0	     48	     30	tkl_i2c.c.obj (ex armino/tuyaos_adapter/libtuyaos_adapter.a)
+   1590	      8	   1590	   1480	    110	      0	      8	   1598	    63e	tkl_rgb.c.obj (ex armino/tuyaos_adapter/libtuyaos_adapter.a)
+   1506	      8	   1506	   1372	    134	      0	      8	   1514	    5ea	tkl_8080.c.obj (ex armino/tuyaos_adapter/libtuyaos_adapter.a)
+   1025	    675	   1008	    884	    124	     17	    658	   1683	    693	tkl_adc.c.obj (ex armino/tuyaos_adapter/libtuyaos_adapter.a)
+    550	     40	    538	    416	    122	     12	     28	    578	    242	tkl_i2c.c.obj (ex armino/tuyaos_adapter/libtuyaos_adapter.a)
    3367	     51	   3359	   2388	    971	      8	     43	   3410	    d52	tkl_audio.c.obj (ex armino/tuyaos_adapter/libtuyaos_adapter.a)
       2	      0	      2	      2	      0	      0	      0	      2	      2	bk_adapter.c.obj (ex armino/tuyaos_adapter/libtuyaos_adapter.a)
    1842	   1168	   1838	   1438	    400	      4	   1164	   3006	    bbe	tkl_ota.c.obj (ex armino/tuyaos_adapter/libtuyaos_adapter.a)
@@ -663,18 +667,18 @@
     160	      0	    160	      0	    160	      0	      0	    160	     a0	tkl_init_network.c.obj (ex armino/tuyaos_adapter/libtuyaos_adapter.a)
     124	      0	    124	      0	    124	      0	      0	    124	     7c	tkl_init_wifi.c.obj (ex armino/tuyaos_adapter/libtuyaos_adapter.a)
      40	      0	     40	      0	     40	      0	      0	     40	     28	tkl_init_wired.c.obj (ex armino/tuyaos_adapter/libtuyaos_adapter.a)
-  45424	   3588	  44375	  31674	  12701	   1049	   2539	  47963	   bb5b	armino/tuyaos_adapter/libtuyaos_adapter.a
+  58533	   4752	  57347	  43420	  13927	   1186	   3566	  62099	   f293	armino/tuyaos_adapter/libtuyaos_adapter.a
 
   flash	    ram	   text	   code	 rodata	   data	    bss	    dec	    hex	filename
     141	    109	     32	     32	      0	    109	      0	    141	     8d	mpu_cfg.c.obj (ex armino/bk7258_ap/libbk7258_ap.a)
-   1690	      0	   1690	   1690	      0	      0	      0	   1690	    69a	sys_hal.c.obj (ex armino/bk7258_ap/libbk7258_ap.a)
+   1692	      0	   1692	   1692	      0	      0	      0	   1692	    69c	sys_hal.c.obj (ex armino/bk7258_ap/libbk7258_ap.a)
     254	      0	    254	    158	     96	      0	      0	    254	     fe	aon_pmu_hal.c.obj (ex armino/bk7258_ap/libbk7258_ap.a)
     108	      0	    108	    108	      0	      0	      0	    108	     6c	timer_hal.c.obj (ex armino/bk7258_ap/libbk7258_ap.a)
     594	      4	    594	    540	     54	      0	      4	    598	    256	sys_pm_hal.c.obj (ex armino/bk7258_ap/libbk7258_ap.a)
     784	      1	    784	    784	      0	      0	      1	    785	    311	i2s_hal.c.obj (ex armino/bk7258_ap/libbk7258_ap.a)
     606	      0	    606	    606	      0	      0	      0	    606	    25e	i2s_multi_hal.c.obj (ex armino/bk7258_ap/libbk7258_ap.a)
     160	      0	    160	     32	    128	      0	      0	    160	     a0	jpeg_ll.c.obj (ex armino/bk7258_ap/libbk7258_ap.a)
-   4337	    114	   4228	   3950	    278	    109	      5	   4342	   10f6	armino/bk7258_ap/libbk7258_ap.a
+   4339	    114	   4230	   3952	    278	    109	      5	   4344	   10f8	armino/bk7258_ap/libbk7258_ap.a
 
   flash	    ram	   text	   code	 rodata	   data	    bss	    dec	    hex	filename
     150	      0	    150	    150	      0	      0	      0	    150	     96	wdt_hal.c.obj (ex armino/common/libcommon.a)
@@ -683,12 +687,12 @@
     874	      0	    874	    874	      0	      0	      0	    874	    36a	lcd_disp_hal.c.obj (ex armino/common/libcommon.a)
     160	      0	    160	    160	      0	      0	      0	    160	     a0	timer_hal.c.obj (ex armino/common/libcommon.a)
     498	      0	    498	    460	     38	      0	      0	    498	    1f2	dma_hal.c.obj (ex armino/common/libcommon.a)
-   1232	      0	   1232	    922	    310	      0	      0	   1232	    4d0	spi_hal.c.obj (ex armino/common/libcommon.a)
+   1246	      0	   1246	    936	    310	      0	      0	   1246	    4de	spi_hal.c.obj (ex armino/common/libcommon.a)
     572	      0	    572	    572	      0	      0	      0	    572	    23c	i2c_hal.c.obj (ex armino/common/libcommon.a)
     326	      0	    326	    326	      0	      0	      0	    326	    146	uart_hal.c.obj (ex armino/common/libcommon.a)
    2254	      0	   2254	   2248	      6	      0	      0	   2254	    8ce	pwm_hal_v1px.c.obj (ex armino/common/libcommon.a)
      80	      0	     80	     80	      0	      0	      0	     80	     50	trng_hal.c.obj (ex armino/common/libcommon.a)
-   1525	      4	   1525	   1486	     39	      0	      4	   1529	    5f9	qspi_hal.c.obj (ex armino/common/libcommon.a)
+   1685	      4	   1685	   1646	     39	      0	      4	   1689	    699	qspi_hal.c.obj (ex armino/common/libcommon.a)
     308	      0	    308	    308	      0	      0	      0	    308	    134	jpeg_hal.c.obj (ex armino/common/libcommon.a)
     518	      0	    518	    518	      0	      0	      0	    518	    206	yuv_buf_hal.c.obj (ex armino/common/libcommon.a)
     664	      0	    664	    664	      0	      0	      0	    664	    298	h264_hal.c.obj (ex armino/common/libcommon.a)
@@ -699,7 +703,7 @@
    3340	    224	   3276	   3112	    164	     64	    160	   3500	    dac	jpeg_dec_hal.c.obj (ex armino/common/libcommon.a)
     248	      0	    248	    248	      0	      0	      0	    248	     f8	scale0_hal.c.obj (ex armino/common/libcommon.a)
     248	      0	    248	    248	      0	      0	      0	    248	     f8	scale1_hal.c.obj (ex armino/common/libcommon.a)
-  18231	    232	  18167	  16130	   2037	     64	    168	  18399	   47df	armino/common/libcommon.a
+  18405	    232	  18341	  16304	   2037	     64	    168	  18573	   488d	armino/common/libcommon.a
 
   flash	    ram	   text	   code	 rodata	   data	    bss	    dec	    hex	filename
     241	     32	    241	    236	      5	      0	     32	    273	    111	system_main.c.obj (ex armino/bk_startup/libbk_startup.a)

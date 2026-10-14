@@ -44,6 +44,7 @@ typedef struct {
 } AUDIO_RECODER_T;
 
 STATIC AUDIO_RECODER_T *recorder = NULL;
+extern QUEUE_HANDLE  s_queue_vad_flag;
 
 STATIC OPERATE_RET __audio_slice_check_and_send(BOOL_T *more_data)
 {
@@ -435,6 +436,8 @@ OPERATE_RET wukong_audio_board_input_reset()
         wukong_audio_frontend_vad_stop();
         wukong_audio_frontend_vad_start();
         TAL_PR_NOTICE("wukong audio input -> vad start!");
+        UCHAR_T flag = 0;
+        tal_queue_post(s_queue_vad_flag, &flag, 0);
     }
 
     return OPRT_OK;
