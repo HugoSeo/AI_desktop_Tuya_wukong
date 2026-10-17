@@ -608,7 +608,10 @@ STATIC VOID_T hugo_ai_moto_timer_cb(TIMER_ID timer_id, VOID_T *arg)
     // hugo_ai_moto_timer();
 }
 
-
+STATIC VOID_T hugo_ai_adc_timer_cb(TIMER_ID timer_id, VOID_T *arg)
+{
+    hugo_ai_adc_task();
+}
 
 STATIC VOID_T hugo_ai_i2c_thread(VOID_T *arg)
 {
@@ -703,16 +706,22 @@ STATIC VOID_T user_main(VOID_T)
     tal_sw_timer_create(hugo_ai_moto_timer_cb, NULL, &hugo_ai_motor_timer_id);
     tal_sw_timer_start(hugo_ai_motor_timer_id, 2, TAL_TIMER_CYCLE);
 
-//     TUYA_TIMER_BASE_CFG_T sg_timer_cfg = {
-//         .mode = TUYA_TIMER_MODE_PERIOD,
-//         .args = NULL,
-//         .cb = hugo_ai_moto_timer_cb
-//     };
+    TIMER_ID hugo_ai_adc_timer_id = NULL;
+    tal_sw_timer_create(hugo_ai_adc_timer_cb, NULL, &hugo_ai_adc_timer_id);
+    tal_sw_timer_start(hugo_ai_adc_timer_id, 1, TAL_TIMER_CYCLE);
+    
+
+
+    // TUYA_TIMER_BASE_CFG_T sg_timer_cfg = {
+    //     .mode = TUYA_TIMER_MODE_PERIOD,
+    //     .args = NULL,
+    //     .cb = hugo_ai_adc_timer_cb
+    // };
 
 //     TUYA_CALL_ERR_GOTO(tkl_timer_init(TIMER_ID1, &sg_timer_cfg), __EXIT);
 
 //     /*start timer*/
-//     TUYA_CALL_ERR_GOTO(tkl_timer_start(TIMER_ID1, 2000), __EXIT);
+//     TUYA_CALL_ERR_GOTO(tkl_timer_start(TIMER_ID1,1000), __EXIT);  //63
 //     TAL_PR_NOTICE("timer %d is start", TIMER_ID1);
 // __EXIT:
 //     ;
@@ -756,6 +765,7 @@ INT_T main(INT_T argc, CHAR_T **argv)
 VOID_T tuya_app_main(VOID)
 #endif
 {
+    OPERATE_RET rt = OPRT_OK;
 #if OPERATING_SYSTEM == SYSTEM_LINUX
     (void)argc;
     (void)argv;
@@ -774,6 +784,7 @@ VOID_T tuya_app_main(VOID)
 
     THREAD_CFG_T thrd_param1 = {2048, THREAD_PRIO_4, "hugo_ai_i2c__thread"};
     tal_thread_create_and_start(&hugo_self_ai_i2c_thread, NULL, NULL, hugo_ai_i2c_thread, NULL, &thrd_param1);
+
 
 #if OPERATING_SYSTEM == SYSTEM_LINUX
     while (1) {

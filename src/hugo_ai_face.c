@@ -77,6 +77,7 @@ STATIC UINT8_T  face_store_ID=0xFF;
 STATIC unsigned int  PIR_READ_TIME=0;
 STATIC unsigned char Face_error_ts=0;
 STATIC unsigned char FACE_MODE_ERROR=1;
+STATIC UINT8_T  face_dirctiong_flag = 0;
 
 // unsigned int  PIR_SEN_DATA=DELTA_H;
 STATIC unsigned char FACE_TX_FLG=0;
@@ -831,6 +832,12 @@ VOID Face_uart_task(VOID)
                     }
                 }
             }
+            else if(face_dirctiong_flag == 0 && RX_Msgid == MID_NOTE && Face_rxdata[0] == 0x01 && Face_rxdata[1] != 0)
+            {
+                //EF AA 01 00 11 01 01 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 10
+                face_dirctiong_flag = 1;
+
+            }
             //Deleted by Hugo 25.11.18
            else
            {
@@ -1143,7 +1150,7 @@ VOID hugo_ai_face_intimer(VOID)
     face_store_ID = 0xFF;
     FACE_RELEASE_TIME = 0;
 
-
+    face_dirctiong_flag = 0;
     
 
 }

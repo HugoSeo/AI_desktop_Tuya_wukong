@@ -199,6 +199,14 @@ extern OPERATE_RET hugo_ai_set_free_wakeup(VOID);
 /***********************************************************
 ***********************function define**********************
 ***********************************************************/
+#define TICK_US             19
+
+#define DESKTOP_DELAY(us) \
+do { \
+    volatile UINT_T i = us * TICK_US; \
+    while (i--); \
+} while(0)
+
 
 // //uart 
 VOID mcu_uart_init(VOID)
@@ -1019,13 +1027,15 @@ VOID hugo_ai_adc_get(VOID)
     OPERATE_RET rt = OPRT_OK;
     // INT32_T adc_value[16] = {0};
     UINT8_T i = 0;
-
-    // TUYA_CALL_ERR_LOG(tkl_adc_read_single_channel(ADC_NUM, ADC_CHANNEL, &adc_value));
     TUYA_CALL_ERR_LOG(tkl_adc_read_data(ADC_NUM,adc_value,4));  //4
     // tkl_adc_read_single_channel(ADC_NUM,ADC_CHANNEL_A,&adc_value[0]);
+    // DESKTOP_DELAY(50);
     // tkl_adc_read_single_channel(ADC_NUM,ADC_CHANNEL_B,&adc_value[1]);
+    // DESKTOP_DELAY(50);
     // tkl_adc_read_single_channel(ADC_NUM,ADC_CHANNEL_C,&adc_value[2]);
+    // DESKTOP_DELAY(50);
     // tkl_adc_read_single_channel(ADC_NUM,ADC_CHANNEL_D,&adc_value[3]);
+    // DESKTOP_DELAY(50);
     // TAL_PR_DEBUG("ADC%d value = %d", ADC_NUM, adc_value&0x0FFF);
     // for(i=0;i<4;i++)
     // {        
@@ -1058,15 +1068,16 @@ VOID hugo_ai_adc_data_clear(VOID)
 STATIC VOID_T hugo_ai_adc_result(VOID)
 {
 
+    return ;
     if(flag_adc_check_en != 1)
     {
         return;
     }
 
     flag_adc_check_en = 0;
-    
-    TAL_PR_INFO("============================ adc result= %d %d %d %d",cnt_total,cnt_left,cnt_middle,cnt_right);
-    if((cnt_left > cnt_right)&&(cnt_left > cnt_total/3))
+
+    TAL_PR_INFO("============== adc result= %d %d %d %d     dir=%d",cnt_total,cnt_left,cnt_middle,cnt_right,direction_value);
+    if((cnt_left > cnt_right)&&(cnt_left>cnt_middle)&&(cnt_left > cnt_total/3))
     {
         if(direction_value > DIRECT_LEFT)
         {
@@ -1075,7 +1086,7 @@ STATIC VOID_T hugo_ai_adc_result(VOID)
             TAL_PR_INFO("============== TURN LEFT ==============");
         }
     }
-    else if ((cnt_right > cnt_left)&&(cnt_right > cnt_total/3))
+    else if ((cnt_right > cnt_left)&&(cnt_right>cnt_middle)&&(cnt_right > cnt_total/3))
     {
         if(direction_value < DIRECT_RIGHT)
         {
@@ -1086,7 +1097,7 @@ STATIC VOID_T hugo_ai_adc_result(VOID)
     }
     
 }
-STATIC UINT8_T hugo_ai_adc_task(VOID)
+UINT8_T hugo_ai_adc_task(VOID)
 {
     OPERATE_RET rt = OPRT_OK;
     CONST CHAR_T *audio_data = NULL;
@@ -1107,14 +1118,16 @@ STATIC UINT8_T hugo_ai_adc_task(VOID)
 
 
 
-    if(adc_check_flag != 1)
-        return  rt;
+    // if(adc_check_flag != 1)
+    //     return  rt;
 
     hugo_ai_adc_get();
     // tal_system_sleep(100);
     // if(adc_value_poit >= 250)
     //     adc_value_poit = 0;
 
+    // if(adc_check_flag != 1)
+    //     return  rt;
 
 #if 0
     //max data check
@@ -1241,9 +1254,9 @@ STATIC UINT8_T hugo_ai_adc_task(VOID)
 #else
     cnt_total++;
     adc_left = adc_value[2];
-    adc_right = adc_value[0];
+    adc_right = adc_value[3];//0
 
-    if((adc_left>adc_right)&&(adc_left>700))
+    if((adc_left>adc_right)&&(adc_left>600))
     {
         if(adc_left>adc_right*1.1)
             cnt_left++;
@@ -1251,7 +1264,7 @@ STATIC UINT8_T hugo_ai_adc_task(VOID)
             cnt_middle++;
     }
     
-    if((adc_right>adc_left)&&(adc_right>700))
+    if((adc_right>adc_left)&&(adc_right>600))
     {
         if(adc_right>adc_left*1.1)
             cnt_right++;
@@ -1425,7 +1438,7 @@ OPERATE_RET hugo_ai_desktop_init(VOID)
         online_state = tuya_ai_toy_is_cloud_connected();
         
         mcu_uart_task();
-        hugo_ai_adc_task();
+        // hugo_ai_adc_task();
         
         if((flag_turn_off_on_state == POWER_STATUS_ON)&&(online_state == TRUE))
         {
@@ -2163,6 +2176,13 @@ OPERATE_RET hugo_ai_desktop_init(VOID)
                 {
                     face_voice_flag = 0;
                 }
+            }
+            if(face_voice_flag == 4)
+            {
+                face_voice_flag = 0;
+                tuya_ai_input_start(TRUE);
+                TUYA_CALL_ERR_LOG(wukong_ai_agent_send_text("跟我读下面的话，“靠近一点，让我看看你是谁”。"));
+                tuya_ai_input_stop();
             }
         }
 
