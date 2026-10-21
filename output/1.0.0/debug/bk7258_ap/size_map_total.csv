@@ -12,7 +12,7 @@ flash,ram,text,code,rodata,data,bss,dec,hex,filename
 1308,76,1307,1226,81,1,75,1383,`567,armino/bk_system/libbk_system.a
 473,4,473,336,137,0,4,477,`1dd,armino/bk_init/libbk_init.a
 19580,9770,19187,15652,3535,393,9377,28957,`711d,armino/bk_cli/libbk_cli.a
-58533,4752,57347,43420,13927,1186,3566,62099,`f293,armino/tuyaos_adapter/libtuyaos_adapter.a
+58330,4752,57144,43240,13904,1186,3566,61896,`f1c8,armino/tuyaos_adapter/libtuyaos_adapter.a
 4339,114,4230,3952,278,109,5,4344,`10f8,armino/bk7258_ap/libbk7258_ap.a
 18405,232,18341,16304,2037,64,168,18573,`488d,armino/common/libcommon.a
 251,32,251,246,5,0,32,283,`11b,armino/bk_startup/libbk_startup.a

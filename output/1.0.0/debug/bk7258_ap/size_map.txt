@@ -647,7 +647,7 @@
     258	      0	    258	    258	      0	      0	      0	    258	    102	tkl_pinmux.c.obj (ex armino/tuyaos_adapter/libtuyaos_adapter.a)
    1590	      8	   1590	   1480	    110	      0	      8	   1598	    63e	tkl_rgb.c.obj (ex armino/tuyaos_adapter/libtuyaos_adapter.a)
    1506	      8	   1506	   1372	    134	      0	      8	   1514	    5ea	tkl_8080.c.obj (ex armino/tuyaos_adapter/libtuyaos_adapter.a)
-   1025	    675	   1008	    884	    124	     17	    658	   1683	    693	tkl_adc.c.obj (ex armino/tuyaos_adapter/libtuyaos_adapter.a)
+    822	    675	    805	    704	    101	     17	    658	   1480	    5c8	tkl_adc.c.obj (ex armino/tuyaos_adapter/libtuyaos_adapter.a)
     550	     40	    538	    416	    122	     12	     28	    578	    242	tkl_i2c.c.obj (ex armino/tuyaos_adapter/libtuyaos_adapter.a)
    3367	     51	   3359	   2388	    971	      8	     43	   3410	    d52	tkl_audio.c.obj (ex armino/tuyaos_adapter/libtuyaos_adapter.a)
       2	      0	      2	      2	      0	      0	      0	      2	      2	bk_adapter.c.obj (ex armino/tuyaos_adapter/libtuyaos_adapter.a)
@@ -667,7 +667,7 @@
     160	      0	    160	      0	    160	      0	      0	    160	     a0	tkl_init_network.c.obj (ex armino/tuyaos_adapter/libtuyaos_adapter.a)
     124	      0	    124	      0	    124	      0	      0	    124	     7c	tkl_init_wifi.c.obj (ex armino/tuyaos_adapter/libtuyaos_adapter.a)
      40	      0	     40	      0	     40	      0	      0	     40	     28	tkl_init_wired.c.obj (ex armino/tuyaos_adapter/libtuyaos_adapter.a)
-  58533	   4752	  57347	  43420	  13927	   1186	   3566	  62099	   f293	armino/tuyaos_adapter/libtuyaos_adapter.a
+  58330	   4752	  57144	  43240	  13904	   1186	   3566	  61896	   f1c8	armino/tuyaos_adapter/libtuyaos_adapter.a
 
   flash	    ram	   text	   code	 rodata	   data	    bss	    dec	    hex	filename
     141	    109	     32	     32	      0	    109	      0	    141	     8d	mpu_cfg.c.obj (ex armino/bk7258_ap/libbk7258_ap.a)

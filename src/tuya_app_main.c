@@ -116,6 +116,7 @@
 STATIC THREAD_HANDLE ty_app_thread = NULL;
 
 STATIC THREAD_HANDLE hugo_self_ai_i2c_thread = NULL;
+STATIC THREAD_HANDLE hugo_self_ai_desktop_thread = NULL;
 STATIC THREAD_HANDLE hugo_self_ai_general_thread = NULL;
 
 extern UINT8_T moto_flag;
@@ -600,6 +601,7 @@ STATIC VOID_T hugo_ai_general_timer_cb(TIMER_ID timer_id, VOID_T *arg)
     hugo_ai_moto_timer();
     hugo_ai_face_timer();
     // hugo_ai_moto_task();
+    hugo_ai_adc_task();
 }
 
 STATIC VOID_T hugo_ai_moto_timer_cb(TIMER_ID timer_id, VOID_T *arg)
@@ -608,10 +610,10 @@ STATIC VOID_T hugo_ai_moto_timer_cb(TIMER_ID timer_id, VOID_T *arg)
     // hugo_ai_moto_timer();
 }
 
-STATIC VOID_T hugo_ai_adc_timer_cb(TIMER_ID timer_id, VOID_T *arg)
-{
-    hugo_ai_adc_task();
-}
+// STATIC VOID_T hugo_ai_adc_timer_cb(TIMER_ID timer_id, VOID_T *arg)
+// {
+//     hugo_ai_adc_task();
+// }
 
 STATIC VOID_T hugo_ai_i2c_thread(VOID_T *arg)
 {
@@ -631,6 +633,15 @@ STATIC VOID_T hugo_ai_i2c_thread(VOID_T *arg)
     tal_thread_delete(hugo_self_ai_i2c_thread);
     hugo_self_ai_i2c_thread = NULL;
 }
+
+// STATIC VOID_T hugo_ai_desktop_thread(VOID_T *arg)
+// {
+//     hugo_ai_desktop_init();
+//     tal_thread_delete(hugo_self_ai_desktop_thread);
+//     hugo_self_ai_desktop_thread = NULL;
+
+// }
+
 
 /**
  * @brief First-stage main logic: init netconfig, optional cellular boot, Tuya IoT params/DB,
@@ -704,11 +715,11 @@ STATIC VOID_T user_main(VOID_T)
 
     TIMER_ID hugo_ai_motor_timer_id = NULL;
     tal_sw_timer_create(hugo_ai_moto_timer_cb, NULL, &hugo_ai_motor_timer_id);
-    tal_sw_timer_start(hugo_ai_motor_timer_id, 2, TAL_TIMER_CYCLE);
+    tal_sw_timer_start(hugo_ai_motor_timer_id, 2, TAL_TIMER_CYCLE);     //2
 
-    TIMER_ID hugo_ai_adc_timer_id = NULL;
-    tal_sw_timer_create(hugo_ai_adc_timer_cb, NULL, &hugo_ai_adc_timer_id);
-    tal_sw_timer_start(hugo_ai_adc_timer_id, 1, TAL_TIMER_CYCLE);
+    // TIMER_ID hugo_ai_adc_timer_id = NULL;
+    // tal_sw_timer_create(hugo_ai_adc_timer_cb, NULL, &hugo_ai_adc_timer_id);
+    // tal_sw_timer_start(hugo_ai_adc_timer_id, 1, TAL_TIMER_CYCLE);
     
 
 
@@ -781,6 +792,10 @@ VOID_T tuya_app_main(VOID)
     thrd_param.psram_mode = 1;
 #endif
     tal_thread_create_and_start(&ty_app_thread, NULL, NULL, tuya_app_thread, NULL, &thrd_param);
+
+    // THREAD_CFG_T thrd_param2 = {4096, THREAD_PRIO_4, "hugo_ai_desktop_theread"};
+    // tal_thread_create_and_start(&hugo_self_ai_desktop_thread, NULL, NULL, hugo_ai_desktop_thread, NULL, &thrd_param2);
+
 
     THREAD_CFG_T thrd_param1 = {2048, THREAD_PRIO_4, "hugo_ai_i2c__thread"};
     tal_thread_create_and_start(&hugo_self_ai_i2c_thread, NULL, NULL, hugo_ai_i2c_thread, NULL, &thrd_param1);

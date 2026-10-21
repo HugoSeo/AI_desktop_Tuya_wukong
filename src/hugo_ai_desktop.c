@@ -123,7 +123,7 @@ STATIC UINT16_T seg_dis_time = 0;
 STATIC UINT_T rgb_dis_time = 0;
 
 UINT8_T demo_test_state = 1;    //0:demo test first run     1:usually run
-STATIC UINT16_T demo_test_time = 0;
+STATIC UINT16_T demo_test_time = 15000;
 STATIC UINT8_T demo_test_flag = 0;
 STATIC UINT8_T demo_test_cmd = 0;
 
@@ -145,14 +145,19 @@ STATIC WF_STATION_STAT_E net_state={0};
 STATIC BOOL_T online_state = FALSE;
 
 INT32_T adc_value[16] = {0};
-INT16_T adc_value_store[4][250] = {0};
+INT16_T adc_value_store[4][256] = {0};
 STATIC INT16_T adc_value_poit = 0;
 CHAR_T  adc_check_flag = 0;
 STATIC INT8_T direction_value = DIRECT_MIDDLE;
+STATIC UINT8_T flag_on_state = 0;
+
 
 STATIC UINT16_T cnt_left = 0;
 STATIC UINT16_T cnt_right = 0;
 STATIC UINT16_T cnt_middle = 0;
+STATIC UINT16_T cnt_back_left = 0;
+STATIC UINT16_T cnt_back_right = 0;
+STATIC UINT16_T cnt_back_middle = 0;
 STATIC UINT16_T cnt_total = 0;
 STATIC UINT8_T flag_adc_check_en = 0;
 
@@ -297,6 +302,7 @@ VOID mcu_uart_rx_process(VOID)
                         
                         if(flag_turn_off_on_state == POWER_STATUS_ON)
                         {
+                            flag_on_state = 0;
                             // seg_dis_time = 30000;
                             flag_seg_data = 1;
                             time_dis_flag = 1;
@@ -317,6 +323,7 @@ VOID mcu_uart_rx_process(VOID)
                         }
                         else if(flag_turn_off_on_state == POWER_STATUS_OFF)
                         {
+                            flag_on_state = 0;
                             seg_dis_time = 1000;
                             flag_seg_data = 3;
                             flag_rgb_data = RGB_OFF;
@@ -1007,11 +1014,12 @@ __EXIT_ADC:
 }
 VOID adc_average_diff(VOID)
 {
-    CONST INT32_T average_adc[4] = {150,1300,149,174};   //100,943,149,174
+    CONST INT32_T average_adc[4] = {200,200,200,200};   //100,943,149,174
     UINT8_T i = 0;
 
     for(i=0; i<4; i++)
     {
+        adc_value[i] = abs(adc_value[i]-3900);
         if (adc_value[i] > average_adc[i])
         {
             adc_value[i] -= average_adc[i];
@@ -1019,7 +1027,7 @@ VOID adc_average_diff(VOID)
         else
         {
             adc_value[i] = 0;
-        }        
+        }
     }
 }
 VOID hugo_ai_adc_get(VOID)
@@ -1027,13 +1035,18 @@ VOID hugo_ai_adc_get(VOID)
     OPERATE_RET rt = OPRT_OK;
     // INT32_T adc_value[16] = {0};
     UINT8_T i = 0;
-    TUYA_CALL_ERR_LOG(tkl_adc_read_data(ADC_NUM,adc_value,4));  //4
-    // tkl_adc_read_single_channel(ADC_NUM,ADC_CHANNEL_A,&adc_value[0]);
+    // TUYA_CALL_ERR_LOG(tkl_adc_read_data(ADC_NUM,adc_value,4));  //4
+    tkl_adc_read_single_channel(ADC_NUM,ADC_CHANNEL_A,&adc_value[0]);
+    tkl_adc_read_single_channel(ADC_NUM,ADC_CHANNEL_B,&adc_value[1]);
+    // DESKTOP_DELAY(1000);
+    // tal_system_sleep(10);
+    tkl_adc_read_single_channel(ADC_NUM,ADC_CHANNEL_C,&adc_value[2]);
     // DESKTOP_DELAY(50);
-    // tkl_adc_read_single_channel(ADC_NUM,ADC_CHANNEL_B,&adc_value[1]);
-    // DESKTOP_DELAY(50);
+    tkl_adc_read_single_channel(ADC_NUM,ADC_CHANNEL_D,&adc_value[3]);
     // tkl_adc_read_single_channel(ADC_NUM,ADC_CHANNEL_C,&adc_value[2]);
-    // DESKTOP_DELAY(50);
+    // tal_system_sleep(10);
+    
+
     // tkl_adc_read_single_channel(ADC_NUM,ADC_CHANNEL_D,&adc_value[3]);
     // DESKTOP_DELAY(50);
     // TAL_PR_DEBUG("ADC%d value = %d", ADC_NUM, adc_value&0x0FFF);
@@ -1041,13 +1054,13 @@ VOID hugo_ai_adc_get(VOID)
     // {        
     //     TAL_PR_INFO("ADC%d[%d] get Volt = %d", i, adc_value[i], adc_value[i]/2*3300/4096);
     // }
-    // adc_average_diff();
+    adc_average_diff();
 
-    TAL_PR_INFO("ADC get= [%d:%d %d] [%d:%d %d] [%d:%d %d] [%d:%d %d]",\
-        ADC_CHANNEL_A, adc_value[0], adc_value[0]/2*3300/4096,\
-        ADC_CHANNEL_B, adc_value[1], adc_value[1]/2*3300/4096,\
-        ADC_CHANNEL_C, adc_value[2], adc_value[2]/2*3300/4096,\
-        ADC_CHANNEL_D, adc_value[3], adc_value[3]/2*3300/4096\
+    // TAL_PR_INFO("ADC get= [%d:%d] [%d:%d] [%d:%d] [%d:%d]",\
+        ADC_CHANNEL_A, adc_value[0],\
+        ADC_CHANNEL_B, adc_value[1],\
+        ADC_CHANNEL_C, adc_value[2],\
+        ADC_CHANNEL_D, adc_value[3]\
     );
 
     // tkl_adc_read_voltage(ADC_NUM, &adc_value, 4);
@@ -1065,19 +1078,174 @@ VOID hugo_ai_adc_data_clear(VOID)
     cnt_total = 0;
     flag_adc_check_en = 1;
 }
+
+#define ADC_MID     4096
+#define CH_CNT      4
+#define SAMPLE_CNT  256
+#define FS          16000.0f
+#define VS          340.0f
+#define Dx          0.078f
+#define Dy          0.041f
+#define PI          3.14159265f
+
+static void adc_to_pcm(uint16_t *adc_buf, float *pcm_out, int len)
+{
+    for(int n=0;n<len;n++)
+        pcm_out[n] = (float)adc_buf[n] - ADC_MID;
+}
+
+// 时域互相关，返回tau
+static float xcorr_tdoa(float *s1, float *s2, int max_search)
+{
+    float max_corr = -1e20f;
+    int peak_d = 0;
+    // 遍历偏移d: [-max_search, +max_search]
+    for(int d = -max_search; d <= max_search; d++)
+    {
+        float sum = 0;
+        for(int n=0;n<SAMPLE_CNT;n++)
+        {
+            int m = n + d;
+            if(m <0 || m >= SAMPLE_CNT) continue;
+            sum += s1[n] * s2[m];
+        }
+        if(sum > max_corr)
+        {
+            max_corr = sum;
+            peak_d = d;
+        }
+    }
+    return (float)peak_d / FS;
+}
+
+float doa_calc_xcorr()
+{
+    float pcm0[SAMPLE_CNT];
+    float pcm1[SAMPLE_CNT];
+    float pcm3[SAMPLE_CNT];
+    adc_to_pcm(adc_value_store[0], pcm0, SAMPLE_CNT);
+    adc_to_pcm(adc_value_store[1], pcm1, SAMPLE_CNT);
+    adc_to_pcm(adc_value_store[3], pcm3, SAMPLE_CNT);
+
+    float tau01 = xcorr_tdoa(pcm0, pcm1, 4);
+    float tau03 = xcorr_tdoa(pcm0, pcm3, 2);
+
+    float cos_theta = (tau01 * VS) / Dx;
+    float sin_theta = (tau03 * VS) / Dy;
+    cos_theta = fminf(1.0f, fmaxf(-1.0f, cos_theta));
+    sin_theta = fminf(1.0f, fmaxf(-1.0f, sin_theta));
+
+    float rad = atan2f(sin_theta, cos_theta);
+    float deg = rad * 180.0f / PI;
+    if(deg < 0) deg += 360.0f;
+    TAL_PR_INFO("============== deg = %f",deg);
+ 
+    return deg;
+}
+
+STATIC INT16_T get_poit(INT16_T data)
+{
+    if(data >= 0)
+        return data;
+    else
+        return (256+data);
+}
 STATIC VOID_T hugo_ai_adc_result(VOID)
 {
+    INT32_T adc_left = 0x0000;
+    INT32_T adc_right = 0x0000;
+    INT16_T poit = 0;
+    unsigned char i = 0;
+    unsigned char stop_cnt = 0;
 
-    return ;
-    if(flag_adc_check_en != 1)
+
+    INT32_T sum_left = 0;
+    INT32_T sum_right = 0;
+    // doa_calc_xcorr();
+    // return ;
+    if((moto_flag == MOTO_RUN_UP)||(moto_flag == MOTO_RUN_DOWN))
     {
         return;
     }
-
+    if((flag_adc_check_en != 1)||(online_state != TRUE))
+    {
+        return;
+    }
     flag_adc_check_en = 0;
 
-    TAL_PR_INFO("============== adc result= %d %d %d %d     dir=%d",cnt_total,cnt_left,cnt_middle,cnt_right,direction_value);
-    if((cnt_left > cnt_right)&&(cnt_left>cnt_middle)&&(cnt_left > cnt_total/3))
+    cnt_left = 0;
+    cnt_right = 0;
+    cnt_middle = 0;
+
+    // cnt_back_left = 0;
+    // cnt_back_right = 0;
+    // cnt_back_middle = 0;
+    for(i = 5; i<60; i++)
+    {
+        poit = get_poit(adc_value_poit-i);
+        adc_left = adc_value_store[3][poit];
+        adc_right = adc_value_store[2][poit];
+        if((adc_left<200)&&(adc_right<200))
+        {
+            stop_cnt++;
+            if(stop_cnt>10)
+            {
+                stop_cnt = i-10;
+                break;
+            }
+        }
+        else
+        {
+            // if((adc_left > adc_right*1.05)&&(adc_left>500))
+            // {
+            //     cnt_left++;
+            // }
+            // else if((adc_right>adc_left*1.05)&&(adc_right>500))
+            // {
+            //     cnt_right++;
+            // }
+            // else
+            // {
+            //     cnt_middle++;
+            // }
+
+            // if (adc_value_store[0] > adc_value_store[1])
+            // {
+            //     cnt_back_left ++;
+            // }
+            // else if (adc_value_store[0] < adc_value_store[1])
+            // {
+            //     cnt_back_right ++;
+            // }
+        }
+    }
+
+    for(i = 0; i<20; i++)
+    {
+        poit = get_poit(adc_value_poit-stop_cnt+i);
+        adc_left = adc_value_store[3][poit];
+        adc_right = adc_value_store[2][poit];
+
+        sum_left += adc_left;
+        sum_right += adc_right;
+
+        if(adc_left > adc_right*1.05)
+        {
+            cnt_left++;
+        }
+        else if(adc_right>adc_left*1.05)
+        {
+            cnt_right++;
+        }
+        else
+        {
+            cnt_middle++;
+        }
+    }
+    TAL_PR_INFO("============== adc result= %d %d %d %d     [%d %d]   dir=%d",cnt_total,cnt_left,cnt_middle,cnt_right,sum_left,sum_right,direction_value);
+
+    if(sum_left > sum_right*1.03)
+    // if((cnt_left > cnt_right)&&(cnt_left > cnt_middle)&&(cnt_left>8))
     {
         if(direction_value > DIRECT_LEFT)
         {
@@ -1086,7 +1254,8 @@ STATIC VOID_T hugo_ai_adc_result(VOID)
             TAL_PR_INFO("============== TURN LEFT ==============");
         }
     }
-    else if ((cnt_right > cnt_left)&&(cnt_right>cnt_middle)&&(cnt_right > cnt_total/3))
+    // else if ((cnt_right > cnt_left)&&(cnt_right>cnt_middle)&&(cnt_right>8))
+    else if(sum_right > sum_left*1.03)
     {
         if(direction_value < DIRECT_RIGHT)
         {
@@ -1095,6 +1264,30 @@ STATIC VOID_T hugo_ai_adc_result(VOID)
             TAL_PR_INFO("============== TURN RIGHT ==============");
         }
     }
+    return;
+
+
+    // TAL_PR_INFO("============== adc result= %d %d %d %d     dir=%d",cnt_total,cnt_left,cnt_middle,cnt_right,direction_value);
+    // if((cnt_left > cnt_right)&&(cnt_left>cnt_middle)&&(cnt_left > cnt_total/3))
+    // {
+    //     if(direction_value > DIRECT_LEFT)
+    //     {
+    //         direction_value--;
+    //         flag_moto_motion = 2;
+    //         TAL_PR_INFO("============== TURN LEFT ==============");
+    //     }
+    // }
+    // else if ((cnt_right > cnt_left)&&(cnt_right>cnt_middle)&&(cnt_right > cnt_total/3))
+    // {
+    //     if(direction_value < DIRECT_RIGHT)
+    //     {
+    //         direction_value++;
+    //         flag_moto_motion = 1;
+    //         TAL_PR_INFO("============== TURN RIGHT ==============");
+    //     }
+    // }
+
+    
     
 }
 UINT8_T hugo_ai_adc_task(VOID)
@@ -1113,13 +1306,20 @@ UINT8_T hugo_ai_adc_task(VOID)
     INT32_T adc_min = 0xFFFF;
     INT32_T point = 0xFF;
 
-    INT32_T adc_left = 0x0000;
-    INT32_T adc_right = 0x0000;
+    // INT32_T adc_left = 0x0000;
+    // INT32_T adc_right = 0x0000;
 
+    if((moto_flag == MOTO_RUN_UP)||(moto_flag == MOTO_RUN_DOWN)||(demo_test_flag!=0)||(flag_on_state == 0))
+    {
+        return rt;
+    }
+    if(online_state != TRUE)
+    {
+        return rt;
+    }
 
-
-    // if(adc_check_flag != 1)
-    //     return  rt;
+    if(adc_check_flag == 1)
+        return  rt;
 
     hugo_ai_adc_get();
     // tal_system_sleep(100);
@@ -1252,25 +1452,25 @@ UINT8_T hugo_ai_adc_task(VOID)
         }        
     }
 #else
-    cnt_total++;
-    adc_left = adc_value[2];
-    adc_right = adc_value[3];//0
+    // cnt_total++;
+    // adc_left = adc_value[4];
+    // adc_right = adc_value[3];//0
 
-    if((adc_left>adc_right)&&(adc_left>600))
-    {
-        if(adc_left>adc_right*1.1)
-            cnt_left++;
-        else
-            cnt_middle++;
-    }
+    // if((adc_left>adc_right)&&(adc_left>600))
+    // {
+    //     if(adc_left>adc_right*1.1)
+    //         cnt_left++;
+    //     else
+    //         cnt_middle++;
+    // }
     
-    if((adc_right>adc_left)&&(adc_right>600))
-    {
-        if(adc_right>adc_left*1.1)
-            cnt_right++;
-        else
-            cnt_middle++;
-    }
+    // if((adc_right>adc_left)&&(adc_right>600))
+    // {
+    //     if(adc_right>adc_left*1.1)
+    //         cnt_right++;
+    //     else
+    //         cnt_middle++;
+    // }
 #endif
     
     // for(cnt = 0; cnt < 4; cnt++)
@@ -1302,11 +1502,16 @@ UINT8_T hugo_ai_adc_task(VOID)
     // }
 
 
-
+    for(cnt = 0; cnt < 4; cnt++)
+    {
+        adc_value_store[cnt][adc_value_poit] = adc_value[cnt];
+    }
     adc_value_poit++;
-    if(adc_value_poit >= 250)
+    if(adc_value_poit >= 256)
     {
         adc_value_poit = 0;
+
+
         // for(cnt = 0; cnt < 4; cnt++)
         // {
         //     for(i=0; i<250; i++)
@@ -1426,11 +1631,14 @@ OPERATE_RET hugo_ai_desktop_init(VOID)
     TAL_PR_NOTICE("------------------Hugo run------------------");
 
     tal_queue_create_init(&s_queue_voice_cmd, 4*SIZEOF(UINT8_T), 1);
-    tal_queue_create_init(&s_queue_emotion, SIZEOF(UINT8_T), 1);
+    // tal_queue_create_init(&s_queue_emotion, SIZEOF(UINT8_T), 1);
     tal_queue_create_init(&s_queue_name_str, 31*SIZEOF(UINT8_T), 1);
     tal_queue_create_init(&s_queue_wake, 1*SIZEOF(UINT8_T), 1);
     tal_queue_create_init(&s_queue_onvoice, 1*SIZEOF(UINT8_T), 1);
     tal_queue_create_init(&s_queue_vad_flag, 1*SIZEOF(UINT8_T), 1);
+
+    flag_shut_voice = 1;
+    moto_state = STATE_MOTO_ON;
     
     while (1)
     { 
@@ -1614,7 +1822,7 @@ OPERATE_RET hugo_ai_desktop_init(VOID)
             // TUYA_CALL_ERR_LOG(wukong_ai_agent_send_text("你收到了一条控制指令，用下面的话术进行应答，不要加任何其他的词包括“好的”和“正在处理”等词，注意只说一遍，直接说：“好嘞，马上安排。”。"));
             // tuya_ai_input_stop();
         }
-        if (tal_queue_fetch(s_queue_emotion, &emoji_num, 1) == OPRT_OK)
+        /*if (tal_queue_fetch(s_queue_emotion, &emoji_num, 1) == OPRT_OK)
         {            
             TAL_PR_NOTICE("-------------emo: %d",getdata[1]);
 
@@ -1660,7 +1868,7 @@ OPERATE_RET hugo_ai_desktop_init(VOID)
                 }
             }
             
-        }
+        }*/
 
         if (tal_queue_fetch(s_queue_wake, &wakeflag, 1) == OPRT_OK)
         {            
@@ -1669,6 +1877,12 @@ OPERATE_RET hugo_ai_desktop_init(VOID)
             keep_quiet = 0;
             adc_check_flag = 0;
             waketime = 2000;
+            if(flag_on_state == 0)
+            {
+                flag_on_state = 1;
+                // hugo_ai_adc_init();
+            }
+            
             // if(turnonkeyflag == 1)
             // {
             //     turnonkeyflag = 0;                
@@ -1705,6 +1919,7 @@ OPERATE_RET hugo_ai_desktop_init(VOID)
             {
                 hugo_ai_adc_data_clear();
             }
+            
             
         }
 
@@ -1774,6 +1989,11 @@ OPERATE_RET hugo_ai_desktop_init(VOID)
                 demo_test_state = 1;
                 tal_queue_post(s_queue_onvoice, &demo_test_state, 0);
                 keep_quiet = 0;
+                if(flag_on_state == 0)
+                {
+                    flag_on_state = 1;
+                    // hugo_ai_adc_init();
+                }
                 // wukong_audio_player_alert(AI_TOY_ALERT_TYPE_POWER_ON, FALSE);   //updat voice flag
             }
         }
@@ -2186,10 +2406,10 @@ OPERATE_RET hugo_ai_desktop_init(VOID)
             }
         }
 
-        tal_system_sleep(1);
+        // tal_system_sleep(1);
     }
     tal_queue_free(s_queue_voice_cmd);
-    tal_queue_free(s_queue_emotion);
+    // tal_queue_free(s_queue_emotion);
     tal_queue_free(s_queue_name_str);
     tal_queue_free(s_queue_wake);
     tal_queue_free(s_queue_onvoice);
