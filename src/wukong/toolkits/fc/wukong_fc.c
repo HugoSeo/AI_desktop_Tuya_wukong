@@ -344,6 +344,16 @@ OPERATE_RET __wukong_ai_asr_process(AI_TEXT_TYPE_E type, ty_cJSON *root, BOOL_T 
         cmd_data[1] = 3;
         tal_queue_post(s_queue_voice_cmd, &cmd_data, 0);
     }
+    else if((strstr((const char*)content,"修改名字")!=NULL)||(strstr((const char*)content,"修改称呼")!=NULL))
+    {
+        cmd_data[0] = 11;
+        cmd_data[1] = 3;
+    }
+    else if((strstr((const char*)content,"看看我是谁")!=NULL)||(strstr((const char*)content,"看下我是谁")!=NULL)||(strstr((const char*)content,"看一下我是谁")!=NULL))
+    {
+        cmd_data[0] = 11;
+        cmd_data[1] = 2;
+    }
     else if((strstr((const char*)content,"我是")!=NULL)||(strstr((const char*)content,"我叫")!=NULL))
     {
         cmd_data[0] = 11;

@@ -92,7 +92,7 @@ STATIC UINT8_T flag_moto_motion_store = 0;
 // STATIC UINT8_T flag_mcu_uart_ack = 0;
 // STATIC UINT8_T flag_move_cmd = 0;
 STATIC UINT8_T flag_turn_off_on_cmd = 0;
-STATIC UINT8_T flag_shut_voice = 0;
+UINT8_T flag_shut_voice = 0;
 UINT8_T flag_turn_off_on_state = POWER_STATUS_ON;
 STATIC UINT8_T flag_config_voic = 0;
 STATIC UINT8_T getdata[4]={0};
@@ -150,7 +150,7 @@ STATIC INT16_T adc_value_poit = 0;
 CHAR_T  adc_check_flag = 0;
 STATIC INT8_T direction_value = DIRECT_MIDDLE;
 STATIC UINT8_T flag_on_state = 0;
-
+STATIC UINT8_T desktop_deinit_flag = 0;
 
 STATIC UINT16_T cnt_left = 0;
 STATIC UINT16_T cnt_right = 0;
@@ -160,6 +160,7 @@ STATIC UINT16_T cnt_back_right = 0;
 STATIC UINT16_T cnt_back_middle = 0;
 STATIC UINT16_T cnt_total = 0;
 STATIC UINT8_T flag_adc_check_en = 0;
+STATIC UINT8_T flag_adc_inint = 0;
 
 CHAR_T  keep_quiet = 0;
 
@@ -190,6 +191,7 @@ extern QUEUE_HANDLE  s_queue_name_str;
 extern QUEUE_HANDLE  s_queue_wake;
 extern QUEUE_HANDLE  s_queue_onvoice;
 extern QUEUE_HANDLE  s_queue_vad_flag;
+extern QUEUE_HANDLE  s_queue_deinit_flag;
 
 extern float pitch_out;
 extern float roll_out;
@@ -200,6 +202,7 @@ extern UINT8_T time_dis_flag;
 
 extern OPERATE_RET hugo_ai_set_free_idle(VOID);
 extern OPERATE_RET hugo_ai_set_free_wakeup(VOID);
+extern VOID hugo_face_name_input(VOID);
 
 /***********************************************************
 ***********************function define**********************
@@ -292,7 +295,7 @@ VOID mcu_uart_rx_process(VOID)
                     break;
                 case 0x02:  //开关机设置
                     if((uart_rxbuff[t+5]==1)&&(uart_rxbuff[t+6]<=3))
-                    {                        
+                    {
                         flag_turn_off_on_state = uart_rxbuff[t+6];
                         if(flag_turn_off_on_state == POWER_STATUS_DEMO)
                             flag_turn_off_on_state = POWER_STATUS_ON;
@@ -377,12 +380,13 @@ VOID mcu_uart_rx_process(VOID)
                                 // radar_check_time = 10000;   //10s后检查雷达
                                 if(radar_flag_valid < 2)
                                 {
-                                    radar_flag_valid++;
+                                    radar_flag_valid++;                                    
                                 
                                 }
                                 if((radar_flag_valid == 1)/*&&(radar_check_time == 0)*/)   // New get radar
                                 {                               
                                     hugo_ai_face_intimer();
+                                    hugo_ai_face_clear_dir();
                                     
                                     // seg_dis_time = 10000;
                                     flag_seg_data = 1;
@@ -1007,9 +1011,11 @@ STATIC UINT8_T hugo_ai_adc_init(VOID)
     };
 
     TUYA_CALL_ERR_GOTO(tkl_adc_init(ADC_NUM, &sg_adc_cfg), __EXIT_ADC);
+    flag_adc_inint = 1;
     return 1;
 __EXIT_ADC:
     TUYA_CALL_ERR_LOG(tkl_adc_deinit(ADC_NUM));
+    flag_adc_inint = 0;
     return 0;
 }
 VOID adc_average_diff(VOID)
@@ -1290,7 +1296,7 @@ STATIC VOID_T hugo_ai_adc_result(VOID)
     
     
 }
-UINT8_T hugo_ai_adc_task(VOID)
+UINT16_T hugo_ai_adc_task(VOID)
 {
     OPERATE_RET rt = OPRT_OK;
     CONST CHAR_T *audio_data = NULL;
@@ -1305,6 +1311,15 @@ UINT8_T hugo_ai_adc_task(VOID)
     INT32_T adc_max = 0;
     INT32_T adc_min = 0xFFFF;
     INT32_T point = 0xFF;
+
+    if(desktop_deinit_flag == 1)
+        return OPRT_COM_ERROR;
+
+    if(flag_adc_inint == 0)
+    {
+        hugo_ai_adc_init();
+        return OPRT_COM_ERROR;
+    }
 
     // INT32_T adc_left = 0x0000;
     // INT32_T adc_right = 0x0000;
@@ -1636,9 +1651,11 @@ OPERATE_RET hugo_ai_desktop_init(VOID)
     tal_queue_create_init(&s_queue_wake, 1*SIZEOF(UINT8_T), 1);
     tal_queue_create_init(&s_queue_onvoice, 1*SIZEOF(UINT8_T), 1);
     tal_queue_create_init(&s_queue_vad_flag, 1*SIZEOF(UINT8_T), 1);
+    tal_queue_create_init(&s_queue_deinit_flag, 1*SIZEOF(UINT8_T), 1);
+    
 
-    flag_shut_voice = 1;
-    moto_state = STATE_MOTO_ON;
+    // flag_shut_voice = 1;
+    // moto_state = STATE_MOTO_ON;
     
     while (1)
     { 
@@ -1648,7 +1665,7 @@ OPERATE_RET hugo_ai_desktop_init(VOID)
         mcu_uart_task();
         // hugo_ai_adc_task();
         
-        if((flag_turn_off_on_state == POWER_STATUS_ON)&&(online_state == TRUE))
+        if((flag_turn_off_on_state == POWER_STATUS_ON)&&(online_state == TRUE)&&(desktop_deinit_flag == 0))
         {
             hugo_Face_uart_task();
         }
@@ -1801,6 +1818,25 @@ OPERATE_RET hugo_ai_desktop_init(VOID)
                         }
                     }
                 }
+                else if(getdata[1]==2)
+                {
+                    hugo_ai_face_intimer();
+                    wukong_ai_agent_output_stop(TRUE);
+                    wukong_audio_player_stop(AI_PLAYER_ALL);
+                    wukong_audio_input_reset();
+                    wukong_ai_agent_chat_break(NULL);
+                    break;
+                }
+                else if(getdata[1]==3)
+                {
+                    hugo_face_name_input();
+
+                    wukong_ai_agent_output_stop(TRUE);
+                    wukong_audio_player_stop(AI_PLAYER_ALL);
+                    wukong_audio_input_reset();
+                    wukong_ai_agent_chat_break(NULL);
+
+                }
                 // break;
                 continue;            
             // case 0xFF:
@@ -1881,6 +1917,7 @@ OPERATE_RET hugo_ai_desktop_init(VOID)
             {
                 flag_on_state = 1;
                 // hugo_ai_adc_init();
+                hugo_ai_face_intimer();
             }
             
             // if(turnonkeyflag == 1)
@@ -1922,7 +1959,10 @@ OPERATE_RET hugo_ai_desktop_init(VOID)
             
             
         }
-
+        if (tal_queue_fetch(s_queue_deinit_flag, &desktop_deinit_flag, 1) == OPRT_OK)
+        {
+            TAL_PR_NOTICE("------------------desktop_deinit_flag = %d----------------",desktop_deinit_flag);
+        }
         
         if(flag_config_voic == 1)
         {
@@ -2403,6 +2443,8 @@ OPERATE_RET hugo_ai_desktop_init(VOID)
                 tuya_ai_input_start(TRUE);
                 TUYA_CALL_ERR_LOG(wukong_ai_agent_send_text("跟我读下面的话，“靠近一点，让我看看你是谁”。"));
                 tuya_ai_input_stop();
+
+                hugo_ai_face_intimer();
             }
         }
 
@@ -2414,6 +2456,7 @@ OPERATE_RET hugo_ai_desktop_init(VOID)
     tal_queue_free(s_queue_wake);
     tal_queue_free(s_queue_onvoice);
     tal_queue_free(s_queue_vad_flag);
+    tal_queue_free(s_queue_deinit_flag);
     
     return rt;
 }

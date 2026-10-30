@@ -77,7 +77,7 @@ STATIC UINT8_T  face_store_ID=0xFF;
 STATIC unsigned int  PIR_READ_TIME=0;
 STATIC unsigned char Face_error_ts=0;
 STATIC unsigned char FACE_MODE_ERROR=1;
-STATIC UINT8_T  face_dirctiong_flag = 0;
+STATIC UINT8_T  face_direction_flag = 0;
 
 // unsigned int  PIR_SEN_DATA=DELTA_H;
 STATIC unsigned char FACE_TX_FLG=0;
@@ -87,6 +87,8 @@ UINT8_T face_voice_flag = 0;
 STATIC BYTE_T  face_flag_buf[100] = {0};
 
 STATIC UCHAR_T face_first_run_flag = 1;
+
+
 /***********************************************************
 ***********************function define**********************
 ***********************************************************/
@@ -99,7 +101,8 @@ unsigned char GetCRC(const unsigned char *pData, unsigned char len);
 
 extern UINT8_T hugo_radar_valid(VOID);
 extern CHAR_T hugo_ai_get_speak_flag(VOID);
-
+extern UINT8_T hugo_ai_time_second_reflash(VOID);
+extern VOID hugo_ai_time_second_clear(VOID);
 VOID face_flag_write(BYTE_T *data)
 {
     INT_T  rt = OPRT_OK;
@@ -249,7 +252,8 @@ UINT8_T face_name_store(BYTE_T *data)
     if(FACE_ADD_TIME > 0)
     {
         face_name_write(FACE_ID,data);
-        FACE_WR(FACE_ID);            
+        FACE_WR(FACE_ID);
+        FACE_ADD_TIME = 0;
         return TRUE;
     }
     return FALSE;
@@ -500,13 +504,13 @@ unsigned char Face_Rx_data(char *data)
                         printf("%0.2X ", Face_rxbuff[i]);   //打印接收人脸数据
                     }
                     TAL_PR_NOTICE("\r\n");
-//                    for(i = 0; i < Face_Rxln; i++) Face_rxbuff[i] = 0; //清空数组
-//                    Face_rxlog = 0;
-//                    Face_RXtime = 0;
-//                    Face_Rxln = 0;
-                    Face_rxbuff[t] =0XFF;
-                    Face_rxbuff[t+1] =0XFF;
-                    Face_rxbuff[t+2]=0XFF;
+                   for(i = 0; i < Face_Rxln; i++) Face_rxbuff[i] = 0; //清空数组
+                   Face_rxlog = 0;
+                   Face_RXtime = 0;
+                   Face_Rxln = 0;
+                    // Face_rxbuff[t] =0XFF;
+                    // Face_rxbuff[t+1] =0XFF;
+                    // Face_rxbuff[t+2]=0XFF;
                     return 1;
                 }
             }
@@ -583,7 +587,7 @@ VOID Bread_STANDBY(VOID)
 {
     FACE_Work_Mode=FACE_STANDBY;//待机模式
     FACE_WORK_FLG=ENABLE;
-    FACE_TIME=20000;
+    FACE_TIME=5000;//20000;
     PIR_DATA=0;
     if(FACE_POWER_FLG == ENABLE)
     {
@@ -595,6 +599,7 @@ VOID Check_FACE_TimeOut(VOID)
     if(FACE_TIME==0)  //超时
     {
         Bread_STANDBY();
+        setting_flag = SET_INPW;
 #ifdef Debug_ENABLE
         printf("FACE_T_Out\r\n");
 #endif
@@ -625,7 +630,12 @@ VOID Check_FACE_TimeOut(VOID)
         // }
     }
 }
-
+VOID hugo_face_name_input(VOID)
+{
+    face_voice_flag = 1;
+    FACE_ADD_TIME = 30000;
+    face_store_ID = 0xFF;
+}
 VOID Dispay_fled(char t)
 {
     char i=0;
@@ -640,7 +650,7 @@ VOID Dispay_fled(char t)
 unsigned char  Face_Start(VOID)
 {
     //检测时间到了，且雷达数据有效
-    if((FACE_TIME==0)/*&&(hugo_radar_valid()!=0)*/&&(hugo_ai_get_speak_flag() == 0)) return 1;
+    if((FACE_TIME==0)&&(hugo_radar_valid()!=0)/*&&(hugo_ai_get_speak_flag() == 0)*/) return 1;
     else return 0;
 }
 VOID Face_uart_rx(VOID)
@@ -658,7 +668,7 @@ VOID Face_uart_rx(VOID)
         }
         Face_rxlog=1;
         Face_RXtime=0;
-    }
+    }    
 }
 VOID Face_uart_task(VOID)
 {
@@ -705,7 +715,7 @@ VOID Face_uart_task(VOID)
                     Send_FaceCmd(MID_VERIFY, pdata, 2); // 鉴权解锁
 #endif
                     FACE_Work_Mode = FACE_VERIFY_ACK;
-                    FACE_TIME = 5500;
+                    FACE_TIME = 6000;
                 }
                 if(setting_flag==ADD_USER_FACE)
                 {   //注册人脸
@@ -775,15 +785,21 @@ VOID Face_uart_task(VOID)
                         // 去获取名字并打招呼
                         face_voice_flag = 3;
                         face_store_ID = FACE_ID;
-                        FACE_RELEASE_TIME = 300000;
+                        FACE_RELEASE_TIME = 120000;
                     }
+                    FACE_TIME = 5000;
+
 
                 }
                 else
                 {
-                    face_voice_flag = 1;
-                    FACE_ADD_TIME = 80000;
-                    FACE_TIME = 15000;
+                    // if(FACE_ADD_TIME == 0)
+                    {
+                        face_voice_flag = 1;
+                        FACE_ADD_TIME = 30000;
+                        face_store_ID = 0xFF;
+                    }
+                    FACE_TIME = 5000;
                     // setting_flag = ADD_USER_FACE;
                 }
             }
@@ -832,27 +848,30 @@ VOID Face_uart_task(VOID)
                     }
                 }
             }
-            else if(face_dirctiong_flag == 0 && RX_Msgid == MID_NOTE && Face_rxdata[0] == 0x01 && Face_rxdata[1] != 0)
+            else if(face_direction_flag < 5 && RX_Msgid == MID_NOTE && Face_rxdata[0] == 0x01 && Face_rxdata[1] != 0)
             {
                 //EF AA 01 00 11 01 01 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 10
-                face_dirctiong_flag = 1;
-
+                face_direction_flag ++;
+                if (face_direction_flag >= 5)
+                {
+                    face_voice_flag = 4;
+                }
             }
             //Deleted by Hugo 25.11.18
-           else
-           {
-//#ifdef Palm_EN
+//            else
+//            {
+// //#ifdef Palm_EN
+// //                pdata[0] = 1; //自动关机
+// //                pdata[1] = 2; //2秒
+// //                Send_FaceCmd(PALM_VERIFY, pdata, 2); // 鉴权解锁 自动辨别人脸和掌静脉
+// //#else
 //                pdata[0] = 1; //自动关机
 //                pdata[1] = 2; //2秒
-//                Send_FaceCmd(PALM_VERIFY, pdata, 2); // 鉴权解锁 自动辨别人脸和掌静脉
-//#else
-               pdata[0] = 1; //自动关机
-               pdata[1] = 2; //2秒
-               Send_FaceCmd(MID_VERIFY, pdata, 2); // 鉴权解锁
-//#endif
-           }
+//                Send_FaceCmd(MID_VERIFY, pdata, 2); // 鉴权解锁
+// //#endif
+//            }
         }
-        else if(FACE_TIME>3000&&FACE_TIME<3500)
+        else if(FACE_TIME>3000&&FACE_TIME<=4000)
         {
             FACE_TIME=3000;
             pdata[0]=1;  //自动关机
@@ -887,12 +906,13 @@ VOID Face_uart_task(VOID)
                 // FACE_WR(FACE_ID);
 
                 face_voice_flag = 1;
-                FACE_ADD_TIME = 80000;
-                FACE_TIME = 80000;
+                FACE_ADD_TIME = 30000;
+                FACE_TIME = 5000;
             }
             else
             {
-                USER_EXISTED();
+                // USER_EXISTED();
+                setting_flag = SET_INPW;
             }
             break;
         }
@@ -1126,11 +1146,11 @@ VOID Face_uart_task(VOID)
 
 VOID hugo_ai_face_timer(VOID)
 {
-    if(FACE_TIME>0) FACE_TIME --;    
-    if(FACE_ADD_TIME>0) FACE_ADD_TIME --;
+    // if(FACE_TIME>0) FACE_TIME --;
+    // if(FACE_ADD_TIME>0) FACE_ADD_TIME --;
     Face_RXtime += 1;
 
-    if(FACE_RELEASE_TIME>0) FACE_RELEASE_TIME--;
+    // if(FACE_RELEASE_TIME>0) FACE_RELEASE_TIME--;
 }
 
 VOID hugo_ai_face_intimer(VOID)
@@ -1146,13 +1166,16 @@ VOID hugo_ai_face_intimer(VOID)
     }
     
     FACE_Work_Mode=FACE_STANDBY;
+    setting_flag = SET_INPW;
     Face_error_ts = 0;
     face_store_ID = 0xFF;
     FACE_RELEASE_TIME = 0;
 
-    face_dirctiong_flag = 0;
-    
-
+    // face_direction_flag = 0;
+}
+VOID hugo_ai_face_clear_dir(VOID)
+{
+    face_direction_flag = 0;
 }
 
 VOID hugo_Face_uart_task(VOID)
@@ -1160,6 +1183,35 @@ VOID hugo_Face_uart_task(VOID)
     Face_uart_rx();
     Face_uart_task();
 
+    if(hugo_ai_time_second_reflash()==1)
+    {
+        hugo_ai_time_second_clear();
+        if(FACE_TIME>1000)
+        {
+            FACE_TIME -= 1000;
+        }
+        else
+        {
+            FACE_TIME = 0;
+        }
+        if(FACE_ADD_TIME>1000)
+        {
+            FACE_ADD_TIME -= 1000;
+        }
+        else
+        {
+            FACE_ADD_TIME = 0;
+        }
+        if(FACE_RELEASE_TIME>1000)
+        {
+            FACE_RELEASE_TIME -= 1000;
+        }
+        else
+        {
+            FACE_RELEASE_TIME = 0;
+        }
+
+    }
     // if(FACE_TIME>0) FACE_TIME--;
     // if(FACE_ADD_TIME>0) FACE_ADD_TIME--;
     // Face_RXtime ++;

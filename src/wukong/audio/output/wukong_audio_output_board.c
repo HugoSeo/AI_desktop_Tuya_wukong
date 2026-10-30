@@ -21,6 +21,9 @@
 #include "tal_audio_output.h"
 #include "wukong_audio_output.h"
 
+#include "tal_queue.h"
+QUEUE_HANDLE  s_queue_deinit_flag;
+
 STATIC TAL_AUDIO_OUTPUT_HANDLE s_audio_output_handle = NULL;
 
 OPERATE_RET wukong_audio_board_output_init(WUKONG_AUDIO_OUTPUT_CFG_T *cfg)
@@ -64,6 +67,9 @@ OPERATE_RET wukong_audio_board_output_deinit(VOID)
     rt = tal_audio_output_deinit(s_audio_output_handle);
     TAL_PR_NOTICE("board output deinit done: handle=%p ret=%d", s_audio_output_handle, rt);
     s_audio_output_handle = NULL;
+    //Add by Hugo 26.10.28
+    UINT8_T deinit_falg = 1;
+    tal_queue_post(s_queue_deinit_flag, &deinit_falg, 0);
     return rt;
 }
 

@@ -87,7 +87,7 @@ POSIX_TM_S tm = {0};
 STATIC UINT8_T buf[10] = {0x00};
 STATIC UINT8_T buff[10] = {0x00};
 
-
+STATIC UINT8_T time_second_reflash = 0;
 
 extern UINT8_T flag_rgb_data;
 extern UINT8_T flag_seg_data;
@@ -228,12 +228,13 @@ STATIC VOID_T hugo_ai_seg_reflash_time(VOID_T)
 {
     // POSIX_TM_S tm = {0};
     STATIC INT_T s_last_min  = -1, s_last_hour = -1;
+    STATIC INT_T s_last_sec  = -1;
 
-    if (tal_time_check_time_sync() != OPRT_OK ||
-    tal_time_check_time_zone_sync() != OPRT_OK) 
-    {
-        // return;
-    }
+    // if (tal_time_check_time_sync() != OPRT_OK ||
+    // tal_time_check_time_zone_sync() != OPRT_OK) 
+    // {
+    //     // return;
+    // }
     if (tal_time_get_local_time_custom(0, &tm) != OPRT_OK) 
     {
         // return;
@@ -243,6 +244,12 @@ STATIC VOID_T hugo_ai_seg_reflash_time(VOID_T)
     //     time_valid_flag = 0;
     //     return;
     // }
+    if(tm.tm_sec != s_last_sec)
+    {
+        s_last_sec = tm.tm_sec;
+        time_second_reflash = 1;
+    }
+    
     if ((tm.tm_min == s_last_min)&&(tm.tm_hour == s_last_hour))
     {
         time_valid_flag = 0;
@@ -306,4 +313,13 @@ VOID_T hugo_ai_lightboard_process(VOID_T)
     }
 
     
+}
+
+UINT8_T hugo_ai_time_second_reflash(VOID)
+{
+    return time_second_reflash;
+}
+VOID hugo_ai_time_second_clear(VOID)
+{
+    time_second_reflash = 0;
 }

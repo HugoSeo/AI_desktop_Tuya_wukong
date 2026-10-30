@@ -37,7 +37,7 @@ int ret_gateway_state(void);
 VOID_T hugo_ai_seg_process(VOID_T);
 VOID_T seg_init(VOID_T);
 
-UINT8_T hugo_ai_adc_task(VOID);
+UINT16_T hugo_ai_adc_task(VOID);
 
 
 // UINT16_T flag_rgb_bit;

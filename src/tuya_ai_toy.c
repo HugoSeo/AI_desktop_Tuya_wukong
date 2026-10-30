@@ -119,6 +119,7 @@
 #define AI_TOY_ALERT_PLAY_ID   "ai_toy_alert"
 
 extern UINT8_T flag_turn_off_on_state;
+extern UINT8_T flag_shut_voice;
 extern CHAR_T  keep_quiet;
 /* ---------------------------------------------------------------------------
  * File scope variables
@@ -793,7 +794,7 @@ STATIC VOID __on_ai_toy_audio_trigger_pin(UINT_T port, PUSH_KEY_TYPE_E type, INT
     /** Exit lowpower status when key press and device was in lowpower status */
     __on_ai_toy_key_press_exit_lowpower();
 
-    if(flag_turn_off_on_state != 1)
+    if((flag_turn_off_on_state != 1)||(flag_shut_voice != 0))
         return;
 
     if (SEQ_KEY == type) {

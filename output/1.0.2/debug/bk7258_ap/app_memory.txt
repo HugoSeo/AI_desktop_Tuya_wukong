@@ -1,0 +1,19 @@
+Memory region         Used Size  Region Size  %age Used
+           FLASH:     3039404 B      3584 KB     82.82%
+            IRAM:        1696 B       334 KB      0.50%
+        SPINLOCK:       46124 B        64 KB     70.38%
+             RAM:      110844 B       334 KB     32.41%
+            SWAP:          2 KB         2 KB    100.00%
+           ITCM0:         152 B      16352 B      0.93%
+           DTCM0:          0 GB      16380 B      0.00%
+           ITCM1:          0 GB      16352 B      0.00%
+           DTCM1:       13084 B      16380 B     79.88%
+           ITCM2:          0 GB      16352 B      0.00%
+           DTCM2:       13084 B      16380 B     79.88%
+ PSRAM_SLAB_USER:          0 GB       100 KB      0.00%
+PSRAM_SLAB_AUDIO:          0 GB       100 KB      0.00%
+PSRAM_SLAB_ENCODE:          0 GB      1400 KB      0.00%
+PSRAM_SLAB_DISPLAY:          0 GB      4544 KB      0.00%
+PSRAM_STACK_HEAP:          0 GB         1 MB      0.00%
+      PSRAM_HEAP:          0 GB      8832 KB      0.00%
+   PSRAM_SECTION:          0 GB       128 KB      0.00%

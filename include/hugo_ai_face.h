@@ -189,6 +189,7 @@ VOID Face_Init(VOID);
 VOID hugo_Face_uart_task(VOID);
 VOID hugo_ai_face_timer(VOID);
 VOID hugo_ai_face_intimer(VOID);
+VOID hugo_ai_face_clear_dir(VOID);
 
 // VOID face_name_write(BYTE_T face_id, BYTE_T *data);
 // UINT8_T face_name_read(BYTE_T face_id, BYTE_T *data);
